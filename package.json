@@ -1,0 +1,28 @@
+{
+  "name": "opengrid-workspace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @opengrid/demo",
+    "build": "npm run build -w opengrid && npm run build -w opengrid-react && npm run build -w @opengrid/demo",
+    "typecheck": "tsc -p packages/opengrid/tsconfig.json --noEmit && tsc -p packages/opengrid-react/tsconfig.json --noEmit && tsc -p apps/demo/tsconfig.json --noEmit",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "bench": "playwright test -c playwright.bench.config.ts"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "^1.49.1",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "ag-grid-community": "36.2.0",
+    "happy-dom": "^16.8.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5",
+    "esbuild": "^0.25.0"
+  }
+}

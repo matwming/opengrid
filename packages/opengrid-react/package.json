@@ -1,0 +1,24 @@
+{
+  "name": "opengrid-react",
+  "version": "0.1.0",
+  "description": "React wrapper for opengrid. Props match ag-grid-react's AgGridReact.",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.tsx",
+      "import": "./src/index.tsx",
+      "default": "./src/index.tsx"
+    }
+  },
+  "peerDependencies": {
+    "opengrid": "0.1.0",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "react": "^18.3.1",
+    "typescript": "^5.7.3"
+  }
+}

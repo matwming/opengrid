@@ -1,0 +1,344 @@
+{
+  "measuredAt": "2026-10-29T21:57:57.346Z",
+  "rows": 1000000,
+  "cols": 50,
+  "repeats": 3,
+  "prepare": {
+    "prepareMs": 3418.7600000000093,
+    "rows": 1000000,
+    "cols": 50
+  },
+  "opengrid": {
+    "mount": {
+      "firstRenderMs": 1068.1049999999814,
+      "workerWaitMs": 13.984999999869615,
+      "engine": "worker",
+      "isolated": true,
+      "rows": 1000000
+    },
+    "scroll": {
+      "frames": 120,
+      "elapsedMs": 1999.9150000000009,
+      "fps": 60.00255010837958,
+      "p95Ms": 16.670000000000073
+    },
+    "sort": {
+      "ms": 67.60000000009313,
+      "ordered": true,
+      "sample": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "computeMs": 61
+    },
+    "filter": {
+      "ms": 46.33499999996275,
+      "count": 499990
+    },
+    "heapBefore": 1620000000,
+    "heapAfterReady": 1620000000,
+    "traceBeginFrames": 121
+  },
+  "ag": {
+    "mount": {
+      "firstRenderMs": 846.9150000000373,
+      "workerWaitMs": 0.02000000001862645,
+      "engine": "ag-grid",
+      "isolated": true,
+      "rows": 1000000
+    },
+    "scroll": {
+      "frames": 79,
+      "elapsedMs": 1999.925000000001,
+      "fps": 39.501481305548936,
+      "p95Ms": 33.335000000000946
+    },
+    "sort": {
+      "ms": 1832.4750000000931,
+      "ordered": true,
+      "sample": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "computeMs": 0
+    },
+    "filter": {
+      "ms": 1002.1800000001676,
+      "count": 499990
+    },
+    "heapBefore": 1620000000,
+    "heapAfterReady": 1620000000,
+    "traceBeginFrames": 121
+  },
+  "runs": [
+    {
+      "round": 0,
+      "opengrid": {
+        "mount": {
+          "firstRenderMs": 1265.155000000028,
+          "workerWaitMs": 19.875,
+          "engine": "worker",
+          "isolated": true,
+          "rows": 1000000
+        },
+        "scroll": {
+          "frames": 120,
+          "elapsedMs": 1999.9189999999999,
+          "fps": 60.00243009841899,
+          "p95Ms": 16.670000000000073
+        },
+        "sort": {
+          "ms": 69.4749999998603,
+          "ordered": true,
+          "sample": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "computeMs": 61
+        },
+        "filter": {
+          "ms": 48.080000000074506,
+          "count": 499990
+        },
+        "heapBefore": 1620000000,
+        "heapAfterReady": 1620000000,
+        "traceBeginFrames": 121
+      },
+      "ag": {
+        "mount": {
+          "firstRenderMs": 846.9150000000373,
+          "workerWaitMs": 0.02000000001862645,
+          "engine": "ag-grid",
+          "isolated": true,
+          "rows": 1000000
+        },
+        "scroll": {
+          "frames": 79,
+          "elapsedMs": 1999.925000000001,
+          "fps": 39.501481305548936,
+          "p95Ms": 33.335000000000946
+        },
+        "sort": {
+          "ms": 1832.4750000000931,
+          "ordered": true,
+          "sample": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "computeMs": 0
+        },
+        "filter": {
+          "ms": 1002.1800000001676,
+          "count": 499990
+        },
+        "heapBefore": 1620000000,
+        "heapAfterReady": 1620000000,
+        "traceBeginFrames": 121
+      }
+    },
+    {
+      "round": 1,
+      "opengrid": {
+        "mount": {
+          "firstRenderMs": 1068.1049999999814,
+          "workerWaitMs": 13.984999999869615,
+          "engine": "worker",
+          "isolated": true,
+          "rows": 1000000
+        },
+        "scroll": {
+          "frames": 120,
+          "elapsedMs": 1999.9150000000009,
+          "fps": 60.00255010837958,
+          "p95Ms": 16.670000000000073
+        },
+        "sort": {
+          "ms": 67.60000000009313,
+          "ordered": true,
+          "sample": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "computeMs": 61
+        },
+        "filter": {
+          "ms": 46.33499999996275,
+          "count": 499990
+        },
+        "heapBefore": 1620000000,
+        "heapAfterReady": 1620000000,
+        "traceBeginFrames": 121
+      },
+      "ag": {
+        "mount": {
+          "firstRenderMs": 802.9500000001863,
+          "workerWaitMs": 0.039999999571591616,
+          "engine": "ag-grid",
+          "isolated": true,
+          "rows": 1000000
+        },
+        "scroll": {
+          "frames": 82,
+          "elapsedMs": 1999.9199999999983,
+          "fps": 41.001640065602665,
+          "p95Ms": 33.335000000002765
+        },
+        "sort": {
+          "ms": 1816.660000000149,
+          "ordered": true,
+          "sample": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "computeMs": 0
+        },
+        "filter": {
+          "ms": 996.2050000000745,
+          "count": 499990
+        },
+        "heapBefore": 1620000000,
+        "heapAfterReady": 1620000000,
+        "traceBeginFrames": 121
+      }
+    },
+    {
+      "round": 2,
+      "opengrid": {
+        "mount": {
+          "firstRenderMs": 1100.6999999997206,
+          "workerWaitMs": 17.68999999994412,
+          "engine": "worker",
+          "isolated": true,
+          "rows": 1000000
+        },
+        "scroll": {
+          "frames": 120,
+          "elapsedMs": 1999.918999999998,
+          "fps": 60.00243009841905,
+          "p95Ms": 16.67000000000189
+        },
+        "sort": {
+          "ms": 65.88999999966472,
+          "ordered": true,
+          "sample": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "computeMs": 61
+        },
+        "filter": {
+          "ms": 46.30499999970198,
+          "count": 499990
+        },
+        "heapBefore": 1620000000,
+        "heapAfterReady": 1620000000,
+        "traceBeginFrames": 121
+      },
+      "ag": {
+        "mount": {
+          "firstRenderMs": 821.3499999996275,
+          "workerWaitMs": 0.03000000026077032,
+          "engine": "ag-grid",
+          "isolated": true,
+          "rows": 1000000
+        },
+        "scroll": {
+          "frames": 77,
+          "elapsedMs": 2016.5849999999991,
+          "fps": 38.18336445029593,
+          "p95Ms": 33.335000000002765
+        },
+        "sort": {
+          "ms": 2033.5900000003166,
+          "ordered": true,
+          "sample": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "computeMs": 0
+        },
+        "filter": {
+          "ms": 1202.4850000003353,
+          "count": 499990
+        },
+        "heapBefore": 1620000000,
+        "heapAfterReady": 1620000000,
+        "traceBeginFrames": 123
+      }
+    }
+  ],
+  "bundle": {
+    "opengridGzip": 18355,
+    "agGridGzip": 186044,
+    "opengridRaw": 60245,
+    "agGridRaw": 659052
+  },
+  "pageErrors": [],
+  "notes": {
+    "memory": "performance.memory.usedJSHeapSize did not move between samples in an earlier run, so this report does not claim a heap delta.",
+    "bundle": "Gzip sizes are esbuild bundles of each package entry. ag-grid-community includes the rest of Community. opengrid is the phase 1 entry.",
+    "scroll": "fps is requestAnimationFrame intervals while the test drives scrollTop for 2 seconds. traceBeginFrames counts Chrome BeginFrame events in the same window.",
+    "sort": "ms is the wait from applyColumnState until modelUpdated. computeMs is the worker query itself when the worker path ran."
+  },
+  "group": {
+    "status": "not-run",
+    "reason": "Row grouping ships in AG Grid Enterprise, so ag-grid-community has no grouping run to compare."
+  },
+  "targets": {
+    "scrollNear60Fps": true,
+    "sortUnder300ms": true,
+    "fasterReady": false,
+    "fasterScroll": true,
+    "fasterSort": true,
+    "fasterFilter": true,
+    "smallerGzipBundle": true
+  }
+}
