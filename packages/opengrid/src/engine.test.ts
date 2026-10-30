@@ -11,8 +11,8 @@ function rowsOf(partial: Record<string, unknown>[]): { store: ReturnType<typeof 
   return { rows: partial, store: buildStore(partial, fields) };
 }
 
-function ids(store: ReturnType<typeof buildStore>, rows: Record<string, unknown>[], sort: { colId: string; direction: 'asc' | 'desc' }[] = [], filter: Parameters<typeof queryView>[2] = null): string[] {
-  const view = queryView(store, sort, filter);
+function ids(store: ReturnType<typeof buildStore>, rows: Record<string, unknown>[], sort: { colId: string; direction: 'asc' | 'desc' }[] = [], filter: Parameters<typeof queryView>[2] = null, quick?: string): string[] {
+  const view = queryView(store, sort, filter, quick);
   const out: string[] = [];
   for (let i = 0; i < view.count; i++) {
     const source = view.identity ? i : view.indices[i];
@@ -95,5 +95,15 @@ describe('client-side view', () => {
         .map((row) => String(row.index));
       expect(actual).toEqual(expected);
     }
+  });
+
+  it('matches a quick filter as case-insensitive words across columns', () => {
+    expect(ids(store, rows, [], null, 'no')).toEqual(['a', 'b']);
+    expect(ids(store, rows, [], null, '10')).toEqual(['c', 'd']);
+    expect(ids(store, rows, [], null, '2020')).toEqual(['a', 'b', 'e', 'f']);
+    expect(ids(store, rows, [], null, 'bo   10')).toEqual(['d']);
+    expect(ids(store, rows, [], null, 'alpha beta')).toEqual([]);
+    expect(ids(store, rows, [], null, '  ')).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
+    expect(ids(store, rows, [], { qty: { filterType: 'number', type: 'equals', filter: 10 } }, 'no')).toEqual([]);
   });
 });

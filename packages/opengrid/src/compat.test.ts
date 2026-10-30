@@ -134,4 +134,107 @@ describe('community api compatibility', () => {
     og.forEachNode((node, index) => ogNodes.push(`${index}:${node.id}:${node.displayed}`));
     expect(ogNodes).toEqual(agNodes);
   });
+
+  it('matches quick filter text and pagination against the same calls', () => {
+    const gridOptions = {
+      ...options(),
+      pagination: true,
+      paginationPageSize: 2,
+      paginationPageSizeSelector: [2, 10],
+    };
+    const hostFor = () => {
+      const host = document.createElement('div');
+      host.style.width = '900px';
+      host.style.height = '420px';
+      document.body.appendChild(host);
+      return host;
+    };
+    const agPage = createAgGrid(hostFor(), gridOptions);
+    const ogPage = createOpenGrid(hostFor(), gridOptions);
+    for (const text of ['no', '10', '2020', 'bo   10', 'alpha beta', '  ']) {
+      agPage.setGridOption('quickFilterText', text);
+      ogPage.setGridOption('quickFilterText', text);
+      expect(ids(ogPage), JSON.stringify(text)).toEqual(ids(agPage));
+    }
+    agPage.setGridOption('quickFilterText', 'no');
+    ogPage.setGridOption('quickFilterText', 'no');
+    agPage.setFilterModel({ qty: { filterType: 'number', type: 'greaterThan', filter: 0 } });
+    ogPage.setFilterModel({ qty: { filterType: 'number', type: 'greaterThan', filter: 0 } });
+    expect(ids(ogPage), 'quick and column').toEqual(ids(agPage));
+    agPage.setGridOption('quickFilterText', '');
+    ogPage.setGridOption('quickFilterText', '');
+    agPage.setFilterModel(null);
+    ogPage.setFilterModel(null);
+
+    const snapshot = (api: GridApi<Row>) => ({
+      first: api.getFirstDisplayedRowIndex(),
+      last: api.getLastDisplayedRowIndex(),
+      count: api.getDisplayedRowCount(),
+      page: api.paginationGetCurrentPage(),
+      size: api.paginationGetPageSize(),
+      total: api.paginationGetTotalPages(),
+      rows: api.paginationGetRowCount(),
+      known: api.paginationIsLastPageFound(),
+    });
+    expect(snapshot(ogPage)).toEqual(snapshot(agPage));
+    agPage.paginationGoToNextPage();
+    ogPage.paginationGoToNextPage();
+    expect(snapshot(ogPage), 'next').toEqual(snapshot(agPage));
+    agPage.paginationGoToPage(99);
+    ogPage.paginationGoToPage(99);
+    expect(snapshot(ogPage), 'last').toEqual(snapshot(agPage));
+    agPage.setGridOption('quickFilterText', '2020');
+    ogPage.setGridOption('quickFilterText', '2020');
+    expect(snapshot(ogPage), 'filtered page').toEqual(snapshot(agPage));
+    agPage.destroy();
+    ogPage.destroy();
+  });
+
+  it('saves and restores sort, filter, columns, page, and selection', () => {
+    const gridOptions = {
+      ...options(),
+      pagination: true,
+      paginationPageSize: 2,
+      paginationPageSizeSelector: [2, 10],
+    };
+    const hostFor = () => {
+      const host = document.createElement('div');
+      host.style.width = '900px';
+      host.style.height = '420px';
+      document.body.appendChild(host);
+      return host;
+    };
+    const agPage = createAgGrid(hostFor(), gridOptions);
+    const ogPage = createOpenGrid(hostFor(), gridOptions);
+    const arrange = (api: GridApi<Row>) => {
+      api.applyColumnState({ state: [{ colId: 'name', sort: 'asc', width: 140 }], defaultState: { sort: null } });
+      api.setColumnsPinned(['name'], 'left');
+      api.setColumnsVisible(['when'], false);
+      api.setFilterModel({ name: { filterType: 'text', type: 'contains', filter: 'o' } });
+      api.paginationGoToPage(1);
+      api.getRowNode('d')?.setSelected(true);
+    };
+    arrange(agPage);
+    arrange(ogPage);
+    const { version: agVersion, ...agState } = agPage.getState();
+    const { version: ogVersion, ...ogState } = ogPage.getState();
+    expect(ogVersion).toBe('0.1.0');
+    expect(agVersion).toBe('36.2.0');
+    expect(ogState).toEqual(agState);
+
+    const agRestored = createAgGrid(hostFor(), gridOptions);
+    const ogRestored = createOpenGrid(hostFor(), gridOptions);
+    agRestored.setState(agPage.getState());
+    ogRestored.setState(ogPage.getState());
+    expect(ids(ogRestored)).toEqual(ids(agRestored));
+    expect(ogRestored.getColumnState().map((column) => ({ colId: column.colId, hide: column.hide, sort: column.sort, pinned: column.pinned, width: column.width }))).toEqual(
+      agRestored.getColumnState().map((column) => ({ colId: column.colId, hide: column.hide, sort: column.sort, pinned: column.pinned, width: column.width })),
+    );
+    expect(ogRestored.paginationGetCurrentPage()).toBe(agRestored.paginationGetCurrentPage());
+    expect(ogRestored.getSelectedRows().map((row) => row.id).sort()).toEqual(agRestored.getSelectedRows().map((row) => row.id).sort());
+    agPage.destroy();
+    ogPage.destroy();
+    agRestored.destroy();
+    ogRestored.destroy();
+  });
 });

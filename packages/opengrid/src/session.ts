@@ -1,7 +1,7 @@
 import { bandsOf, buildLeaves, columnFacade, groupRuns, selectionConfig, visibleLeaves, type Leaf, type SelectionConfig } from './columns';
 import { encodeCsv, encodeCsvRaw, downloadCsv } from './csv';
 import { WORKER_ROW_MIN, WorkerEngine } from './engine-client';
-import { applyFilter, queryView, type SortKey, type ViewResult } from './engine';
+import { applyFilter, applyQuickFilter, hasQuickFilter, queryView, type SortKey, type ViewResult } from './engine';
 import { FALLBACK_COLORS, paintFrame, type PaintColors, type PaintColumn } from './paint';
 import { buildStore, cellRaw, formatDay, readPath, sharedMemoryAvailable, writePath, writeVector, type ColumnStore, type StoreField } from './store';
 import type {
@@ -13,6 +13,7 @@ import type {
   FilterModel,
   GridApi,
   GridOptions,
+  GridState,
   IRowNode,
   RowDataTransaction,
   RowNodeTransaction,
@@ -77,6 +78,8 @@ export class GridSession<TData = any> {
   private a11y: HTMLElement;
   private live: HTMLElement;
   private empty: HTMLElement;
+  private pager: HTMLElement;
+  private pageIndex = 0;
   private resizeObserver: ResizeObserver | null = null;
   private paintFrameId = 0;
   private customText = new Map<string, string>();
@@ -118,9 +121,11 @@ export class GridSession<TData = any> {
     this.live.setAttribute('aria-live', 'polite');
     this.empty = el('div', 'og-empty');
     this.empty.hidden = true;
+    this.pager = el('div', 'og-pager');
+    this.pager.hidden = true;
     this.root.append(this.header, body, this.a11y);
     const shell = el('div', 'og-shell');
-    shell.append(this.root, this.popup, this.live, this.empty);
+    shell.append(this.root, this.pager, this.popup, this.live, this.empty);
     this.host.classList.add('og-host');
     this.host.replaceChildren(shell);
     this.viewport.addEventListener('scroll', () => this.onScroll(), { passive: true });
@@ -143,8 +148,6 @@ export class GridSession<TData = any> {
     this.rebuildColumns(options.rowData ?? []);
     this.loadRows(options.rowData ?? [], true);
     this.emit('gridReady', {});
-    if (options.pagination) this.warn('pagination', 'pagination is not implemented yet; all rows stay in the scroll viewport');
-    if (options.quickFilterText) this.warn('quickFilter', 'quick filter is not implemented yet');
   }
 
   destroy(): void {
@@ -235,7 +238,9 @@ export class GridSession<TData = any> {
     const initial = reason === 'initial';
     const useWorker = Boolean(this.worker) && !custom && this.rows.length > WORKER_ROW_MIN && !initial;
     if (!useWorker) {
-      const view = custom ? this.comparisonSort(applyFilter(this.store, this.filterModel), sort) : queryView(this.store, sort, this.filterModel);
+      const quick = this.quickText();
+      const filtered = applyQuickFilter(this.store, applyFilter(this.store, this.filterModel), quick);
+      const view = custom ? this.comparisonSort(filtered, sort) : queryView(this.store, sort, this.filterModel, quick);
       this.applyView(view, generation, reason);
       if (initial && this.worker && (sort.length > 0 || this.hasFilter())) {
         void this.workerReady.then(() => {
@@ -245,7 +250,7 @@ export class GridSession<TData = any> {
       return;
     }
     this.root.dataset.busy = '1';
-    void this.workerReady.then(() => this.worker?.query(sort, this.filterModel)).then((view) => {
+    void this.workerReady.then(() => this.worker?.query(sort, this.filterModel, this.quickText())).then((view) => {
       if (!view || generation !== this.generation || this.destroyed) return;
       this.root.dataset.computeMs = String(Math.round(view.computeMs));
       this.applyView(view, generation, reason);
@@ -308,8 +313,12 @@ export class GridSession<TData = any> {
       .map((leaf) => ({ colId: leaf.colId, direction: leaf.sort === 'desc' ? 'desc' : 'asc' }));
   }
 
+  private quickText(): string {
+    return this.options.quickFilterText ?? '';
+  }
+
   private hasFilter(): boolean {
-    return Object.values(this.filterModel).some((model) => model != null && modelActive(model));
+    return hasQuickFilter(this.quickText()) || Object.values(this.filterModel).some((model) => model != null && modelActive(model));
   }
 
   private layout(): void {
@@ -330,7 +339,7 @@ export class GridSession<TData = any> {
     this.leftWidth = placeBand(left, this.positions);
     this.centerWidth = placeBand(center, this.positions);
     this.rightWidth = placeBand(right, this.positions);
-    const totalHeight = this.view.count * this.rowHeight();
+    const totalHeight = this.scrollRowCount() * this.rowHeight();
     this.spacer.style.height = `${Math.min(Math.max(totalHeight, 1), MAX_SCROLL)}px`;
     this.spacer.style.width = `${Math.max(this.leftWidth + this.centerWidth + this.rightWidth, 1)}px`;
     const bar = this.viewport.offsetWidth - this.viewport.clientWidth;
@@ -338,6 +347,7 @@ export class GridSession<TData = any> {
     this.renderHeader();
     this.paint();
     this.renderEmpty();
+    this.renderPager();
   }
 
   private renderHeader(): void {
@@ -681,8 +691,10 @@ export class GridSession<TData = any> {
     this.canvas.style.height = `${height}px`;
     const top = this.virtualTop();
     const rowHeight = this.rowHeight();
-    const firstRow = Math.floor(top / rowHeight);
-    const rowOffset = top - firstRow * rowHeight;
+    const origin = this.displayOrigin();
+    const localFirst = Math.floor(top / rowHeight);
+    const firstRow = origin + localFirst;
+    const rowOffset = top - localFirst * rowHeight;
     const columns: PaintColumn[] = [];
     const { left, center, right } = bandsOf(this.leaves);
     for (const leaf of [...left, ...center, ...right]) {
@@ -698,7 +710,7 @@ export class GridSession<TData = any> {
       rowHeight,
       firstRow,
       rowOffset,
-      viewCount: this.view.count,
+      viewCount: origin + this.scrollRowCount(),
       leftWidth: this.leftWidth,
       rightWidth: this.rightWidth,
       scrollLeft: this.viewport.scrollLeft,
@@ -1104,7 +1116,8 @@ export class GridSession<TData = any> {
     const y = clientY - rect.top;
     if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
     const top = this.virtualTop();
-    const display = Math.floor((top + y) / this.rowHeight());
+    const display = this.displayOrigin() + Math.floor((top + y) / this.rowHeight());
+    if (display >= this.displayOrigin() + this.scrollRowCount()) return null;
     const source = this.sourceAt(display);
     if (source < 0) return null;
     const leaf = this.leafAtViewportX(x);
@@ -1129,7 +1142,7 @@ export class GridSession<TData = any> {
     const placed = this.positions.get(leaf.colId);
     if (!placed) return null;
     const top = this.virtualTop();
-    const y = display * this.rowHeight() - top;
+    const y = (display - this.displayOrigin()) * this.rowHeight() - top;
     let x = placed.x;
     if (leaf.pinned === 'right') x = this.viewport.clientWidth - this.rightWidth + placed.x;
     else if (leaf.pinned == null) x = this.leftWidth + placed.x - this.viewport.scrollLeft;
@@ -1137,10 +1150,18 @@ export class GridSession<TData = any> {
   }
 
   private ensureVisible(display: number, colId: string | null): void {
+    if (this.paginationOn()) {
+      const page = Math.floor(display / this.paginationPageSize());
+      if (page !== this.pageIndex) {
+        this.pageIndex = page;
+        this.viewport.scrollTop = 0;
+        this.layout();
+      }
+    }
     const rowHeight = this.rowHeight();
     const top = this.virtualTop();
     const viewHeight = this.viewport.clientHeight;
-    const rowTop = display * rowHeight;
+    const rowTop = (display - this.displayOrigin()) * rowHeight;
     if (rowTop < top) this.setVirtualTop(rowTop);
     else if (rowTop + rowHeight > top + viewHeight) this.setVirtualTop(rowTop + rowHeight - viewHeight);
     if (!colId) return;
@@ -1156,7 +1177,7 @@ export class GridSession<TData = any> {
   }
 
   private virtualTop(): number {
-    const total = this.view.count * this.rowHeight();
+    const total = this.scrollRowCount() * this.rowHeight();
     if (total <= MAX_SCROLL) return this.viewport.scrollTop;
     const maxScroll = this.viewport.scrollHeight - this.viewport.clientHeight;
     if (maxScroll <= 0) return 0;
@@ -1165,7 +1186,7 @@ export class GridSession<TData = any> {
   }
 
   private setVirtualTop(top: number): void {
-    const total = this.view.count * this.rowHeight();
+    const total = this.scrollRowCount() * this.rowHeight();
     const clamped = Math.max(0, top);
     if (total <= MAX_SCROLL) {
       this.viewport.scrollTop = clamped;
@@ -1181,8 +1202,9 @@ export class GridSession<TData = any> {
     for (const node of previous) node.remove();
     this.customText.clear();
     if (!this.leaves.some((leaf) => leaf.cellRenderer)) return;
-    const first = Math.max(0, Math.floor(this.virtualTop() / this.rowHeight()));
-    const last = Math.min(this.view.count, first + this.pageSize() + 1);
+    const origin = this.displayOrigin();
+    const first = origin + Math.max(0, Math.floor(this.virtualTop() / this.rowHeight()));
+    const last = Math.min(origin + this.scrollRowCount(), first + this.pageSize() + 1);
     for (let display = first; display < last; display++) {
       const source = this.sourceAt(display);
       if (source < 0) continue;
@@ -1227,8 +1249,9 @@ export class GridSession<TData = any> {
   private syncA11y(): void {
     const leaves = this.visibleLeaves();
     const headerRows = this.leaves.some((leaf) => leaf.groupId) ? 2 : 1;
-    const first = Math.max(0, Math.floor(this.virtualTop() / this.rowHeight()) - 1);
-    const last = Math.min(this.view.count, first + this.pageSize() + 3);
+    const origin = this.displayOrigin();
+    const first = Math.max(origin, origin + Math.floor(this.virtualTop() / this.rowHeight()) - 1);
+    const last = Math.min(origin + this.scrollRowCount(), first + this.pageSize() + 3);
     const fragment = document.createDocumentFragment();
     for (let display = first; display < last; display++) {
       const source = this.sourceAt(display);
@@ -1324,6 +1347,105 @@ export class GridSession<TData = any> {
     return this.options.rowHeight ?? 36;
   }
 
+  private paginationOn(): boolean {
+    return this.options.pagination === true;
+  }
+
+  private paginationPageSize(): number {
+    const size = this.options.paginationPageSize;
+    return typeof size === 'number' && size > 0 ? Math.floor(size) : 100;
+  }
+
+  private pageCount(): number {
+    if (!this.paginationOn()) return 1;
+    return Math.max(1, Math.ceil(this.view.count / this.paginationPageSize()));
+  }
+
+  private clampPage(): void {
+    if (!this.paginationOn()) {
+      this.pageIndex = 0;
+      return;
+    }
+    const last = this.pageCount() - 1;
+    if (this.pageIndex > last) this.pageIndex = last;
+    if (this.pageIndex < 0) this.pageIndex = 0;
+  }
+
+  private displayOrigin(): number {
+    if (!this.paginationOn() || this.view.count === 0) return 0;
+    this.clampPage();
+    return this.pageIndex * this.paginationPageSize();
+  }
+
+  private scrollRowCount(): number {
+    if (!this.paginationOn()) return this.view.count;
+    if (this.view.count === 0) return 0;
+    return Math.min(this.paginationPageSize(), this.view.count - this.displayOrigin());
+  }
+
+  private firstDisplayed(): number {
+    if (this.view.count === 0) return -1;
+    const origin = this.displayOrigin();
+    const local = Math.floor(this.virtualTop() / this.rowHeight());
+    return Math.min(origin + this.scrollRowCount() - 1, origin + local);
+  }
+
+  private lastDisplayed(): number {
+    if (this.view.count === 0) return -1;
+    const first = this.firstDisplayed();
+    const pageEnd = this.displayOrigin() + this.scrollRowCount() - 1;
+    const measured = this.viewport.clientHeight;
+    const fitsPage = this.paginationOn() && (measured === 0 || measured >= this.scrollRowCount() * this.rowHeight());
+    if (fitsPage) return pageEnd;
+    return Math.min(pageEnd, first + this.pageSize() - 1);
+  }
+
+  private goToPage(page: number): void {
+    if (!this.paginationOn()) return;
+    const last = this.pageCount() - 1;
+    const next = Math.min(last, Math.max(0, Math.floor(page)));
+    if (next === this.pageIndex) return;
+    this.pageIndex = next;
+    this.viewport.scrollTop = 0;
+    this.layout();
+    this.syncA11y();
+  }
+
+  private renderPager(): void {
+    if (!this.paginationOn()) {
+      this.pager.hidden = true;
+      this.pager.replaceChildren();
+      return;
+    }
+    this.pager.hidden = false;
+    const count = this.view.count;
+    const origin = this.displayOrigin();
+    const shown = this.scrollRowCount();
+    const from = count === 0 ? 0 : origin + 1;
+    const to = count === 0 ? 0 : origin + shown;
+    const pages = this.pageCount();
+    const range = el('span', 'og-pager-range');
+    range.textContent = `${from} to ${to} of ${count}`;
+    const label = el('span', 'og-pager-label');
+    label.textContent = `Page ${this.pageIndex + 1} of ${pages}`;
+    const button = (text: string, target: number, disabled: boolean) => {
+      const node = document.createElement('button');
+      node.type = 'button';
+      node.textContent = text;
+      node.disabled = disabled;
+      node.addEventListener('click', () => this.goToPage(target));
+      return node;
+    };
+    this.pager.replaceChildren(
+      range,
+      button('First', 0, this.pageIndex === 0),
+      button('Previous', this.pageIndex - 1, this.pageIndex === 0),
+      label,
+      button('Next', this.pageIndex + 1, this.pageIndex >= pages - 1),
+      button('Last', pages - 1, this.pageIndex >= pages - 1),
+    );
+  }
+
   private pageSize(): number {
     return Math.max(1, Math.floor(this.viewport.clientHeight / this.rowHeight()));
   }
@@ -1350,6 +1472,94 @@ export class GridSession<TData = any> {
     leaf.def.hide = leaf.hide;
     leaf.def.pinned = leaf.pinned;
     leaf.def.flex = leaf.flex ?? null;
+  }
+
+  private gridState(): GridState {
+    const columns = this.columnState();
+    const sortModel = columns
+      .filter((column) => column.sort === 'asc' || column.sort === 'desc')
+      .slice()
+      .sort((left, right) => (left.sortIndex ?? 0) - (right.sortIndex ?? 0))
+      .map((column) => ({ colId: column.colId, sort: column.sort === 'desc' ? 'desc' as const : 'asc' as const, type: 'default' }));
+    const hiddenColIds = columns.filter((column) => column.hide).map((column) => column.colId);
+    const leftColIds = columns.filter((column) => column.pinned === 'left').map((column) => column.colId);
+    const rightColIds = columns.filter((column) => column.pinned === 'right').map((column) => column.colId);
+    const filterModel = this.filterModel;
+    const state: GridState = {
+      version: '0.1.0',
+      columnOrder: { orderedColIds: columns.map((column) => column.colId) },
+      columnSizing: {
+        columnSizingModel: columns.map((column) => {
+          const item: { colId: string; width?: number; flex?: number } = { colId: column.colId, width: column.width };
+          if (column.flex != null) item.flex = column.flex;
+          return item;
+        }),
+      },
+    };
+    if (sortModel.length > 0) state.sort = { sortModel };
+    if (Object.keys(filterModel).length > 0) state.filter = { filterModel };
+    if (leftColIds.length > 0 || rightColIds.length > 0) state.columnPinning = { leftColIds, rightColIds };
+    if (hiddenColIds.length > 0) state.columnVisibility = { hiddenColIds };
+    if (this.paginationOn()) state.pagination = { page: this.pageIndex, pageSize: this.paginationPageSize() };
+    const selected = this.selectedIds();
+    if (selected.length > 0) state.rowSelection = selected;
+    return state;
+  }
+
+  private selectedIds(): string[] {
+    const ids: string[] = [];
+    for (let source = 0; source < this.rows.length; source++) {
+      if (this.selected[source] === 1) ids.push(this.rowId(source));
+    }
+    return ids;
+  }
+
+  private restoreState(state: GridState, ignore: (keyof GridState)[] | undefined): void {
+    const skip = new Set(ignore ?? []);
+    if (!skip.has('columnOrder') && state.columnOrder) {
+      this.applyColumnState({ state: state.columnOrder.orderedColIds.map((colId) => ({ colId })), applyOrder: true });
+    }
+    if (!skip.has('columnSizing') && state.columnSizing) {
+      this.api.setColumnWidths(
+        state.columnSizing.columnSizingModel
+          .filter((item) => item.width != null)
+          .map((item) => ({ key: item.colId, newWidth: item.width ?? 0 })),
+      );
+      for (const item of state.columnSizing.columnSizingModel) {
+        const leaf = this.leafById(item.colId);
+        if (!leaf || item.flex == null) continue;
+        leaf.flex = item.flex;
+        this.syncLeafDef(leaf);
+      }
+    }
+    if (!skip.has('columnPinning') && state.columnPinning) {
+      this.api.setColumnsPinned(this.leaves.map((leaf) => leaf.colId), null);
+      if (state.columnPinning.leftColIds.length > 0) this.api.setColumnsPinned(state.columnPinning.leftColIds, 'left');
+      if (state.columnPinning.rightColIds.length > 0) this.api.setColumnsPinned(state.columnPinning.rightColIds, 'right');
+    }
+    if (!skip.has('columnVisibility') && state.columnVisibility) {
+      const hidden = new Set(state.columnVisibility.hiddenColIds);
+      const shown = this.leaves.map((leaf) => leaf.colId).filter((colId) => !hidden.has(colId));
+      if (shown.length > 0) this.api.setColumnsVisible(shown, true);
+      if (hidden.size > 0) this.api.setColumnsVisible([...hidden], false);
+    }
+    if (!skip.has('sort') && state.sort) {
+      this.api.applyColumnState({
+        state: state.sort.sortModel.map((item, index) => ({ colId: item.colId, sort: item.sort, sortIndex: index })),
+        defaultState: { sort: null },
+      });
+    }
+    if (!skip.has('filter') && state.filter) this.api.setFilterModel(state.filter.filterModel ?? null);
+    if (!skip.has('pagination') && state.pagination) {
+      if (state.pagination.pageSize != null) this.api.setGridOption('paginationPageSize', state.pagination.pageSize);
+      if (state.pagination.page != null) this.goToPage(state.pagination.page);
+    }
+    if (!skip.has('rowSelection') && Array.isArray(state.rowSelection)) {
+      this.api.deselectAll();
+      const nodes = state.rowSelection.map((id) => this.api.getRowNode(id)).filter((node): node is NonNullable<typeof node> => node != null);
+      if (nodes.length > 0) this.api.setNodesSelected({ nodes, newValue: true });
+    }
+    this.layout();
   }
 
   private columnState(): ColumnState[] {
@@ -1571,6 +1781,13 @@ export class GridSession<TData = any> {
           session.layout();
         } else if (key === 'rowHeight' || key === 'headerHeight') session.layout();
         else if (key === 'loading') session.renderEmpty();
+        else if (key === 'quickFilterText') session.refresh('filter');
+        else if (key === 'pagination' || key === 'paginationPageSize') {
+          session.clampPage();
+          session.viewport.scrollTop = 0;
+          session.layout();
+          session.syncA11y();
+        }
       },
       updateGridOptions: (options) => {
         for (const [key, value] of Object.entries(options)) session.api.setGridOption(key as keyof GridOptions<TData>, value as never);
@@ -1667,17 +1884,25 @@ export class GridSession<TData = any> {
         const source = session.sourceAt(index);
         return source < 0 ? undefined : session.nodeFor(source);
       },
-      getFirstDisplayedRowIndex: () => (session.view.count === 0 ? -1 : Math.floor(session.virtualTop() / session.rowHeight())),
-      getLastDisplayedRowIndex: () => {
-        if (session.view.count === 0) return -1;
-        const last = Math.floor(session.virtualTop() / session.rowHeight()) + session.pageSize() - 1;
-        return Math.min(session.view.count - 1, Math.max(0, last));
-      },
+      getFirstDisplayedRowIndex: () => session.firstDisplayed(),
+      getLastDisplayedRowIndex: () => session.lastDisplayed(),
+      paginationIsLastPageFound: () => true,
+      paginationGetPageSize: () => session.paginationPageSize(),
+      paginationGetCurrentPage: () => (session.paginationOn() ? session.pageIndex : 0),
+      paginationGetTotalPages: () => (session.paginationOn() ? session.pageCount() : 1),
+      paginationGetRowCount: () => session.view.count,
+      paginationGoToNextPage: () => session.goToPage(session.pageIndex + 1),
+      paginationGoToPreviousPage: () => session.goToPage(session.pageIndex - 1),
+      paginationGoToFirstPage: () => session.goToPage(0),
+      paginationGoToLastPage: () => session.goToPage(session.pageCount() - 1),
+      paginationGoToPage: (page) => session.goToPage(page),
+      getState: () => session.gridState(),
+      setState: (state, ignore) => session.restoreState(state, ignore),
       forEachNode: (callback) => {
         for (let source = 0; source < session.rows.length; source++) callback(session.nodeFor(source), source);
       },
       forEachNodeAfterFilter: (callback) => {
-        const filtered = applyFilter(session.store, session.filterModel);
+        const filtered = applyQuickFilter(session.store, applyFilter(session.store, session.filterModel), session.quickText());
         for (let index = 0; index < filtered.count; index++) {
           const source = filtered.identity ? index : filtered.indices[index] ?? -1;
           if (source >= 0) callback(session.nodeFor(source), index);
@@ -1754,8 +1979,16 @@ export class GridSession<TData = any> {
       redrawRows: () => session.paint(),
       refreshHeader: () => session.renderHeader(),
       ensureIndexVisible: (index, position) => {
+        if (session.paginationOn() && index >= 0) {
+          const page = Math.floor(index / session.paginationPageSize());
+          if (page !== session.pageIndex) {
+            session.pageIndex = page;
+            session.viewport.scrollTop = 0;
+            session.layout();
+          }
+        }
         const rowHeight = session.rowHeight();
-        const rowTop = index * rowHeight;
+        const rowTop = (index - session.displayOrigin()) * rowHeight;
         const view = session.viewport.clientHeight;
         const top = session.virtualTop();
         if (position === 'top') session.setVirtualTop(rowTop);

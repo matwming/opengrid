@@ -386,6 +386,18 @@ export interface RowNodeTransaction<TData = any> {
   update: IRowNode<TData>[];
 }
 
+export interface GridState {
+  version?: string;
+  sort?: { sortModel: { colId: string; sort: 'asc' | 'desc'; type?: string }[] };
+  filter?: { filterModel?: FilterModel | null };
+  columnOrder?: { orderedColIds: string[] };
+  columnSizing?: { columnSizingModel: { colId: string; width?: number; flex?: number }[] };
+  columnPinning?: { leftColIds: string[]; rightColIds: string[] };
+  columnVisibility?: { hiddenColIds: string[] };
+  pagination?: { page?: number; pageSize?: number };
+  rowSelection?: string[];
+}
+
 export interface GridApi<TData = any> {
   destroy(): void;
   getGridId(): string;
@@ -420,6 +432,18 @@ export interface GridApi<TData = any> {
   getDisplayedRowAtIndex(index: number): IRowNode<TData> | undefined;
   getFirstDisplayedRowIndex(): number;
   getLastDisplayedRowIndex(): number;
+  paginationIsLastPageFound(): boolean;
+  paginationGetPageSize(): number;
+  paginationGetCurrentPage(): number;
+  paginationGetTotalPages(): number;
+  paginationGetRowCount(): number;
+  paginationGoToNextPage(): void;
+  paginationGoToPreviousPage(): void;
+  paginationGoToFirstPage(): void;
+  paginationGoToLastPage(): void;
+  paginationGoToPage(page: number): void;
+  getState(): GridState;
+  setState(state: GridState, propertiesToIgnore?: (keyof GridState)[]): void;
   forEachNode(callback: (rowNode: IRowNode<TData>, index: number) => void): void;
   forEachNodeAfterFilter(callback: (rowNode: IRowNode<TData>, index: number) => void): void;
   forEachNodeAfterFilterAndSort(callback: (rowNode: IRowNode<TData>, index: number) => void): void;

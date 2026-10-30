@@ -1,5 +1,5 @@
 import type { FilterModel, JoinOperator, ProvidedFilterModel, SimpleFilterModel, SortDirection } from './types';
-import { cellRaw, type ColumnStore, type Vector, sortableFloatWords } from './store';
+import { cellRaw, displayText, type ColumnStore, type Vector, sortableFloatWords } from './store';
 
 export interface SortKey {
   colId: string;
@@ -14,8 +14,8 @@ export interface ViewResult {
 
 const EMPTY = new Uint32Array(0);
 
-export function queryView(store: ColumnStore, sort: readonly SortKey[], filter: FilterModel | null): ViewResult {
-  const filtered = applyFilter(store, filter);
+export function queryView(store: ColumnStore, sort: readonly SortKey[], filter: FilterModel | null, quick?: string | null): ViewResult {
+  const filtered = applyQuickFilter(store, applyFilter(store, filter), quick);
   if (sort.length === 0) return filtered;
   const indices = filtered.identity ? identityIndices(filtered.count) : filtered.indices;
   sortIndices(store, indices, filtered.count, sort);
@@ -47,6 +47,25 @@ export function applyFilter(store: ColumnStore, filter: FilterModel | null): Vie
       }
     }
     if (pass) indices[count++] = row;
+  }
+  return { indices, count, identity: false };
+}
+
+export function hasQuickFilter(text: string | null | undefined): boolean {
+  return text != null && text.trim() !== '';
+}
+
+export function applyQuickFilter(store: ColumnStore, view: ViewResult, text: string | null | undefined): ViewResult {
+  if (!hasQuickFilter(text)) return view;
+  const tokens = text!.trim().toLowerCase().split(/\s+/);
+  const columns = [...store.columns.values()];
+  const indices = new Uint32Array(view.count);
+  let count = 0;
+  for (let index = 0; index < view.count; index++) {
+    const row = view.identity ? index : view.indices[index] ?? -1;
+    if (row < 0) continue;
+    const haystack = columns.map((vector) => displayText(vector, row).toLowerCase());
+    if (tokens.every((token) => haystack.some((value) => value.includes(token)))) indices[count++] = row;
   }
   return { indices, count, identity: false };
 }

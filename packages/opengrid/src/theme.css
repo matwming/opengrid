@@ -11,6 +11,7 @@
 }
 
 .og-root {
+  flex: 1;
   --og-bg: #f4efe6;
   --og-stripe: #ebe4d6;
   --og-text: #241c16;
@@ -26,7 +27,6 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 100%;
   min-height: 0;
   background: var(--og-bg);
   color: var(--og-text);
@@ -216,6 +216,33 @@
   background: white;
   border: 1px solid #e4d8c8;
   padding: 4px 6px;
+}
+
+.og-pager {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  background: var(--og-header);
+  color: var(--og-header-text);
+  font-size: 13px;
+}
+
+.og-pager[hidden] {
+  display: none;
+}
+
+.og-pager button {
+  font: inherit;
+  color: var(--og-text);
+  background: var(--og-bg);
+  border: 1px solid var(--og-line);
+  padding: 2px 8px;
+}
+
+.og-pager button:disabled {
+  color: var(--og-muted);
 }
 
 .og-empty {

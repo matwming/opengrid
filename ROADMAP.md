@@ -10,7 +10,7 @@ Status words mean the following.
 
 | Feature | Doc | Status |
 | --- | --- | --- |
-| Client-side row model | [Row models](https://www.ag-grid.com/javascript-data-grid/row-models/) | partial. The grid loads `rowData`, sorts, and filters. `applyTransaction` is not started. Above 32,768 rows, sort and filter finish on `modelUpdated`. A read in the same turn still sees the previous view. |
+| Client-side row model | [Row models](https://www.ag-grid.com/javascript-data-grid/row-models/) | partial. The grid loads `rowData`, sorts, filters, and applies `applyTransaction`. Above 32,768 rows, sort and filter finish on `modelUpdated`. A read in the same turn still sees the previous view. |
 | Row and column virtualisation | [DOM virtualisation](https://www.ag-grid.com/javascript-data-grid/dom-virtualisation/) | done |
 | Sort | [Row sorting](https://www.ag-grid.com/javascript-data-grid/row-sorting/) | partial. Built-in sort matches 36.2.0, including nulls and stable ties. A custom `comparator` runs on the main thread. |
 | Text, number, and date filters | [Filtering](https://www.ag-grid.com/javascript-data-grid/filtering/) | partial. Simple filters, `inRange`, blank, and `AND`/`OR` conditions match the 36.2.0 probe. Floating filters and custom filter components are not started. |
@@ -31,10 +31,10 @@ Status words mean the following.
 | Feature | Doc | Status |
 | --- | --- | --- |
 | Infinite row model | [Infinite scrolling](https://www.ag-grid.com/javascript-data-grid/infinite-scrolling/) | not started |
-| Quick filter | [Filtering](https://www.ag-grid.com/javascript-data-grid/filtering/) | not started |
+| Quick filter | [Filtering](https://www.ag-grid.com/javascript-data-grid/filtering/) | partial. The default search matches `ag-grid-community` 36.2.0. Words are case-insensitive and a row must match every word. `quickFilterParser` and `getQuickFilterText` are not started. |
 | Row dragging | [Row dragging](https://www.ag-grid.com/javascript-data-grid/row-dragging/) | not started |
-| Pagination | [Row pagination](https://www.ag-grid.com/javascript-data-grid/row-pagination/) | not started |
-| State save and restore | [Grid state](https://www.ag-grid.com/javascript-data-grid/grid-state/) | not started |
+| Pagination | [Row pagination](https://www.ag-grid.com/javascript-data-grid/row-pagination/) | partial. Client-side page size, current page, total pages, and `paginationGoToPage` match 36.2.0. `getDisplayedRowCount` stays the full filtered count. `paginationAutoPageSize` is not started. |
+| State save and restore | [Grid state](https://www.ag-grid.com/javascript-data-grid/grid-state/) | partial. `getState` and `setState` round-trip sort, filter, column order, width, pin, visibility, page, and row selection against 36.2.0. Scroll, focus, and group state are not started. |
 | Vue wrapper | [Vue getting started](https://www.ag-grid.com/vue-data-grid/getting-started/) | not started |
 | Angular wrapper | [Angular getting started](https://www.ag-grid.com/angular-data-grid/getting-started/) | not started |
 

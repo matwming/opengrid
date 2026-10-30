@@ -69,9 +69,9 @@ export class WorkerEngine {
     });
   }
 
-  query(sort: readonly SortKey[], filter: FilterModel | null): Promise<ViewResult & { computeMs: number }> {
+  query(sort: readonly SortKey[], filter: FilterModel | null, quick?: string | null): Promise<ViewResult & { computeMs: number }> {
     const id = this.seq++;
-    return this.send(id, { op: 'query', id, sort, filter }).then((reply) => {
+    return this.send(id, { op: 'query', id, sort, filter, quick }).then((reply) => {
       if (reply.op === 'error' || reply.count == null) throw new Error(reply.message ?? 'worker query failed');
       const computeMs = reply.computeMs ?? 0;
       if (reply.identity) return { indices: new Uint32Array(0), count: reply.count, identity: true, computeMs };

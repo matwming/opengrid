@@ -19,6 +19,7 @@ interface QueryMessage {
   id: number;
   sort: SortKey[];
   filter: FilterModel | null;
+  quick?: string | null;
 }
 
 interface PatchMessage {
@@ -63,7 +64,7 @@ self.onmessage = (event: MessageEvent<Inbound>) => {
     return;
   }
   const started = performance.now();
-  const view = queryView(store, message.sort, message.filter);
+  const view = queryView(store, message.sort, message.filter, message.quick);
   const computeMs = performance.now() - started;
   if (view.identity) {
     post({ op: 'view', id: message.id, count: view.count, identity: true, computeMs });
