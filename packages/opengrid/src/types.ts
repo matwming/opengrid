@@ -216,6 +216,9 @@ export interface GridOptions<TData = any> {
   pivotMode?: boolean;
   treeData?: boolean;
   getDataPath?: (data: TData) => string[];
+  masterDetail?: boolean;
+  isRowMaster?: (data: TData) => boolean;
+  detailCellRenderer?: (params: { data: TData | undefined }) => string;
   domLayout?: 'normal' | 'autoHeight' | 'print';
   theme?: string;
   ensureDomOrder?: boolean;

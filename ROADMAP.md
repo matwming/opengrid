@@ -46,7 +46,7 @@ Status words mean the following.
 | Aggregation | [Aggregation](https://www.ag-grid.com/javascript-data-grid/aggregation/) | partial. Group rows expose `aggData` for `sum`, `min`, `max`, `count`, and `avg`. Count ignores values that are not numbers. Not compared with Enterprise. |
 | Pivot | [Pivoting](https://www.ag-grid.com/javascript-data-grid/pivoting/) | partial. `pivotMode` with one `pivot` column and one `aggFunc` builds a column per pivot key. The group row `aggData` holds that key's aggregate. Leaf rows stay hidden. Not compared with Enterprise. |
 | Tree data | [Tree data](https://www.ag-grid.com/javascript-data-grid/tree-data/) | partial. `treeData` with `getDataPath` nests rows. A path that has children is a group. `setExpanded(false)` hides that branch. Not compared with Enterprise. |
-| Master detail | [Master detail](https://www.ag-grid.com/javascript-data-grid/master-detail/) | not started |
+| Master detail | [Master detail](https://www.ag-grid.com/javascript-data-grid/master-detail/) | partial. `masterDetail` plus `setExpanded(true)` inserts a detail row. `isRowMaster` can refuse a row. `detailCellRenderer` may return a string. Not compared with Enterprise. |
 | Set filter | [Set filter](https://www.ag-grid.com/javascript-data-grid/filter-set/) | not started |
 | Multi filter | [Multi filter](https://www.ag-grid.com/javascript-data-grid/filter-multi/) | not started |
 | Advanced filter | [Advanced filter](https://www.ag-grid.com/javascript-data-grid/filter-advanced/) | not started |

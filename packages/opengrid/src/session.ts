@@ -47,6 +47,7 @@ export class GridSession<TData = any> {
   private flat: FlatRow[] | null = null;
   private groupExpanded = new Map<string, boolean>();
   private groupNodes = new Map<string, GroupNode<TData>>();
+  private detailOpen = new Set<number>();
   private reverse: Uint32Array | null = null;
   private selected = new Uint8Array(0);
   private selectedList: number[] = [];
@@ -409,7 +410,7 @@ export class GridSession<TData = any> {
     this.syncGroupColumns();
     const groups = this.groupLeaves();
     const tree = Boolean(this.options.treeData && this.options.getDataPath);
-    if (groups.length === 0 && !tree) {
+    if (groups.length === 0 && !tree && !this.options.masterDetail) {
       this.flat = null;
       this.view = this.leafView;
       return;
@@ -418,6 +419,11 @@ export class GridSession<TData = any> {
     for (let index = 0; index < this.leafView.count; index++) {
       const source = this.leafView.identity ? index : this.leafView.indices[index] ?? -1;
       if (source >= 0) sources.push(source);
+    }
+    if (groups.length === 0 && !tree && this.options.masterDetail) {
+      this.flat = this.masterFlat(sources);
+      this.view = { indices: new Uint32Array(0), count: this.flat.length, identity: false };
+      return;
     }
     const expanded = this.options.pivotMode ? -2 : this.options.groupDefaultExpanded ?? 0;
     const isExpanded = (id: string, level: number) => {
@@ -444,6 +450,19 @@ export class GridSession<TData = any> {
     }
     this.syncPivotColumns(sources);
     this.view = { indices: new Uint32Array(0), count: this.flat.length, identity: false };
+  }
+
+  private masterFlat(sources: readonly number[]): FlatRow[] {
+    const out: FlatRow[] = [];
+    for (const source of sources) {
+      out.push({ kind: 'leaf', source, level: 0 });
+      if (!this.detailOpen.has(source)) continue;
+      const row = this.rows[source];
+      if (this.options.isRowMaster && row !== undefined && !this.options.isRowMaster(row)) continue;
+      const text = this.options.detailCellRenderer?.({ data: row }) ?? '';
+      out.push({ kind: 'group', id: `detail:${source}`, key: text, level: 1, expanded: false, leafCount: 0, leafSources: [] });
+    }
+    return out;
   }
 
   private ensureAutoGroup(): void {
@@ -538,6 +557,10 @@ export class GridSession<TData = any> {
   private groupLabel(display: number, colId: string): string {
     const item = this.flat?.[display];
     if (!item || item.kind !== 'group') return '';
+    if (item.id.startsWith('detail:')) {
+      const first = this.visibleLeaves().find((leaf) => !leaf.selectionColumn);
+      return first?.colId === colId ? item.key : '';
+    }
     if (colId !== AUTO_GROUP_COL_ID) {
       const value = item.leafSources.length ? this.groupAgg(item, colId) : null;
       return value == null ? '' : String(value);
@@ -2550,7 +2573,6 @@ class RowNode<TData> implements IRowNode<TData> {
   readonly group = false;
   readonly rowPinned = null;
   readonly key = null;
-  readonly expanded = false;
   readonly allChildrenCount = null;
   readonly aggData = null;
   private readonly listeners = new Map<string, Set<(event: unknown) => void>>();
@@ -2571,6 +2593,10 @@ class RowNode<TData> implements IRowNode<TData> {
 
   get displayed(): boolean {
     return this.rowIndex != null;
+  }
+
+  get expanded(): boolean {
+    return this.session['detailOpen'].has(this.sourceIndex);
   }
 
   get selected(): boolean {
@@ -2594,7 +2620,17 @@ class RowNode<TData> implements IRowNode<TData> {
     this.session['setSourceSelected'](this.sourceIndex, newValue, clearSelection, source ?? 'api');
   }
 
-  setExpanded(): void {}
+  setExpanded(expanded: boolean): void {
+    const options = this.session['options'];
+    if (!options.masterDetail) return;
+    if (options.isRowMaster && this.data !== undefined && !options.isRowMaster(this.data)) return;
+    if (expanded) this.session['detailOpen'].add(this.sourceIndex);
+    else this.session['detailOpen'].delete(this.sourceIndex);
+    this.session['attachGroups']();
+    this.session['reverse'] = null;
+    this.session['layout']();
+    this.session['syncA11y']();
+  }
 
   isSelected(): boolean {
     return this.selected;
