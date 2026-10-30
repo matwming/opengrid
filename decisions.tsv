@@ -29,3 +29,4 @@ ts	phase	decision	why	evidence	result
 2026-10-30T23:05:23Z	detail	Insert a detail row under an expanded master and ignore a row isRowMaster rejects	The detail test shows note a between a and b, and b stays closed	packages/opengrid/src/detail.test.ts	tests green
 2026-10-30T23:06:28Z	set	Keep rows whose text is listed in a set filter, and keep none when the list is empty	The engine test expects Nora and Bo, and an empty list matches nobody	packages/opengrid/src/engine.test.ts	tests green
 2026-10-30T23:09:45Z	range	Remember a cell range and clear it	The range test reads rows 0 to 1 on the name column, then getCellRanges returns null	packages/opengrid/src/range.test.ts	tests green
+2026-10-30T23:11:20Z	clipboard	Copy a range as tab-separated text and paste the first row back	The clipboard test copies ADA and BEA, then paste writes Cara and the number 9	packages/opengrid/src/clipboard.test.ts	tests green

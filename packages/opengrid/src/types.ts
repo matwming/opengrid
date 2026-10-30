@@ -217,6 +217,9 @@ export interface GridOptions<TData = any> {
   treeData?: boolean;
   getDataPath?: (data: TData) => string[];
   cellSelection?: boolean;
+  sendToClipboard?: (params: { data: string }) => void;
+  processCellForClipboard?: (params: { value: string; column: Column }) => string;
+  processCellFromClipboard?: (params: { value: string; column: Column }) => unknown;
   masterDetail?: boolean;
   isRowMaster?: (data: TData) => boolean;
   detailCellRenderer?: (params: { data: TData | undefined }) => string;
@@ -532,6 +535,7 @@ export interface GridApi<TData = any> {
   addCellRange(params: CellRangeParams): void;
   getCellRanges(): CellRange[] | null;
   clearCellSelection(): void;
+  copySelectedRangeToClipboard(): void;
   startEditingCell(params: StartEditingCellParams): void;
   stopEditing(cancel?: boolean): void;
   getEditingCells(): { rowIndex: number; colId: string; rowPinned: 'top' | 'bottom' | null }[];

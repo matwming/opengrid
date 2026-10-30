@@ -51,7 +51,7 @@ Status words mean the following.
 | Multi filter | [Multi filter](https://www.ag-grid.com/javascript-data-grid/filter-multi/) | not started |
 | Advanced filter | [Advanced filter](https://www.ag-grid.com/javascript-data-grid/filter-advanced/) | not started |
 | Range selection | [Cell selection](https://www.ag-grid.com/javascript-data-grid/cell-selection/) | partial. `addCellRange` remembers the rows and columns. `getCellRanges` reads them back. `clearCellSelection` drops them. Dragging a range with the mouse is not started. Not compared with Enterprise. |
-| Clipboard | [Clipboard](https://www.ag-grid.com/javascript-data-grid/clipboard/) | not started |
+| Clipboard | [Clipboard](https://www.ag-grid.com/javascript-data-grid/clipboard/) | partial. `copySelectedRangeToClipboard` sends tab-separated text through `sendToClipboard`. `processCellForClipboard` can change each cell. A paste event writes the text back into the range and keeps a number as a number. Not compared with Enterprise. |
 | Fill handle | [Fill handle](https://www.ag-grid.com/javascript-data-grid/cell-selection-fill-handle/) | not started |
 | Excel export | [Excel export](https://www.ag-grid.com/javascript-data-grid/excel-export/) | not started |
 | Server-side row model | [Server-side model](https://www.ag-grid.com/javascript-data-grid/server-side-model/) | not started |

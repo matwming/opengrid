@@ -151,6 +151,10 @@ function App() {
                 <td><code>addCellRange</code> 记下起止行和列。<code>getCellRanges</code> 能读回来。<code>clearCellSelection</code> 清空。还不能用鼠标拖出范围。没有和企业版并排对照。</td>
               </tr>
               <tr>
+                <td>剪贴板</td>
+                <td><code>copySelectedRangeToClipboard</code> 把范围做成制表符文本，交给 <code>sendToClipboard</code>。<code>processCellForClipboard</code> 可以改每个格子。粘贴会写回范围，数字列仍是数字。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -166,7 +170,7 @@ function App() {
           <h2>还没做</h2>
           <ul>
             <li>多重过滤、高级过滤。</li>
-            <li>剪贴板、填充柄、Excel 导出。</li>
+            <li>填充柄、Excel 导出。</li>
             <li>服务端行模型、视口行模型、集成图表、迷你图、状态栏、侧边栏、工具面板。</li>
           </ul>
         </section>

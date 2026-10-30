@@ -145,6 +145,12 @@ export class GridSession<TData = any> {
     this.viewport.addEventListener('pointerdown', (event) => this.onRowDragDown(event));
     this.viewport.addEventListener('dblclick', (event) => this.onBodyDoubleClick(event));
     this.root.addEventListener('keydown', (event) => this.onKey(event));
+    this.root.addEventListener('paste', (event) => {
+      const text = event.clipboardData?.getData('text/plain');
+      if (!text || this.cellRanges.length === 0) return;
+      event.preventDefault();
+      this.pasteClipboard(text);
+    });
     this.root.addEventListener('focus', () => {
       if (this.view.count > 0) this.setFocus(this.focusRow, this.focusCol, false);
     });
@@ -1650,6 +1656,48 @@ export class GridSession<TData = any> {
     return `${this.id}-r${display}-c${col}`;
   }
 
+  private clipboardText(): string {
+    const lines: string[] = [];
+    for (const range of this.cellRanges) {
+      const start = Math.min(range.rowStartIndex, range.rowEndIndex);
+      const end = Math.max(range.rowStartIndex, range.rowEndIndex);
+      for (let row = start; row <= end; row++) {
+        const source = this.sourceAt(row);
+        const cells = range.columns.map((colId) => {
+          const leaf = this.leafByKey(colId);
+          if (!leaf || source < 0) return '';
+          const value = this.textFor(source, leaf);
+          const next = this.options.processCellForClipboard?.({ value, column: columnFacade(leaf) });
+          return next == null ? value : String(next);
+        });
+        lines.push(cells.join('\t'));
+      }
+    }
+    return lines.join('\n');
+  }
+
+  private pasteClipboard(text: string): void {
+    const range = this.cellRanges[0];
+    if (!range) return;
+    const start = Math.min(range.rowStartIndex, range.rowEndIndex);
+    const rows = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    rows.forEach((line, rowOffset) => {
+      const source = this.sourceAt(start + rowOffset);
+      if (source < 0) return;
+      line.split('\t').forEach((cell, colOffset) => {
+        const colId = range.columns[colOffset];
+        const leaf = colId ? this.leafByKey(colId) : undefined;
+        if (!leaf) return;
+        const parsed = this.options.processCellFromClipboard?.({ value: cell, column: columnFacade(leaf) }) ?? cell;
+        const current = this.readSource(source, leaf);
+        const next = typeof current === 'number' && typeof parsed === 'string' && parsed !== '' && !Number.isNaN(Number(parsed)) ? Number(parsed) : parsed;
+        this.writeSource(source, leaf, next, 'clipboard');
+      });
+    });
+    this.paint();
+    this.syncA11y();
+  }
+
   private sourceAt(display: number): number {
     if (this.flat) {
       const item = this.flat[display];
@@ -2412,6 +2460,9 @@ export class GridSession<TData = any> {
       },
       clearCellSelection: () => {
         session.cellRanges = [];
+      },
+      copySelectedRangeToClipboard: () => {
+        session.options.sendToClipboard?.({ data: session.clipboardText() });
       },
       startEditingCell: (params) => {
         const leaf = session.leafByKey(params.colKey);
