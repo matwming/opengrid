@@ -32,3 +32,4 @@ ts	phase	decision	why	evidence	result
 2026-10-30T23:11:20Z	clipboard	Copy a range as tab-separated text and paste the first row back	The clipboard test copies ADA and BEA, then paste writes Cara and the number 9	packages/opengrid/src/clipboard.test.ts	tests green
 2026-10-30T23:12:22Z	fill	Copy the source cell down the rows covered by the fill handle	The fill test writes 5 into the qty cells on rows 1 and 2 and extends the range	packages/opengrid/src/fill.test.ts	tests green
 2026-10-30T23:13:34Z	excel	Return an xlsx workbook that contains the header and a cell	The excel test reads a PK zip whose sheet text includes Ada	packages/opengrid/src/excel.test.ts	tests green
+2026-10-30T23:14:34Z	server	Load a server-side block through success rowData and rowCount	The server test shows Ada and Bea and stops at two rows	packages/opengrid/src/server.test.ts	tests green

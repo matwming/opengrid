@@ -99,7 +99,7 @@ export class GridSession<TData = any> {
   private a11yTimer = 0;
 
   constructor(host: HTMLElement, options: GridOptions<TData>) {
-    if (options.rowModelType && options.rowModelType !== 'clientSide' && options.rowModelType !== 'infinite') {
+    if (options.rowModelType && options.rowModelType !== 'clientSide' && options.rowModelType !== 'infinite' && options.rowModelType !== 'serverSide') {
       throw new Error(`opengrid: rowModelType "${options.rowModelType}" is not in this build`);
     }
     this.host = host;
@@ -169,7 +169,7 @@ export class GridSession<TData = any> {
     }
     this.readColors();
     this.rebuildColumns(options.rowData ?? []);
-    if (this.infiniteMode()) this.bootInfinite();
+    if (this.remoteMode()) this.bootInfinite();
     else this.loadRows(options.rowData ?? [], true);
     this.emit('gridReady', {});
   }
@@ -259,8 +259,12 @@ export class GridSession<TData = any> {
     return this.options.rowModelType === 'infinite';
   }
 
+  private remoteMode(): boolean {
+    return this.options.rowModelType === 'infinite' || this.options.rowModelType === 'serverSide';
+  }
+
   private bootInfinite(): void {
-    const known = this.options.datasource?.rowCount;
+    const known = this.options.rowModelType === 'serverSide' ? undefined : this.options.datasource?.rowCount;
     this.infiniteKnown = typeof known === 'number';
     const count = known ?? this.options.infiniteInitialRowCount ?? 1;
     this.rows = new Array(count);
@@ -289,7 +293,9 @@ export class GridSession<TData = any> {
   }
 
   private ensureInfinite(): void {
-    if (!this.infiniteMode() || !this.options.datasource || this.view.count <= 0) return;
+    if (!this.remoteMode() || this.view.count <= 0) return;
+    if (this.options.rowModelType === 'infinite' && !this.options.datasource) return;
+    if (this.options.rowModelType === 'serverSide' && !this.options.serverSideDatasource) return;
     const size = Math.max(1, this.options.cacheBlockSize ?? 100);
     const rowHeight = this.rowHeight();
     const first = Math.max(0, Math.floor(this.virtualTop() / rowHeight));
@@ -305,13 +311,25 @@ export class GridSession<TData = any> {
   }
 
   private loadInfiniteBlock(block: number, size: number): void {
-    const datasource = this.options.datasource;
+    const datasource = this.options.rowModelType === 'serverSide' ? this.options.serverSideDatasource : this.options.datasource;
     if (!datasource || this.infiniteBlocks.has(block)) return;
     const start = block * size;
     const end = start + size;
     const generation = this.infiniteGen;
     this.infiniteBlocks.set(block, 'loading');
-    datasource.getRows({
+    if (this.options.rowModelType === 'serverSide' && this.options.serverSideDatasource) {
+      this.options.serverSideDatasource.getRows({
+        request: { startRow: start, endRow: end, sortModel: this.infiniteSortModel(), filterModel: this.filterModel },
+        success: ({ rowData, rowCount }) => this.infiniteSuccess(generation, start, end, rowData, rowCount),
+        fail: () => {
+          if (generation !== this.infiniteGen) return;
+          this.infiniteBlocks.delete(block);
+        },
+      });
+      return;
+    }
+    if (!this.options.datasource) return;
+    this.options.datasource.getRows({
       startRow: start,
       endRow: end,
       successCallback: (rows, lastRow) => this.infiniteSuccess(generation, start, end, rows, lastRow),
@@ -365,7 +383,7 @@ export class GridSession<TData = any> {
   }
 
   private refresh(reason: 'initial' | 'sort' | 'filter' | 'data' | 'edit'): void {
-    if (this.infiniteMode()) {
+    if (this.remoteMode()) {
       if (reason !== 'initial') this.reloadInfinite(true);
       return;
     }
@@ -1085,7 +1103,7 @@ export class GridSession<TData = any> {
 
   private onScroll(): void {
     this.syncHeaderScroll();
-    if (this.infiniteMode()) this.ensureInfinite();
+    if (this.remoteMode()) this.ensureInfinite();
     if (this.paintFrameId) return;
     this.paintFrameId = requestAnimationFrame(() => {
       this.paintFrameId = 0;

@@ -163,6 +163,10 @@ function App() {
                 <td><code>getDataAsExcel</code> 返回 <code>.xlsx</code>。工作表里有表头和单元格文字。还没有样式、多表和导出弹窗。没有和企业版并排对照。</td>
               </tr>
               <tr>
+                <td>服务端行模型</td>
+                <td><code>serverSideDatasource.getRows</code> 收到起止行、排序和过滤。<code>success</code> 把 <code>rowData</code> 和 <code>rowCount</code> 填进这一块。还没有服务端分组和透视。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -178,7 +182,7 @@ function App() {
           <h2>还没做</h2>
           <ul>
             <li>多重过滤、高级过滤。</li>
-            <li>服务端行模型、视口行模型、集成图表、迷你图、状态栏、侧边栏、工具面板。</li>
+            <li>视口行模型、集成图表、迷你图、状态栏、侧边栏、工具面板。</li>
             <li>集合过滤弹窗。</li>
           </ul>
         </section>

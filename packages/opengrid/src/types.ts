@@ -181,6 +181,21 @@ export interface IDatasource<TData = any> {
   destroy?: () => void;
 }
 
+export interface IServerSideGetRowsRequest {
+  startRow: number;
+  endRow: number;
+  sortModel: { colId: string; sort: 'asc' | 'desc' }[];
+  filterModel: FilterModel | null;
+}
+
+export interface IServerSideDatasource<TData = any> {
+  getRows: (params: {
+    request: IServerSideGetRowsRequest;
+    success: (params: { rowData: TData[]; rowCount?: number }) => void;
+    fail: () => void;
+  }) => void;
+}
+
 export interface GridOptions<TData = any> {
   columnDefs?: (ColDef<TData> | ColGroupDef<TData>)[] | null;
   defaultColDef?: ColDef<TData>;
@@ -191,6 +206,7 @@ export interface GridOptions<TData = any> {
   suppressRowClickSelection?: boolean;
   rowModelType?: RowModelType;
   datasource?: IDatasource<TData>;
+  serverSideDatasource?: IServerSideDatasource<TData>;
   cacheBlockSize?: number;
   cacheOverflowSize?: number;
   infiniteInitialRowCount?: number;
