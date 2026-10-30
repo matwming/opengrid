@@ -1,7 +1,8 @@
-import { bandsOf, buildLeaves, columnFacade, groupRuns, selectionConfig, visibleLeaves, type Leaf, type SelectionConfig } from './columns';
+import { bandsOf, buildLeaves, columnFacade, groupRuns, selectionConfig, visibleLeaves, AUTO_GROUP_COL_ID, autoGroupLeaf, type Leaf, type SelectionConfig } from './columns';
 import { encodeCsv, encodeCsvRaw, downloadCsv } from './csv';
 import { WORKER_ROW_MIN, WorkerEngine } from './engine-client';
 import { applyFilter, applyQuickFilter, hasQuickFilter, queryView, type SortKey, type ViewResult } from './engine';
+import { flattenGroups, type FlatRow, type GroupFlat } from './group';
 import { FALLBACK_COLORS, paintFrame, type PaintColors, type PaintColumn } from './paint';
 import { buildStore, cellRaw, formatDay, readPath, sharedMemoryAvailable, writePath, writeVector, type ColumnStore, type StoreField } from './store';
 import type {
@@ -42,6 +43,10 @@ export class GridSession<TData = any> {
   private selection: SelectionConfig<TData> = selectionConfig({});
   private store: ColumnStore = { rowCount: 0, columns: new Map() };
   private view: ViewResult = { indices: new Uint32Array(0), count: 0, identity: true };
+  private leafView: ViewResult = { indices: new Uint32Array(0), count: 0, identity: true };
+  private flat: FlatRow[] | null = null;
+  private groupExpanded = new Map<string, boolean>();
+  private groupNodes = new Map<string, GroupNode<TData>>();
   private reverse: Uint32Array | null = null;
   private selected = new Uint8Array(0);
   private selectedList: number[] = [];
@@ -384,9 +389,108 @@ export class GridSession<TData = any> {
     });
   }
 
+  private groupLeaves(): Leaf<TData>[] {
+    return this.leaves
+      .filter((leaf) => leaf.def.rowGroup && leaf.colId !== AUTO_GROUP_COL_ID)
+      .slice()
+      .sort((left, right) => (left.def.rowGroupIndex ?? 0) - (right.def.rowGroupIndex ?? 0));
+  }
+
+  private groupValue(source: number, colId: string): string {
+    const leaf = this.leafById(colId);
+    if (!leaf) return '';
+    const value = this.readSource(source, leaf);
+    if (value == null) return '';
+    if (leaf.kind === 'date' && typeof value === 'number') return formatDay(value);
+    return String(value);
+  }
+
+  private attachGroups(): void {
+    this.syncGroupColumns();
+    const groups = this.groupLeaves();
+    if (groups.length === 0) {
+      this.flat = null;
+      this.view = this.leafView;
+      return;
+    }
+    const sources: number[] = [];
+    for (let index = 0; index < this.leafView.count; index++) {
+      const source = this.leafView.identity ? index : this.leafView.indices[index] ?? -1;
+      if (source >= 0) sources.push(source);
+    }
+    const expanded = this.options.groupDefaultExpanded ?? 0;
+    this.flat = flattenGroups(
+      sources,
+      (source, colId) => this.groupValue(source, colId),
+      groups.map((leaf) => leaf.colId),
+      (id, level) => {
+        const stored = this.groupExpanded.get(id);
+        if (stored != null) return stored;
+        if (expanded < 0) return true;
+        return level < expanded;
+      },
+    );
+    this.view = { indices: new Uint32Array(0), count: this.flat.length, identity: false };
+  }
+
+  private syncGroupColumns(): void {
+    for (const leaf of this.leaves) {
+      if (leaf.groupedHide) leaf.hide = false;
+      leaf.groupedHide = false;
+    }
+    this.leaves = this.leaves.filter((leaf) => leaf.colId !== AUTO_GROUP_COL_ID);
+    const groups = this.groupLeaves();
+    if (groups.length === 0) return;
+    for (const leaf of groups) {
+      leaf.hide = true;
+      leaf.groupedHide = true;
+    }
+    const header = this.options.autoGroupColumnDef?.headerName ?? 'Group';
+    const width = this.options.autoGroupColumnDef?.width ?? 220;
+    const auto = autoGroupLeaf<TData>(header, width);
+    const selection = this.leaves.findIndex((leaf) => leaf.selectionColumn);
+    this.leaves.splice(selection + 1, 0, auto);
+  }
+
+  private toggleGroup(display: number): void {
+    const item = this.flat?.[display];
+    if (!item || item.kind !== 'group') return;
+    this.groupExpanded.set(item.id, !item.expanded);
+    this.attachGroups();
+    this.reverse = null;
+    this.layout();
+    this.syncA11y();
+  }
+
+  private groupNode(item: GroupFlat): GroupNode<TData> {
+    const cached = this.groupNodes.get(item.id);
+    if (cached) {
+      cached.sync(item);
+      return cached;
+    }
+    const node = new GroupNode(this, item);
+    this.groupNodes.set(item.id, node);
+    return node;
+  }
+
+  private displayedNode(index: number): IRowNode<TData> | undefined {
+    const item = this.flat?.[index];
+    if (!item) return undefined;
+    return item.kind === 'group' ? this.groupNode(item) : this.nodeFor(item.source);
+  }
+
+  private groupLabel(display: number, colId: string): string {
+    const item = this.flat?.[display];
+    if (!item || item.kind !== 'group') return '';
+    if (colId !== AUTO_GROUP_COL_ID) return '';
+    const marker = item.expanded ? 'v' : '>';
+    return `${'  '.repeat(item.level)}${marker} ${item.key} (${item.leafCount})`;
+  }
+
   private applyView(view: ViewResult, generation: number, reason: 'initial' | 'sort' | 'filter' | 'data' | 'edit'): void {
     if (generation !== this.generation) return;
-    this.view = view;
+    this.leafView = view;
+    this.attachGroups();
     this.reverse = null;
     this.root.dataset.busy = '0';
     this.layout();
@@ -895,6 +999,7 @@ export class GridSession<TData = any> {
         const leaf = this.leafById(colId);
         return leaf ? this.textFor(source, leaf) : '';
       },
+      groupText: (display, colId) => this.groupLabel(display, colId),
       selected: (source) => this.selected[source] === 1,
       styleAt: (source, colId) => {
         const leaf = this.leafById(colId);
@@ -935,6 +1040,10 @@ export class GridSession<TData = any> {
   private onBodyClick(event: MouseEvent): void {
     const hit = this.hit(event.clientX, event.clientY);
     if (!hit) return;
+    if (this.flat?.[hit.display]?.kind === 'group') {
+      this.toggleGroup(hit.display);
+      return;
+    }
     const leaf = hit.leaf;
     this.setFocus(hit.display, this.visibleLeaves().indexOf(leaf), false);
     const node = this.nodeFor(hit.source);
@@ -1294,7 +1403,8 @@ export class GridSession<TData = any> {
     const display = this.displayOrigin() + Math.floor((top + y) / this.rowHeight());
     if (display >= this.displayOrigin() + this.scrollRowCount()) return null;
     const source = this.sourceAt(display);
-    if (source < 0) return null;
+    const group = this.flat?.[display]?.kind === 'group';
+    if (source < 0 && !group) return null;
     const leaf = this.leafAtViewportX(x);
     if (!leaf) return null;
     return { display, source, leaf };
@@ -1430,17 +1540,18 @@ export class GridSession<TData = any> {
     const fragment = document.createDocumentFragment();
     for (let display = first; display < last; display++) {
       const source = this.sourceAt(display);
-      if (source < 0) continue;
+      const group = this.flat?.[display]?.kind === 'group';
+      if (source < 0 && !group) continue;
       const row = el('div', 'og-arow');
       row.setAttribute('role', 'row');
       row.setAttribute('aria-rowindex', String(headerRows + display + 1));
-      if (this.selected[source] === 1) row.setAttribute('aria-selected', 'true');
+      if (source >= 0 && this.selected[source] === 1) row.setAttribute('aria-selected', 'true');
       leaves.forEach((leaf, index) => {
         const cell = el('div', 'og-acell');
         cell.id = this.cellDomId(display, index);
         cell.setAttribute('role', 'gridcell');
         cell.setAttribute('aria-colindex', String(index + 1));
-        cell.textContent = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : this.textFor(source, leaf);
+        cell.textContent = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : source < 0 ? this.groupLabel(display, leaf.colId) : this.textFor(source, leaf);
         const paint = this.paintStyle(source, leaf);
         if (paint.className) cell.classList.add(...paint.className.split(/\s+/).filter(Boolean));
         if (paint.background) cell.style.backgroundColor = paint.background;
@@ -1457,12 +1568,21 @@ export class GridSession<TData = any> {
   }
 
   private sourceAt(display: number): number {
+    if (this.flat) {
+      const item = this.flat[display];
+      if (!item || item.kind !== 'leaf') return -1;
+      return item.source;
+    }
     if (display < 0 || display >= this.view.count) return -1;
     if (this.view.identity) return display;
     return this.view.indices[display] ?? -1;
   }
 
   private displayIndex(source: number): number | null {
+    if (this.flat) {
+      const index = this.flat.findIndex((item) => item.kind === 'leaf' && item.source === source);
+      return index < 0 ? null : index;
+    }
     if (source < 0 || source >= this.rows.length) return null;
     if (this.view.identity) return source < this.view.count ? source : null;
     if (!this.reverse) {
@@ -1909,6 +2029,10 @@ export class GridSession<TData = any> {
       rowHeight: this.rowHeight(),
       rowTop: null,
       level: 0,
+      key: null,
+      expanded: false,
+      allChildrenCount: null,
+      setExpanded() {},
       setSelected() {},
       isSelected: () => false,
       isRowPinned: () => false,
@@ -2060,6 +2184,7 @@ export class GridSession<TData = any> {
       applyTransaction: (transaction) => session.applyTransaction(transaction),
       getDisplayedRowCount: () => session.view.count,
       getDisplayedRowAtIndex: (index) => {
+        if (session.flat) return session.displayedNode(index);
         const source = session.sourceAt(index);
         return source < 0 ? undefined : session.nodeFor(source);
       },
@@ -2106,6 +2231,10 @@ export class GridSession<TData = any> {
         }
       },
       forEachNodeAfterFilterAndSort: (callback) => {
+        if (session.flat) {
+          session.flat.forEach((item, index) => callback(item.kind === 'group' ? session.groupNode(item) : session.nodeFor(item.source), index));
+          return;
+        }
         for (let index = 0; index < session.view.count; index++) {
           const source = session.sourceAt(index);
           if (source >= 0) callback(session.nodeFor(source), index);
@@ -2115,6 +2244,7 @@ export class GridSession<TData = any> {
         for (let source = 0; source < session.rows.length; source++) callback(session.nodeFor(source));
       },
       getRowNode: (id) => {
+        if (session.groupNodes.has(id)) return session.groupNodes.get(id);
         if (session.idToSource.size > 0) {
           const source = session.idToSource.get(id);
           return source == null ? undefined : session.nodeFor(source);
@@ -2124,6 +2254,18 @@ export class GridSession<TData = any> {
           return source >= 0 && source < session.rows.length ? session.nodeFor(source) : undefined;
         }
         return undefined;
+      },
+      getRowGroupColumns: () => session.groupLeaves().map((leaf) => columnFacade(leaf)),
+      setRowGroupColumns: (colKeys) => {
+        const ids = colKeys.map((key) => (typeof key === 'string' ? key : key.getColId()));
+        for (const leaf of session.leaves) {
+          if (leaf.selectionColumn || leaf.colId === AUTO_GROUP_COL_ID) continue;
+          const index = ids.indexOf(leaf.colId);
+          leaf.def.rowGroup = index >= 0 ? true : null;
+          leaf.def.rowGroupIndex = index >= 0 ? index : null;
+        }
+        session.groupExpanded.clear();
+        session.refresh('sort');
       },
       getSelectedNodes: () => session.selectedList.map((source) => session.nodeFor(source)),
       getSelectedRows: () => session.selectedList.map((source) => session.rows[source]).filter((row): row is TData => row !== undefined),
@@ -2256,10 +2398,89 @@ export class GridSession<TData = any> {
   }
 }
 
+class GroupNode<TData> implements IRowNode<TData> {
+  readonly group = true;
+  readonly rowPinned = null;
+  readonly data = undefined;
+  readonly selectable = false;
+  readonly selected = false;
+  readonly rowHeight = null;
+  readonly rowTop = null;
+  private item: GroupFlat;
+
+  constructor(private readonly session: GridSession<TData>, item: GroupFlat) {
+    this.item = item;
+  }
+
+  sync(item: GroupFlat): void {
+    this.item = item;
+  }
+
+  get id(): string {
+    return this.item.id;
+  }
+
+  get key(): string {
+    return this.item.key;
+  }
+
+  get level(): number {
+    return this.item.level;
+  }
+
+  get expanded(): boolean {
+    return this.item.expanded;
+  }
+
+  get allChildrenCount(): number {
+    return this.item.leafCount;
+  }
+
+  get rowIndex(): number | null {
+    const index = this.session['flat']?.findIndex((item) => item.kind === 'group' && item.id === this.item.id) ?? -1;
+    return index < 0 ? null : index;
+  }
+
+  get displayed(): boolean {
+    return this.rowIndex != null;
+  }
+
+  setExpanded(expanded: boolean): void {
+    this.session['groupExpanded'].set(this.item.id, expanded);
+    this.session['attachGroups']();
+    this.session['reverse'] = null;
+    this.session['layout']();
+    this.session['syncA11y']();
+  }
+
+  setSelected(): void {}
+
+  isSelected(): boolean {
+    return false;
+  }
+
+  isRowPinned(): boolean {
+    return false;
+  }
+
+  setData(): void {}
+
+  setDataValue(): boolean {
+    return false;
+  }
+
+  addEventListener(): void {}
+
+  removeEventListener(): void {}
+}
+
 class RowNode<TData> implements IRowNode<TData> {
   readonly level = 0;
   readonly group = false;
   readonly rowPinned = null;
+  readonly key = null;
+  readonly expanded = false;
+  readonly allChildrenCount = null;
   private readonly listeners = new Map<string, Set<(event: unknown) => void>>();
 
   constructor(private readonly session: GridSession<TData>, readonly sourceIndex: number) {}
@@ -2300,6 +2521,8 @@ class RowNode<TData> implements IRowNode<TData> {
   setSelected(newValue: boolean, clearSelection = false, source?: string): void {
     this.session['setSourceSelected'](this.sourceIndex, newValue, clearSelection, source ?? 'api');
   }
+
+  setExpanded(): void {}
 
   isSelected(): boolean {
     return this.selected;

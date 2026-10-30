@@ -38,6 +38,7 @@ export interface ColDef<TData = any, TValue = any> {
   cellStyle?: Record<string, string> | ((params: CellClassParams<TData>) => Record<string, string> | null | undefined);
   suppressSizeToFit?: boolean;
   rowGroup?: boolean | null;
+  rowGroupIndex?: number | null;
   pivot?: boolean | null;
   aggFunc?: string | null;
   enableRowGroup?: boolean;
@@ -208,6 +209,8 @@ export interface GridOptions<TData = any> {
   pagination?: boolean;
   paginationPageSize?: number;
   quickFilterText?: string;
+  autoGroupColumnDef?: ColDef<TData>;
+  groupDefaultExpanded?: number;
   domLayout?: 'normal' | 'autoHeight' | 'print';
   theme?: string;
   ensureDomOrder?: boolean;
@@ -306,6 +309,10 @@ export interface IRowNode<TData = any> {
   rowHeight: number | null;
   rowTop: number | null;
   level: number;
+  key: string | null;
+  expanded: boolean;
+  allChildrenCount: number | null;
+  setExpanded(expanded: boolean): void;
   setSelected(newValue: boolean, clearSelection?: boolean, source?: string): void;
   isSelected(): boolean | undefined;
   isRowPinned(): boolean;
@@ -477,6 +484,8 @@ export interface GridApi<TData = any> {
   forEachNodeAfterFilterAndSort(callback: (rowNode: IRowNode<TData>, index: number) => void): void;
   forEachLeafNode(callback: (rowNode: IRowNode<TData>) => void): void;
   getRowNode(id: string): IRowNode<TData> | undefined;
+  getRowGroupColumns(): Column[];
+  setRowGroupColumns(colKeys: (string | Column)[]): void;
   getSelectedNodes(): IRowNode<TData>[];
   getSelectedRows(): TData[];
   selectAll(): void;

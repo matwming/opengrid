@@ -33,6 +33,7 @@ export interface Leaf<TData = any> {
   cellClass?: ColDef<TData>['cellClass'];
   cellStyle?: ColDef<TData>['cellStyle'];
   suppressSizeToFit: boolean;
+  groupedHide?: boolean;
   def: ColDef<TData>;
   groupId: string | null;
   groupName: string | null;
@@ -51,6 +52,7 @@ export interface SelectionConfig<TData = any> {
 }
 
 export const SELECTION_COL_ID = 'ag-Grid-SelectionColumn';
+export const AUTO_GROUP_COL_ID = 'ag-Grid-AutoColumn';
 
 export function selectionConfig<TData>(options: GridOptions<TData>): SelectionConfig<TData> {
   const selection = options.rowSelection;
@@ -104,27 +106,44 @@ function hasUserCheckbox(defs: GridOptions['columnDefs']): boolean {
 }
 
 function selectionLeaf(headerCheckbox: boolean): Leaf {
+  const leaf = autoLeaf(SELECTION_COL_ID, '', 52, 'left');
+  leaf.checkbox = true;
+  leaf.headerCheckbox = headerCheckbox;
+  leaf.selectionColumn = true;
+  leaf.kind = 'boolean';
+  leaf.def = { colId: SELECTION_COL_ID, width: 52, pinned: 'left' };
+  return leaf;
+}
+
+export function autoGroupLeaf<TData>(headerName: string, width: number): Leaf<TData> {
+  const leaf = autoLeaf<TData>(AUTO_GROUP_COL_ID, headerName, width, 'left');
+  leaf.kind = 'text';
+  leaf.def = { colId: AUTO_GROUP_COL_ID, headerName, width, pinned: 'left' };
+  return leaf;
+}
+
+function autoLeaf<TData>(colId: string, headerName: string, width: number, pinned: 'left' | 'right' | null): Leaf<TData> {
   return {
-    colId: SELECTION_COL_ID,
-    headerName: '',
-    width: 52,
+    colId,
+    headerName,
+    width,
     minWidth: 40,
-    pinned: 'left',
+    pinned,
     hide: false,
     sortable: false,
     sort: null,
     sortIndex: null,
     sortingOrder: [null],
-    resizable: false,
+    resizable: true,
     movable: false,
     editable: false,
     filter: false,
-    kind: 'boolean',
-    checkbox: true,
-    headerCheckbox,
-    selectionColumn: true,
+    kind: 'text',
+    checkbox: false,
+    headerCheckbox: false,
+    selectionColumn: false,
     suppressSizeToFit: true,
-    def: { colId: SELECTION_COL_ID, width: 52, pinned: 'left' },
+    def: { colId, headerName, width, pinned },
     groupId: null,
     groupName: null,
     marry: false,

@@ -20,6 +20,7 @@ export interface PaintFrame {
   columns: readonly PaintColumn[];
   sourceAt: (displayIndex: number) => number;
   textAt: (source: number, colId: string) => string;
+  groupText?: (display: number, colId: string) => string;
   selected: (source: number) => boolean;
   styleAt?: (source: number, colId: string) => { background: string | null; color: string | null } | null;
   focusColId: string | null;
@@ -63,8 +64,9 @@ export function paintFrame(ctx: CanvasRenderingContext2D, frame: PaintFrame): vo
     if (display < 0 || display >= frame.viewCount) continue;
     const y = slot * rowHeight - frame.rowOffset;
     const source = frame.sourceAt(display);
-    if (source < 0) continue;
-    const selected = frame.selected(source);
+    const grouped = source < 0 && frame.groupText;
+    if (source < 0 && !grouped) continue;
+    const selected = source < 0 ? false : frame.selected(source);
     if (selected || display % 2 === 1) {
       ctx.fillStyle = selected ? frame.colors.selected : frame.colors.stripe;
       ctx.fillRect(0, y, width, rowHeight);
@@ -73,13 +75,13 @@ export function paintFrame(ctx: CanvasRenderingContext2D, frame: PaintFrame): vo
       const screenX = screenXOf(column, frame);
       if (screenX + column.width < 0 || screenX > width) continue;
       if (column.pinned == null && (screenX + column.width < frame.leftWidth || screenX > width - frame.rightWidth)) continue;
-      const style = frame.styleAt?.(source, column.colId) ?? null;
+      const style = source < 0 ? null : frame.styleAt?.(source, column.colId) ?? null;
       if (style?.background) {
         ctx.fillStyle = style.background;
         ctx.fillRect(screenX, y, column.width, rowHeight);
       }
-      if (column.checkbox) drawCheckbox(ctx, screenX, y, column.width, rowHeight, selected, frame.colors);
-      else drawText(ctx, frame.textAt(source, column.colId), screenX, y, column.width, rowHeight, style?.color ?? frame.colors.text);
+      if (column.checkbox && source >= 0) drawCheckbox(ctx, screenX, y, column.width, rowHeight, selected, frame.colors);
+      else drawText(ctx, source < 0 ? frame.groupText?.(display, column.colId) ?? '' : frame.textAt(source, column.colId), screenX, y, column.width, rowHeight, style?.color ?? frame.colors.text);
       if (frame.focusRow === display && frame.focusColId === column.colId) {
         ctx.strokeStyle = frame.colors.focus;
         ctx.lineWidth = 2;

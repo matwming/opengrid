@@ -42,7 +42,7 @@ Status words mean the following.
 
 | Feature | Doc | Status |
 | --- | --- | --- |
-| Row grouping | [Grouping](https://www.ag-grid.com/javascript-data-grid/grouping/) | not started |
+| Row grouping | [Grouping](https://www.ag-grid.com/javascript-data-grid/grouping/) | partial. Client-side `rowGroup` builds one auto group column, sorts keys ascending, and honors `groupDefaultExpanded` and `setExpanded`. `setRowGroupColumns` switches the group. Aggregation and pivot are not started. Enterprise is not in the community package, so this was not compared side by side. |
 | Aggregation | [Aggregation](https://www.ag-grid.com/javascript-data-grid/aggregation/) | not started |
 | Pivot | [Pivoting](https://www.ag-grid.com/javascript-data-grid/pivoting/) | not started |
 | Tree data | [Tree data](https://www.ag-grid.com/javascript-data-grid/tree-data/) | not started |
