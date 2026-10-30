@@ -57,7 +57,7 @@ Status words mean the following.
 | Server-side row model | [Server-side model](https://www.ag-grid.com/javascript-data-grid/server-side-model/) | partial. `serverSideDatasource.getRows` receives `startRow`, `endRow`, the sort model, and the filter model. `success({ rowData, rowCount })` fills the block. Grouping and pivoting on the server are not started. Not compared with Enterprise. |
 | Viewport row model | [Viewport](https://www.ag-grid.com/javascript-data-grid/viewport/) | not started |
 | Integrated charts | [Integrated charts](https://www.ag-grid.com/javascript-data-grid/integrated-charts/) | partial. `createRangeChart` draws a column chart from the numeric column in the range. `destroyChart` removes it. Other chart types, the chart toolbar, and linking the chart back to the grid are not started. Not compared with Enterprise. |
-| Sparklines | [Sparklines](https://www.ag-grid.com/javascript-data-grid/sparklines-overview/) | not started |
+| Sparklines | [Sparklines](https://www.ag-grid.com/javascript-data-grid/sparklines-overview/) | partial. `cellRenderer: 'agSparklineCellRenderer'` draws one bar per number in the cell array. Line and area sparklines are not started. Not compared with Enterprise. |
 | Status bar | [Status bar](https://www.ag-grid.com/javascript-data-grid/status-bar/) | partial. `agTotalRowCountComponent` and `agTotalAndFilteredRowCountComponent` show the displayed row count, including after a filter. Other status panels are not started. Not compared with Enterprise. |
 | Side bar | [Side bar](https://www.ag-grid.com/javascript-data-grid/side-bar/) | not started |
 | Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | not started |

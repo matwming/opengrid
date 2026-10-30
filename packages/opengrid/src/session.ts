@@ -1741,8 +1741,13 @@ export class GridSession<TData = any> {
       if (source < 0) continue;
       for (const leaf of this.visibleLeaves()) {
         if (!leaf.cellRenderer) continue;
+        let value = this.readSource(source, leaf);
+        if (leaf.def.cellRenderer === 'agSparklineCellRenderer' && leaf.field) {
+          const raw = readPath(this.rows[source], leaf.field);
+          if (Array.isArray(raw)) value = raw;
+        }
         const rendered = leaf.cellRenderer({
-          value: this.readSource(source, leaf),
+          value,
           valueFormatted: null,
           data: this.rows[source],
           node: this.nodeFor(source),

@@ -208,7 +208,7 @@ function leafFrom<TData>(
     valueFormatter: def.valueFormatter,
     valueParser: def.valueParser,
     comparator: def.comparator,
-    cellRenderer: typeof def.cellRenderer === 'function' ? def.cellRenderer : undefined,
+    cellRenderer: sparklineRenderer(def.cellRenderer),
     cellClass: def.cellClass,
     cellStyle: def.cellStyle,
     suppressSizeToFit: Boolean(def.suppressSizeToFit),
@@ -271,6 +271,33 @@ function valueSample<TData>(def: ColDef<TData>, field: string | undefined, row: 
   }
   if (field) return readPath(row, field);
   return undefined;
+}
+
+function sparklineRenderer<TData>(renderer: ColDef<TData>['cellRenderer']): Leaf<TData>['cellRenderer'] {
+  if (renderer === 'agSparklineCellRenderer') {
+    return (params) => {
+      const numbers = Array.isArray(params.value) ? params.value.filter((item): item is number => typeof item === 'number') : [];
+      const wrap = document.createElement('div');
+      wrap.className = 'og-spark';
+      wrap.dataset.values = numbers.join(',');
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 60 20');
+      const max = Math.max(...numbers, 1);
+      numbers.forEach((value, index) => {
+        const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        const slot = 60 / Math.max(numbers.length, 1);
+        const height = (value / max) * 18;
+        bar.setAttribute('x', String(index * slot));
+        bar.setAttribute('y', String(20 - height));
+        bar.setAttribute('width', String(Math.max(1, slot - 1)));
+        bar.setAttribute('height', String(height));
+        svg.append(bar);
+      });
+      wrap.append(svg);
+      return wrap;
+    };
+  }
+  return typeof renderer === 'function' ? renderer : undefined;
 }
 
 function filterKind(filter: ColDef['filter'], kind: ColumnKind): false | 'text' | 'number' | 'date' | 'set' {

@@ -27,7 +27,7 @@ export interface ColDef<TData = any, TValue = any> {
   valueSetter?: string | ValueSetterFunc<TData>;
   valueFormatter?: string | ValueFormatterFunc<TData>;
   valueParser?: string | ValueParserFunc<TData>;
-  cellRenderer?: CellRenderer<TData>;
+  cellRenderer?: CellRenderer<TData> | string;
   cellEditor?: string;
   cellDataType?: boolean | string;
   type?: string | string[];
