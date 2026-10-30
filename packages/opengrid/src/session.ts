@@ -2,7 +2,7 @@ import { bandsOf, buildLeaves, columnFacade, groupRuns, selectionConfig, visible
 import { encodeCsv, encodeCsvRaw, downloadCsv } from './csv';
 import { WORKER_ROW_MIN, WorkerEngine } from './engine-client';
 import { applyFilter, applyQuickFilter, hasQuickFilter, queryView, type SortKey, type ViewResult } from './engine';
-import { aggregate, flattenGroups, type FlatRow, type GroupFlat } from './group';
+import { aggregate, flattenGroups, flattenTree, type FlatRow, type GroupFlat } from './group';
 import { FALLBACK_COLORS, paintFrame, type PaintColors, type PaintColumn } from './paint';
 import { buildStore, cellRaw, formatDay, readPath, sharedMemoryAvailable, writePath, writeVector, type ColumnStore, type StoreField } from './store';
 import type {
@@ -408,7 +408,8 @@ export class GridSession<TData = any> {
   private attachGroups(): void {
     this.syncGroupColumns();
     const groups = this.groupLeaves();
-    if (groups.length === 0) {
+    const tree = Boolean(this.options.treeData && this.options.getDataPath);
+    if (groups.length === 0 && !tree) {
       this.flat = null;
       this.view = this.leafView;
       return;
@@ -419,20 +420,39 @@ export class GridSession<TData = any> {
       if (source >= 0) sources.push(source);
     }
     const expanded = this.options.pivotMode ? -2 : this.options.groupDefaultExpanded ?? 0;
-    this.flat = flattenGroups(
-      sources,
-      (source, colId) => this.groupValue(source, colId),
-      groups.map((leaf) => leaf.colId),
-      (id, level) => {
-        if (expanded === -2) return false;
-        const stored = this.groupExpanded.get(id);
-        if (stored != null) return stored;
-        if (expanded < 0) return true;
-        return level < expanded;
-      },
-    );
+    const isExpanded = (id: string, level: number) => {
+      if (expanded === -2) return false;
+      const stored = this.groupExpanded.get(id);
+      if (stored != null) return stored;
+      if (expanded < 0) return true;
+      return level < expanded;
+    };
+    if (tree && this.options.getDataPath) {
+      const pathOf = this.options.getDataPath;
+      this.ensureAutoGroup();
+      this.flat = flattenTree(
+        sources.map((source) => ({ source, path: pathOf(this.rows[source] as TData) })),
+        isExpanded,
+      );
+    } else {
+      this.flat = flattenGroups(
+        sources,
+        (source, colId) => this.groupValue(source, colId),
+        groups.map((leaf) => leaf.colId),
+        isExpanded,
+      );
+    }
     this.syncPivotColumns(sources);
     this.view = { indices: new Uint32Array(0), count: this.flat.length, identity: false };
+  }
+
+  private ensureAutoGroup(): void {
+    if (this.leaves.some((leaf) => leaf.colId === AUTO_GROUP_COL_ID)) return;
+    const header = this.options.autoGroupColumnDef?.headerName ?? 'Group';
+    const width = this.options.autoGroupColumnDef?.width ?? 220;
+    const auto = autoGroupLeaf<TData>(header, width);
+    const selection = this.leaves.findIndex((leaf) => leaf.selectionColumn);
+    this.leaves.splice(selection + 1, 0, auto);
   }
 
   private syncPivotColumns(sources: readonly number[]): void {

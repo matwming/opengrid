@@ -135,6 +135,10 @@ function App() {
                 <td><code>pivotMode</code> 把透视列的每个键变成一列。Ireland 的 2020 年 sales 是 4，2021 年是 9。透视时不展开明细行。没有和企业版并排对照。</td>
               </tr>
               <tr>
+                <td>树</td>
+                <td><code>treeData</code> 和 <code>getDataPath</code> 按路径嵌套。CEO 下面有 Sales 和 Support，收起 Sales 后 EU 不再显示。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -149,7 +153,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>树、主从明细。</li>
+            <li>主从明细。</li>
             <li>集合过滤、多重过滤、高级过滤。</li>
             <li>范围选择、剪贴板、填充柄、Excel 导出。</li>
             <li>服务端行模型、视口行模型、集成图表、迷你图、状态栏、侧边栏、工具面板。</li>

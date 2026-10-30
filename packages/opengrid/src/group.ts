@@ -59,3 +59,60 @@ export function flattenGroups(
   walk(sources, 0, '');
   return out;
 }
+
+export function flattenTree(
+  items: readonly { source: number; path: readonly string[] }[],
+  isExpanded: (id: string, level: number) => boolean,
+): FlatRow[] {
+  interface Bucket {
+    source?: number;
+    kids: Map<string, Bucket>;
+  }
+  const root = new Map<string, Bucket>();
+  for (const item of items) {
+    let level = root;
+    item.path.forEach((key, index) => {
+      const bucket = level.get(key) ?? { kids: new Map<string, Bucket>() };
+      level.set(key, bucket);
+      if (index === item.path.length - 1) bucket.source = item.source;
+      level = bucket.kids;
+    });
+  }
+  const out: FlatRow[] = [];
+  const walk = (level: Map<string, Bucket>, depth: number, path: string) => {
+    const keys = [...level.keys()].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
+    for (const key of keys) {
+      const bucket = level.get(key);
+      if (!bucket) continue;
+      const id = `${path}${key}`;
+      if (bucket.kids.size > 0) {
+        const expanded = isExpanded(id, depth);
+        const leafCount = countLeaves(bucket);
+        out.push({ kind: 'group', id, key, level: depth, expanded, leafCount, leafSources: collectLeaves(bucket) });
+        if (expanded) walk(bucket.kids, depth + 1, `${id}/`);
+      } else if (bucket.source != null) {
+        out.push({ kind: 'leaf', source: bucket.source, level: depth });
+      }
+    }
+  };
+  walk(root, 0, '');
+  return out;
+}
+
+interface TreeBucket {
+  source?: number;
+  kids: Map<string, TreeBucket>;
+}
+
+function countLeaves(bucket: TreeBucket): number {
+  let count = bucket.kids.size === 0 && bucket.source != null ? 1 : 0;
+  for (const child of bucket.kids.values()) count += countLeaves(child);
+  return count;
+}
+
+function collectLeaves(bucket: TreeBucket): number[] {
+  const sources: number[] = [];
+  if (bucket.kids.size === 0 && bucket.source != null) sources.push(bucket.source);
+  for (const child of bucket.kids.values()) sources.push(...collectLeaves(child));
+  return sources;
+}

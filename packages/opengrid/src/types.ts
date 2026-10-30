@@ -214,6 +214,8 @@ export interface GridOptions<TData = any> {
   autoGroupColumnDef?: ColDef<TData>;
   groupDefaultExpanded?: number;
   pivotMode?: boolean;
+  treeData?: boolean;
+  getDataPath?: (data: TData) => string[];
   domLayout?: 'normal' | 'autoHeight' | 'print';
   theme?: string;
   ensureDomOrder?: boolean;

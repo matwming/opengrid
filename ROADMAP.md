@@ -45,7 +45,7 @@ Status words mean the following.
 | Row grouping | [Grouping](https://www.ag-grid.com/javascript-data-grid/grouping/) | partial. Client-side `rowGroup` builds one auto group column, sorts keys ascending, and honors `groupDefaultExpanded` and `setExpanded`. `setRowGroupColumns` switches the group. Pivot is not started. Enterprise is not in the community package, so this was not compared side by side. |
 | Aggregation | [Aggregation](https://www.ag-grid.com/javascript-data-grid/aggregation/) | partial. Group rows expose `aggData` for `sum`, `min`, `max`, `count`, and `avg`. Count ignores values that are not numbers. Not compared with Enterprise. |
 | Pivot | [Pivoting](https://www.ag-grid.com/javascript-data-grid/pivoting/) | partial. `pivotMode` with one `pivot` column and one `aggFunc` builds a column per pivot key. The group row `aggData` holds that key's aggregate. Leaf rows stay hidden. Not compared with Enterprise. |
-| Tree data | [Tree data](https://www.ag-grid.com/javascript-data-grid/tree-data/) | not started |
+| Tree data | [Tree data](https://www.ag-grid.com/javascript-data-grid/tree-data/) | partial. `treeData` with `getDataPath` nests rows. A path that has children is a group. `setExpanded(false)` hides that branch. Not compared with Enterprise. |
 | Master detail | [Master detail](https://www.ag-grid.com/javascript-data-grid/master-detail/) | not started |
 | Set filter | [Set filter](https://www.ag-grid.com/javascript-data-grid/filter-set/) | not started |
 | Multi filter | [Multi filter](https://www.ag-grid.com/javascript-data-grid/filter-multi/) | not started |
