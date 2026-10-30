@@ -60,4 +60,15 @@ BENCH_ROWS=1000000 BENCH_COLS=50 npm run bench
 
 `npm test` compares sort, filter, CSV, selection, and column state with `ag-grid-community` 36.2.0. `npm run e2e` drives the demo in Chromium, Firefox, and WebKit, and runs axe. The benchmark writes `bench/results.json`. CI runs the same bench at 40,000 rows so the worker path still runs.
 
+## Deploy the demo
+
+From `apps/demo`, after `npm run build`:
+
+```bash
+npx wrangler login
+npx wrangler deploy
+```
+
+The config is `apps/demo/wrangler.jsonc`. It publishes the Vite `dist` folder as a Worker with static assets. `public/_headers` sends the cross-origin isolation headers the worker needs for shared memory.
+
 The parity list is in `ROADMAP.md`.
