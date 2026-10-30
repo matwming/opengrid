@@ -87,6 +87,7 @@ export class GridSession<TData = any> {
   private live: HTMLElement;
   private empty: HTMLElement;
   private pager: HTMLElement;
+  private status: HTMLElement | null = null;
   private pageIndex = 0;
   private infiniteKnown = false;
   private infiniteGen = 0;
@@ -139,6 +140,10 @@ export class GridSession<TData = any> {
     this.root.append(this.header, body, this.a11y);
     const shell = el('div', 'og-shell');
     shell.append(this.root, this.pager, this.popup, this.live, this.empty);
+    if (this.options.statusBar?.statusPanels?.length) {
+      this.status = el('div', 'og-status');
+      shell.append(this.status);
+    }
     this.host.classList.add('og-host');
     this.host.replaceChildren(shell);
     this.viewport.addEventListener('scroll', () => this.onScroll(), { passive: true });
@@ -688,6 +693,7 @@ export class GridSession<TData = any> {
     this.paint();
     this.renderEmpty();
     this.renderPager();
+    this.renderStatus();
   }
 
   private renderHeader(): void {
@@ -1905,6 +1911,13 @@ export class GridSession<TData = any> {
     this.viewport.scrollTop = 0;
     this.layout();
     this.syncA11y();
+  }
+
+  private renderStatus(): void {
+    if (!this.status) return;
+    const panels = this.options.statusBar?.statusPanels ?? [];
+    const wantsCount = panels.some((panel) => panel.statusPanel === 'agTotalRowCountComponent' || panel.statusPanel === 'agTotalAndFilteredRowCountComponent');
+    this.status.textContent = wantsCount ? `Rows: ${this.view.count}` : '';
   }
 
   private renderPager(): void {

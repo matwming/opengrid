@@ -58,7 +58,7 @@ Status words mean the following.
 | Viewport row model | [Viewport](https://www.ag-grid.com/javascript-data-grid/viewport/) | not started |
 | Integrated charts | [Integrated charts](https://www.ag-grid.com/javascript-data-grid/integrated-charts/) | not started |
 | Sparklines | [Sparklines](https://www.ag-grid.com/javascript-data-grid/sparklines-overview/) | not started |
-| Status bar | [Status bar](https://www.ag-grid.com/javascript-data-grid/status-bar/) | not started |
+| Status bar | [Status bar](https://www.ag-grid.com/javascript-data-grid/status-bar/) | partial. `agTotalRowCountComponent` and `agTotalAndFilteredRowCountComponent` show the displayed row count, including after a filter. Other status panels are not started. Not compared with Enterprise. |
 | Side bar | [Side bar](https://www.ag-grid.com/javascript-data-grid/side-bar/) | not started |
 | Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | not started |
 
