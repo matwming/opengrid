@@ -35,7 +35,7 @@ Status words mean the following.
 | Row dragging | [Row dragging](https://www.ag-grid.com/javascript-data-grid/row-dragging/) | partial. `rowDragManaged` moves the gripped row so it lands before the row under the pointer, and fires `onRowDragEnd`. The drop index was not compared with 36.2.0, because happy-dom did not fire that grid's drag events. |
 | Pagination | [Row pagination](https://www.ag-grid.com/javascript-data-grid/row-pagination/) | partial. Client-side page size, current page, total pages, and `paginationGoToPage` match 36.2.0. `getDisplayedRowCount` stays the full filtered count. `paginationAutoPageSize` is not started. |
 | State save and restore | [Grid state](https://www.ag-grid.com/javascript-data-grid/grid-state/) | partial. `getState` and `setState` round-trip sort, filter, column order, width, pin, visibility, page, and row selection against 36.2.0. Scroll, focus, and group state are not started. |
-| Vue wrapper | [Vue getting started](https://www.ag-grid.com/vue-data-grid/getting-started/) | not started |
+| Vue wrapper | [Vue getting started](https://www.ag-grid.com/vue-data-grid/getting-started/) | partial. `AgGridVue` takes grid options as props, emits `grid-ready`, and exposes `api`. Changing `rowData` calls `setGridOption`. Framework cell components are not started. |
 | Angular wrapper | [Angular getting started](https://www.ag-grid.com/angular-data-grid/getting-started/) | not started |
 
 ## Phase 3

@@ -230,6 +230,7 @@ export interface GridOptions<TData = any> {
   onColumnPinned?: (event: ColumnEvent<TData>) => void;
   onColumnVisible?: (event: ColumnEvent<TData>) => void;
   onRowSelected?: (event: RowSelectedEvent<TData>) => void;
+  onRowDragEnd?: (event: AgEvent<TData> & { overIndex?: number }) => void;
   onGridPreDestroyed?: (event: AgEvent<TData>) => void;
 }
 

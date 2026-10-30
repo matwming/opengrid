@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "npm run build -w opengrid && npm run dev -w @opengrid/demo",
     "build": "npm run build -w opengrid",
-    "typecheck": "tsc -p packages/opengrid/tsconfig.json --noEmit && tsc -p packages/opengrid-react/tsconfig.json --noEmit && tsc -p apps/demo/tsconfig.json --noEmit",
+    "typecheck": "tsc -p packages/opengrid/tsconfig.json --noEmit && tsc -p packages/opengrid-react/tsconfig.json --noEmit && tsc -p packages/opengrid-vue/tsconfig.json --noEmit && tsc -p apps/demo/tsconfig.json --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
     "bench": "playwright test -c playwright.bench.config.ts"

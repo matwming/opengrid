@@ -119,6 +119,10 @@ function App() {
                 <td><code>rowDragManaged</code> 把抓住的行放到指针下那一行的前面，并触发 <code>onRowDragEnd</code>。happy-dom 没有触发 36.2.0 的拖拽事件，所以落点没有并排对照。</td>
               </tr>
               <tr>
+                <td>Vue</td>
+                <td><code>AgGridVue</code> 用属性接收 gridOptions，发出 <code>grid-ready</code>，并暴露 <code>api</code>。改 <code>rowData</code> 会调用 <code>setGridOption</code>。框架单元格组件没有做。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -129,7 +133,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>Vue 封装、Angular 封装。</li>
+            <li>Angular 封装。</li>
             <li>分组、聚合、透视、树、主从明细。</li>
             <li>集合过滤、多重过滤、高级过滤。</li>
             <li>范围选择、剪贴板、填充柄、Excel 导出。</li>
