@@ -126,6 +126,10 @@ function App() {
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
+              <tr>
+                <td>Angular</td>
+                <td><code>AgGridAngular</code> 用输入绑定 <code>rowData</code> 和 <code>columnDefs</code>，发出 <code>gridReady</code>，并设置 <code>api</code>。之后的 <code>rowData</code> 变化会调用 <code>setGridOption</code>。框架单元格组件没有做。</td>
+              </tr>
             </tbody>
           </table>
         </section>
@@ -133,7 +137,6 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>Angular 封装。</li>
             <li>分组、聚合、透视、树、主从明细。</li>
             <li>集合过滤、多重过滤、高级过滤。</li>
             <li>范围选择、剪贴板、填充柄、Excel 导出。</li>
