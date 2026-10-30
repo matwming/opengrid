@@ -148,7 +148,7 @@ function App() {
               </tr>
               <tr>
                 <td>范围选择</td>
-                <td><code>addCellRange</code> 记下起止行和列。<code>getCellRanges</code> 能读回来。<code>clearCellSelection</code> 清空。还不能用鼠标拖出范围。没有和企业版并排对照。</td>
+                <td><code>addCellRange</code> 记下起止行和列。<code>getCellRanges</code> 能读回来。<code>clearCellSelection</code> 清空。打开 <code>cellSelection</code> 后，用鼠标从一格拖到另一格，范围会盖住经过的行和列。没有和企业版并排对照。</td>
               </tr>
               <tr>
                 <td>剪贴板</td>

@@ -150,6 +150,7 @@ export class GridSession<TData = any> {
     this.viewport.addEventListener('click', (event) => this.onBodyClick(event));
     this.viewport.addEventListener('pointerdown', (event) => {
       this.onFillDown(event);
+      this.onRangeDown(event);
       this.onRowDragDown(event);
     });
     this.viewport.addEventListener('dblclick', (event) => this.onBodyDoubleClick(event));
@@ -1056,6 +1057,41 @@ export class GridSession<TData = any> {
   private fillHandle(): boolean {
     const selection = this.options.cellSelection;
     return typeof selection === 'object' && selection.handle?.mode === 'fill';
+  }
+
+  private cellSelectionOn(): boolean {
+    return this.options.cellSelection === true || typeof this.options.cellSelection === 'object';
+  }
+
+  private onRangeDown(event: PointerEvent): void {
+    if (!this.cellSelectionOn() || event.button !== 0) return;
+    const found = this.hit(event.clientX, event.clientY);
+    if (!found || found.leaf.selectionColumn) return;
+    if (this.fillHandle() && this.cellRanges[0]) {
+      const range = this.cellRanges[0];
+      const end = Math.max(range.rowStartIndex, range.rowEndIndex);
+      if (found.display === end && range.columns.includes(found.leaf.colId)) return;
+    }
+    const startRow = found.display;
+    const startCol = found.leaf.colId;
+    const write = (row: number, colId: string) => {
+      const visible = this.visibleLeaves().filter((leaf) => !leaf.selectionColumn);
+      const from = visible.findIndex((leaf) => leaf.colId === startCol);
+      const to = visible.findIndex((leaf) => leaf.colId === colId);
+      const columns = from < 0 || to < 0 ? [startCol] : visible.slice(Math.min(from, to), Math.max(from, to) + 1).map((leaf) => leaf.colId);
+      this.cellRanges = [{ rowStartIndex: Math.min(startRow, row), rowEndIndex: Math.max(startRow, row), columns }];
+    };
+    write(startRow, startCol);
+    const move = (ev: PointerEvent) => {
+      const next = this.hit(ev.clientX, ev.clientY);
+      if (next && !next.leaf.selectionColumn) write(next.display, next.leaf.colId);
+    };
+    const up = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
   }
 
   private onFillDown(event: PointerEvent): void {
