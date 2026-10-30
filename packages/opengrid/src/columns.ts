@@ -19,7 +19,7 @@ export interface Leaf<TData = any> {
   resizable: boolean;
   movable: boolean;
   editable: boolean | EditableCallback<TData>;
-  filter: false | 'text' | 'number' | 'date' | 'set';
+  filter: false | 'text' | 'number' | 'date' | 'set' | 'multi';
   kind: ColumnKind;
   checkbox: boolean;
   headerCheckbox: boolean;
@@ -300,12 +300,13 @@ function sparklineRenderer<TData>(renderer: ColDef<TData>['cellRenderer']): Leaf
   return typeof renderer === 'function' ? renderer : undefined;
 }
 
-function filterKind(filter: ColDef['filter'], kind: ColumnKind): false | 'text' | 'number' | 'date' | 'set' {
+function filterKind(filter: ColDef['filter'], kind: ColumnKind): false | 'text' | 'number' | 'date' | 'set' | 'multi' {
   if (filter === false || filter == null) return false;
   if (filter === 'agNumberColumnFilter') return 'number';
   if (filter === 'agDateColumnFilter') return 'date';
   if (filter === 'agTextColumnFilter') return 'text';
   if (filter === 'agSetColumnFilter') return 'set';
+  if (filter === 'agMultiColumnFilter') return 'multi';
   if (filter === true) {
     if (kind === 'number') return 'number';
     if (kind === 'date') return 'date';

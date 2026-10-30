@@ -183,6 +183,10 @@ function App() {
                 <td><code>sideBar: true</code> 打开列工具面板和过滤工具面板。列面板可以藏起一列。过滤面板打开那一列的过滤。自定义工具面板还没有。没有和企业版并排对照。</td>
               </tr>
               <tr>
+                <td>多重过滤</td>
+                <td><code>agMultiColumnFilter</code> 打开两个文本框。Apply 之后，每一条都匹配才留下。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -197,7 +201,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>多重过滤、高级过滤。</li>
+            <li>高级过滤。</li>
             <li>视口行模型。</li>
           </ul>
         </section>

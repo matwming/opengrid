@@ -1,4 +1,4 @@
-import type { FilterModel, JoinOperator, ProvidedFilterModel, SetFilterModel, SimpleFilterModel, SortDirection } from './types';
+import type { FilterModel, JoinOperator, MultiFilterModel, ProvidedFilterModel, SetFilterModel, SimpleFilterModel, SortDirection } from './types';
 import { cellRaw, displayText, type ColumnStore, type Vector, sortableFloatWords } from './store';
 
 export interface SortKey {
@@ -80,7 +80,12 @@ function activeFilters(filter: FilterModel | null): { colId: string; model: Prov
   return out;
 }
 
+function isMultiFilter(model: ProvidedFilterModel): model is MultiFilterModel {
+  return model.filterType === 'multi' && 'filterModels' in model;
+}
+
 function modelIsActive(model: ProvidedFilterModel): boolean {
+  if (isMultiFilter(model)) return model.filterModels.some((child) => child != null && modelIsActive(child));
   if (isSetFilter(model)) return true;
   if ('conditions' in model && Array.isArray(model.conditions)) {
     return model.conditions.some((condition) => simpleIsActive(condition));
@@ -105,6 +110,10 @@ function isSetFilter(model: ProvidedFilterModel): model is SetFilterModel {
 }
 
 function matches(vector: Vector | undefined, row: number, model: ProvidedFilterModel): boolean {
+  if (isMultiFilter(model)) {
+    const active = model.filterModels.filter((child): child is ProvidedFilterModel => child != null && modelIsActive(child));
+    return active.every((child) => matches(vector, row, child));
+  }
   if (isSetFilter(model)) {
     const text = displayText(vector, row);
     return model.values.map((value) => (value == null ? '' : String(value))).includes(text);

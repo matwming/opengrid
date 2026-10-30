@@ -912,8 +912,12 @@ export class GridSession<TData = any> {
       this.openSetFilter(leaf, anchor);
       return;
     }
+    if (leaf.filter === 'multi') {
+      this.openMultiFilter(leaf, anchor);
+      return;
+    }
     const current = this.filterModel[leaf.colId];
-    const simple = current && 'values' in current ? undefined : current && 'conditions' in current ? current.conditions[0] : current;
+    const simple = current && ('values' in current || 'filterModels' in current) ? undefined : current && 'conditions' in current ? current.conditions[0] : current;
     const kind = leaf.filter === 'number' ? 'number' : leaf.filter === 'date' ? 'date' : 'text';
     this.popup.replaceChildren();
     this.popup.hidden = false;
@@ -1019,6 +1023,41 @@ export class GridSession<TData = any> {
       this.popup.hidden = true;
     });
     this.popup.append(list, apply);
+    const rect = anchor.getBoundingClientRect();
+    const rootRect = this.root.getBoundingClientRect();
+    this.popup.style.left = `${Math.max(0, rect.left - rootRect.left)}px`;
+    this.popup.style.top = `${rect.bottom - rootRect.top}px`;
+  }
+
+  private openMultiFilter(leaf: Leaf<TData>, anchor: HTMLElement): void {
+    this.popup.replaceChildren();
+    this.popup.hidden = false;
+    const first = document.createElement('input');
+    first.ariaLabel = `${leaf.headerName} first filter`;
+    const second = document.createElement('input');
+    second.ariaLabel = `${leaf.headerName} second filter`;
+    const current = this.filterModel[leaf.colId];
+    if (current && 'filterModels' in current) {
+      const models = current.filterModels;
+      const textOf = (model: (typeof models)[number]) => (model && 'filter' in model && model.filter != null ? String(model.filter) : '');
+      first.value = textOf(models[0]);
+      second.value = textOf(models[1]);
+    }
+    const apply = document.createElement('button');
+    apply.type = 'button';
+    apply.className = 'og-multi-apply';
+    apply.textContent = 'Apply';
+    apply.addEventListener('click', () => {
+      const models = [first.value, second.value]
+        .filter((value) => value !== '')
+        .map((value) => ({ filterType: 'text' as const, type: 'contains' as const, filter: value }));
+      const next = { ...this.filterModel };
+      if (models.length === 0) delete next[leaf.colId];
+      else next[leaf.colId] = { filterType: 'multi', filterModels: models };
+      this.api.setFilterModel(next);
+      this.popup.hidden = true;
+    });
+    this.popup.append(first, second, apply);
     const rect = anchor.getBoundingClientRect();
     const rootRect = this.root.getBoundingClientRect();
     this.popup.style.left = `${Math.max(0, rect.left - rootRect.left)}px`;

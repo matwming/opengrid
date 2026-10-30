@@ -409,7 +409,12 @@ export interface SetFilterModel {
   values: (string | null)[];
 }
 
-export type ProvidedFilterModel = SimpleFilterModel | CombinedFilterModel | SetFilterModel;
+export interface MultiFilterModel {
+  filterType: 'multi';
+  filterModels: (ProvidedFilterModel | null)[];
+}
+
+export type ProvidedFilterModel = SimpleFilterModel | CombinedFilterModel | SetFilterModel | MultiFilterModel;
 export type FilterModel = Record<string, ProvidedFilterModel | null>;
 
 export interface CsvExportParams {
