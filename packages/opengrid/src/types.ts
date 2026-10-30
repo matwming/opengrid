@@ -381,7 +381,12 @@ export interface CombinedFilterModel {
   condition2?: SimpleFilterModel;
 }
 
-export type ProvidedFilterModel = SimpleFilterModel | CombinedFilterModel;
+export interface SetFilterModel {
+  filterType: 'set';
+  values: (string | null)[];
+}
+
+export type ProvidedFilterModel = SimpleFilterModel | CombinedFilterModel | SetFilterModel;
 export type FilterModel = Record<string, ProvidedFilterModel | null>;
 
 export interface CsvExportParams {

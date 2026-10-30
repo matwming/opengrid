@@ -106,4 +106,9 @@ describe('client-side view', () => {
     expect(ids(store, rows, [], null, '  ')).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
     expect(ids(store, rows, [], { qty: { filterType: 'number', type: 'equals', filter: 10 } }, 'no')).toEqual([]);
   });
+
+  it('keeps only values listed in a set filter', () => {
+    expect(ids(store, rows, [], { name: { filterType: 'set', values: ['Nora', 'Bo'] } })).toEqual(['a', 'd']);
+    expect(ids(store, rows, [], { name: { filterType: 'set', values: [] } })).toEqual([]);
+  });
 });

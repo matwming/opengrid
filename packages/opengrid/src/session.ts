@@ -870,7 +870,7 @@ export class GridSession<TData = any> {
 
   private openFilter(leaf: Leaf<TData>, anchor: HTMLElement): void {
     const current = this.filterModel[leaf.colId];
-    const simple = current && !('conditions' in current) ? current : current && 'conditions' in current ? current.conditions[0] : undefined;
+    const simple = current && 'values' in current ? undefined : current && 'conditions' in current ? current.conditions[0] : current;
     const kind = leaf.filter === 'number' ? 'number' : leaf.filter === 'date' ? 'date' : 'text';
     this.popup.replaceChildren();
     this.popup.hidden = false;

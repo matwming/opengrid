@@ -143,6 +143,10 @@ function App() {
                 <td><code>masterDetail</code> 展开主行后插入明细。只有 <code>isRowMaster</code> 允许的行会展开。<code>detailCellRenderer</code> 可以返回字符串。没有和企业版并排对照。</td>
               </tr>
               <tr>
+                <td>集合过滤</td>
+                <td><code>filterType: 'set'</code> 只留下 <code>values</code> 里的文本。空列表一行都不留。还没有集合过滤弹窗。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -157,7 +161,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>集合过滤、多重过滤、高级过滤。</li>
+            <li>多重过滤、高级过滤。</li>
             <li>范围选择、剪贴板、填充柄、Excel 导出。</li>
             <li>服务端行模型、视口行模型、集成图表、迷你图、状态栏、侧边栏、工具面板。</li>
           </ul>

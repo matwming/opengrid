@@ -1,4 +1,4 @@
-import type { FilterModel, JoinOperator, ProvidedFilterModel, SimpleFilterModel, SortDirection } from './types';
+import type { FilterModel, JoinOperator, ProvidedFilterModel, SetFilterModel, SimpleFilterModel, SortDirection } from './types';
 import { cellRaw, displayText, type ColumnStore, type Vector, sortableFloatWords } from './store';
 
 export interface SortKey {
@@ -81,6 +81,7 @@ function activeFilters(filter: FilterModel | null): { colId: string; model: Prov
 }
 
 function modelIsActive(model: ProvidedFilterModel): boolean {
+  if (isSetFilter(model)) return true;
   if ('conditions' in model && Array.isArray(model.conditions)) {
     return model.conditions.some((condition) => simpleIsActive(condition));
   }
@@ -99,7 +100,15 @@ function simpleIsActive(model: SimpleFilterModel | undefined): boolean {
   return model.filter != null && model.filter !== '';
 }
 
+function isSetFilter(model: ProvidedFilterModel): model is SetFilterModel {
+  return model.filterType === 'set' && 'values' in model;
+}
+
 function matches(vector: Vector | undefined, row: number, model: ProvidedFilterModel): boolean {
+  if (isSetFilter(model)) {
+    const text = displayText(vector, row);
+    return model.values.map((value) => (value == null ? '' : String(value))).includes(text);
+  }
   if ('conditions' in model && Array.isArray(model.conditions) && model.conditions.length > 0) {
     return join(model.operator, model.conditions.map((condition) => matches(vector, row, condition)));
   }
