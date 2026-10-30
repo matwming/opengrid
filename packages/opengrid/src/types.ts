@@ -41,6 +41,8 @@ export interface ColDef<TData = any, TValue = any> {
   rowGroupIndex?: number | null;
   pivot?: boolean | null;
   aggFunc?: string | null;
+  pivotKey?: string;
+  pivotValueColumn?: string;
   enableRowGroup?: boolean;
   enablePivot?: boolean;
   enableValue?: boolean;
@@ -211,6 +213,7 @@ export interface GridOptions<TData = any> {
   quickFilterText?: string;
   autoGroupColumnDef?: ColDef<TData>;
   groupDefaultExpanded?: number;
+  pivotMode?: boolean;
   domLayout?: 'normal' | 'autoHeight' | 'print';
   theme?: string;
   ensureDomOrder?: boolean;
