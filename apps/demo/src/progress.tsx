@@ -191,6 +191,10 @@ function App() {
                 <td><code>setAdvancedFilterModel</code> 用 AND 或 OR 组合文本条件和数字条件。名字包含 a 且数量大于 2 时，留下 Bea 和 Amy。还没有高级过滤的搭建界面。没有和企业版并排对照。</td>
               </tr>
               <tr>
+                <td>视口行模型</td>
+                <td><code>viewportDatasource.init</code> 收到 <code>setRowCount</code> 和 <code>setRowData</code>。<code>setViewportRange</code> 拿到可见行，数据源把这些行填进来。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -204,9 +208,7 @@ function App() {
 
         <section>
           <h2>还没做</h2>
-          <ul>
-            <li>视口行模型。</li>
-          </ul>
+          <p>上面点名的这批已经进表。每一行里写了还没做的部分，例如图表工具条、迷你图折线、高级过滤搭建界面。</p>
         </section>
 
         <section>
@@ -217,7 +219,7 @@ function App() {
             <li>日期快速过滤只在 <code>YYYY-MM-DD</code> 上核对过。</li>
             <li>分页的首尾行号只在 happy-dom 里核对过。分页条没有跑过浏览器和 axe。</li>
             <li>100 万行上每次按键的快速过滤耗时没有测量。</li>
-            <li>自定义比较器留在主线程。分组还没做，所以这一项没有计时。</li>
+            <li>自定义比较器留在主线程。</li>
           </ul>
         </section>
       </main>

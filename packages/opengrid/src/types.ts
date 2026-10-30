@@ -188,6 +188,17 @@ export interface IServerSideGetRowsRequest {
   filterModel: FilterModel | null;
 }
 
+export interface IViewportDatasourceParams<TData = any> {
+  setRowCount: (count: number) => void;
+  setRowData: (rows: Record<number, TData>) => void;
+}
+
+export interface IViewportDatasource<TData = any> {
+  init: (params: IViewportDatasourceParams<TData>) => void;
+  setViewportRange: (firstRow: number, lastRow: number) => void;
+  destroy?: () => void;
+}
+
 export interface IServerSideDatasource<TData = any> {
   getRows: (params: {
     request: IServerSideGetRowsRequest;
@@ -207,6 +218,7 @@ export interface GridOptions<TData = any> {
   rowModelType?: RowModelType;
   datasource?: IDatasource<TData>;
   serverSideDatasource?: IServerSideDatasource<TData>;
+  viewportDatasource?: IViewportDatasource<TData>;
   cacheBlockSize?: number;
   cacheOverflowSize?: number;
   infiniteInitialRowCount?: number;

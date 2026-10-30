@@ -104,7 +104,7 @@ export class GridSession<TData = any> {
   private a11yTimer = 0;
 
   constructor(host: HTMLElement, options: GridOptions<TData>) {
-    if (options.rowModelType && options.rowModelType !== 'clientSide' && options.rowModelType !== 'infinite' && options.rowModelType !== 'serverSide') {
+    if (options.rowModelType && options.rowModelType !== 'clientSide' && options.rowModelType !== 'infinite' && options.rowModelType !== 'serverSide' && options.rowModelType !== 'viewport') {
       throw new Error(`opengrid: rowModelType "${options.rowModelType}" is not in this build`);
     }
     this.host = host;
@@ -181,6 +181,7 @@ export class GridSession<TData = any> {
     this.rebuildColumns(options.rowData ?? []);
     this.mountSide();
     if (this.remoteMode()) this.bootInfinite();
+    else if (this.options.rowModelType === 'viewport') this.bootViewport();
     else this.loadRows(options.rowData ?? [], true);
     this.emit('gridReady', {});
   }
@@ -391,6 +392,46 @@ export class GridSession<TData = any> {
     }
     this.layout();
     this.ensureInfinite();
+  }
+
+  private bootViewport(): void {
+    this.rows = [];
+    this.selected = new Uint8Array(0);
+    this.selectedList = [];
+    this.view = { indices: new Uint32Array(0), count: 0, identity: true };
+    this.store = buildStore([], []);
+    const datasource = this.options.viewportDatasource;
+    if (!datasource) return;
+    datasource.init({
+      setRowCount: (count) => {
+        this.setInfiniteCount(count);
+        this.layout();
+        this.syncA11y();
+        this.pushViewport();
+      },
+      setRowData: (rows) => {
+        for (const key of Object.keys(rows)) {
+          const index = Number(key);
+          const row = rows[index];
+          if (!Number.isInteger(index) || index < 0 || row === undefined) continue;
+          this.rows[index] = row;
+          if (this.options.getRowId) this.idToSource.set(this.options.getRowId({ data: row, level: 0 }), index);
+        }
+        this.layout();
+        this.syncA11y();
+      },
+    });
+    this.pushViewport();
+  }
+
+  private pushViewport(): void {
+    const datasource = this.options.viewportDatasource;
+    if (this.options.rowModelType !== 'viewport' || !datasource || this.view.count <= 0) return;
+    const rowHeight = this.rowHeight();
+    const first = Math.max(0, Math.floor(this.virtualTop() / rowHeight));
+    const visible = this.viewport.clientHeight > 0 ? Math.max(1, Math.floor(this.viewport.clientHeight / rowHeight)) : 1;
+    const last = Math.min(this.view.count - 1, first + visible - 1);
+    datasource.setViewportRange(first, last);
   }
 
   private refresh(reason: 'initial' | 'sort' | 'filter' | 'data' | 'edit'): void {
@@ -1311,6 +1352,7 @@ export class GridSession<TData = any> {
   private onScroll(): void {
     this.syncHeaderScroll();
     if (this.remoteMode()) this.ensureInfinite();
+    if (this.options.rowModelType === 'viewport') this.pushViewport();
     if (this.paintFrameId) return;
     this.paintFrameId = requestAnimationFrame(() => {
       this.paintFrameId = 0;
