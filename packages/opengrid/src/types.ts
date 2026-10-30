@@ -162,6 +162,22 @@ export interface MultiRowSelectionOptions<TData = any> {
 
 export type RowSelectionOptions<TData = any> = SingleRowSelectionOptions<TData> | MultiRowSelectionOptions<TData>;
 
+export interface IGetRowsParams<TData = any> {
+  startRow: number;
+  endRow: number;
+  successCallback: (rowsThisBlock: TData[], lastRow?: number) => void;
+  failCallback: () => void;
+  sortModel: { colId: string; sort: 'asc' | 'desc'; type?: string }[];
+  filterModel: any;
+  context: unknown;
+}
+
+export interface IDatasource<TData = any> {
+  rowCount?: number;
+  getRows: (params: IGetRowsParams<TData>) => void;
+  destroy?: () => void;
+}
+
 export interface GridOptions<TData = any> {
   columnDefs?: (ColDef<TData> | ColGroupDef<TData>)[] | null;
   defaultColDef?: ColDef<TData>;
@@ -171,6 +187,10 @@ export interface GridOptions<TData = any> {
   rowMultiSelectWithClick?: boolean;
   suppressRowClickSelection?: boolean;
   rowModelType?: RowModelType;
+  datasource?: IDatasource<TData>;
+  cacheBlockSize?: number;
+  cacheOverflowSize?: number;
+  infiniteInitialRowCount?: number;
   getRowId?: (params: GetRowIdParams<TData>) => string;
   animateRows?: boolean;
   headerHeight?: number;
@@ -442,6 +462,12 @@ export interface GridApi<TData = any> {
   paginationGoToFirstPage(): void;
   paginationGoToLastPage(): void;
   paginationGoToPage(page: number): void;
+  refreshInfiniteCache(): void;
+  purgeInfiniteCache(): void;
+  getInfiniteRowCount(): number | undefined;
+  setRowCount(rowCount: number, maxRowFound?: boolean): void;
+  isLastRowIndexKnown(): boolean | undefined;
+  getCacheBlockState(): Record<string, { blockNumber: number; startRow: number; endRow: number; pageStatus: string }>;
   getState(): GridState;
   setState(state: GridState, propertiesToIgnore?: (keyof GridState)[]): void;
   forEachNode(callback: (rowNode: IRowNode<TData>, index: number) => void): void;

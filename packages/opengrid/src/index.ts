@@ -18,6 +18,8 @@ export type {
   GridApi,
   GridOptions,
   GridReadyEvent,
+  IDatasource,
+  IGetRowsParams,
   IRowNode,
   ProvidedFilterModel,
   RowModelType,

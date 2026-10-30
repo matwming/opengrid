@@ -111,7 +111,9 @@ function App() {
                 <td><code>getState</code> 和 <code>setState</code> 能来回保存排序、过滤、列顺序、列宽、固定、隐藏、页码和选中行。滚动和焦点不在里面。</td>
               </tr>
               <tr>
-                <td>React</td>
+                <td>无限滚动</td>
+                <td><code>cacheBlockSize</code> 为 10 时，首屏请求的块、行数、排序后的重新请求，以及 <code>purgeInfiniteCache</code> 后的缓存键，与 36.2.0 一致。最后一行未知时，行数是已加载终点再加一行。</td>
+              </tr>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
             </tbody>
@@ -121,7 +123,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>无限滚动、行拖拽、Vue 封装、Angular 封装。</li>
+            <li>行拖拽、Vue 封装、Angular 封装。</li>
             <li>分组、聚合、透视、树、主从明细。</li>
             <li>集合过滤、多重过滤、高级过滤。</li>
             <li>范围选择、剪贴板、填充柄、Excel 导出。</li>

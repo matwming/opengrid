@@ -1,5 +1,5 @@
 import { AllCommunityModule, ModuleRegistry, createGrid as createAgGrid } from 'ag-grid-community';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { createGrid as createOpenGrid, type GridApi } from './index';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -54,6 +54,11 @@ function mount(create: (el: HTMLElement, gridOptions: ReturnType<typeof options>
 describe('community api compatibility', () => {
   const ag = mount(createAgGrid);
   const og = mount(createOpenGrid);
+
+  afterAll(() => {
+    ag.destroy();
+    og.destroy();
+  });
 
   it('matches sort, filter, edit, selection, and csv on the same calls', () => {
     expect(ids(og)).toEqual(ids(ag));

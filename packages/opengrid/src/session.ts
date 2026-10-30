@@ -80,13 +80,16 @@ export class GridSession<TData = any> {
   private empty: HTMLElement;
   private pager: HTMLElement;
   private pageIndex = 0;
+  private infiniteKnown = false;
+  private infiniteGen = 0;
+  private infiniteBlocks = new Map<number, 'loading' | 'loaded'>();
   private resizeObserver: ResizeObserver | null = null;
   private paintFrameId = 0;
   private customText = new Map<string, string>();
   private a11yTimer = 0;
 
   constructor(host: HTMLElement, options: GridOptions<TData>) {
-    if (options.rowModelType && options.rowModelType !== 'clientSide') {
+    if (options.rowModelType && options.rowModelType !== 'clientSide' && options.rowModelType !== 'infinite') {
       throw new Error(`opengrid: rowModelType "${options.rowModelType}" is not in this build`);
     }
     this.host = host;
@@ -146,7 +149,8 @@ export class GridSession<TData = any> {
     }
     this.readColors();
     this.rebuildColumns(options.rowData ?? []);
-    this.loadRows(options.rowData ?? [], true);
+    if (this.infiniteMode()) this.bootInfinite();
+    else this.loadRows(options.rowData ?? [], true);
     this.emit('gridReady', {});
   }
 
@@ -157,6 +161,7 @@ export class GridSession<TData = any> {
     this.resizeObserver?.disconnect();
     this.worker?.destroy();
     this.worker = null;
+    this.options.datasource?.destroy?.();
     this.host.replaceChildren();
     this.host.classList.remove('og-host');
   }
@@ -230,7 +235,120 @@ export class GridSession<TData = any> {
     }
   }
 
+  private infiniteMode(): boolean {
+    return this.options.rowModelType === 'infinite';
+  }
+
+  private bootInfinite(): void {
+    const known = this.options.datasource?.rowCount;
+    this.infiniteKnown = typeof known === 'number';
+    const count = known ?? this.options.infiniteInitialRowCount ?? 1;
+    this.rows = new Array(count);
+    this.selected = new Uint8Array(count);
+    this.selectedList = [];
+    this.view = { indices: new Uint32Array(0), count, identity: true };
+    this.store = buildStore([], []);
+    this.layout();
+    this.ensureInfinite();
+  }
+
+  private setInfiniteCount(count: number): void {
+    const next = Math.max(0, count);
+    if (this.rows.length < next) this.rows.length = next;
+    else if (this.rows.length > next) this.rows.length = next;
+    if (this.selected.length < next) {
+      const grown = new Uint8Array(next);
+      grown.set(this.selected);
+      this.selected = grown;
+    }
+    this.view = { indices: new Uint32Array(0), count: next, identity: true };
+  }
+
+  private infiniteSortModel(): { colId: string; sort: 'asc' | 'desc'; type: string }[] {
+    return this.sortKeys().map((key) => ({ colId: key.colId, sort: key.direction, type: 'default' }));
+  }
+
+  private ensureInfinite(): void {
+    if (!this.infiniteMode() || !this.options.datasource || this.view.count <= 0) return;
+    const size = Math.max(1, this.options.cacheBlockSize ?? 100);
+    const rowHeight = this.rowHeight();
+    const first = Math.max(0, Math.floor(this.virtualTop() / rowHeight));
+    const visible = this.viewport.clientHeight > 0 ? Math.max(1, Math.floor(this.viewport.clientHeight / rowHeight)) : 1;
+    const buffer = 10;
+    const last = Math.min(this.view.count - 1, first + visible - 1 + buffer);
+    const firstBlock = Math.floor(first / size);
+    let lastBlock = Math.floor(Math.max(first, last) / size);
+    if (!this.infiniteKnown) lastBlock = Math.max(lastBlock, firstBlock + 1);
+    const maxBlock = Math.floor(Math.max(0, this.view.count - 1) / size);
+    if (this.infiniteKnown) lastBlock = Math.min(lastBlock, maxBlock);
+    for (let block = firstBlock; block <= lastBlock; block++) this.loadInfiniteBlock(block, size);
+  }
+
+  private loadInfiniteBlock(block: number, size: number): void {
+    const datasource = this.options.datasource;
+    if (!datasource || this.infiniteBlocks.has(block)) return;
+    const start = block * size;
+    const end = start + size;
+    const generation = this.infiniteGen;
+    this.infiniteBlocks.set(block, 'loading');
+    datasource.getRows({
+      startRow: start,
+      endRow: end,
+      successCallback: (rows, lastRow) => this.infiniteSuccess(generation, start, end, rows, lastRow),
+      failCallback: () => {
+        if (generation !== this.infiniteGen) return;
+        this.infiniteBlocks.delete(block);
+      },
+      sortModel: this.infiniteSortModel(),
+      filterModel: this.filterModel,
+      context: this.options.context,
+    });
+  }
+
+  private infiniteSuccess(generation: number, start: number, end: number, rows: TData[], lastRow?: number): void {
+    if (generation !== this.infiniteGen || this.destroyed) return;
+    for (let index = 0; index < rows.length; index++) {
+      const row = rows[index];
+      if (row === undefined) continue;
+      this.rows[start + index] = row;
+      if (this.options.getRowId) this.idToSource.set(this.options.getRowId({ data: row, level: 0 }), start + index);
+    }
+    this.infiniteBlocks.set(Math.floor(start / Math.max(1, this.options.cacheBlockSize ?? 100)), 'loaded');
+    if (typeof lastRow === 'number') {
+      this.infiniteKnown = true;
+      this.setInfiniteCount(lastRow);
+    } else if (!this.infiniteKnown) {
+      const overflow = this.options.cacheOverflowSize ?? 1;
+      this.setInfiniteCount(Math.max(this.view.count, end + overflow));
+    }
+    this.layout();
+    this.syncA11y();
+    if (!this.sawFirst && rows.length > 0) {
+      this.sawFirst = true;
+      this.emit('firstDataRendered', {});
+    }
+    this.emit('modelUpdated', {});
+    this.ensureInfinite();
+  }
+
+  private reloadInfinite(purge: boolean): void {
+    this.infiniteGen += 1;
+    this.infiniteBlocks.clear();
+    this.nodes.clear();
+    this.idToSource.clear();
+    if (purge) {
+      const count = this.view.count;
+      this.rows = new Array(count);
+    }
+    this.layout();
+    this.ensureInfinite();
+  }
+
   private refresh(reason: 'initial' | 'sort' | 'filter' | 'data' | 'edit'): void {
+    if (this.infiniteMode()) {
+      if (reason !== 'initial') this.reloadInfinite(true);
+      return;
+    }
     const generation = ++this.generation;
     this.root.dataset.generation = String(generation);
     const sort = this.sortKeys();
@@ -670,6 +788,7 @@ export class GridSession<TData = any> {
 
   private onScroll(): void {
     this.syncHeaderScroll();
+    if (this.infiniteMode()) this.ensureInfinite();
     if (this.paintFrameId) return;
     this.paintFrameId = requestAnimationFrame(() => {
       this.paintFrameId = 0;
@@ -1785,7 +1904,10 @@ export class GridSession<TData = any> {
           session.rebuildColumns(session.rows);
           session.layout();
         } else if (key === 'rowHeight' || key === 'headerHeight') session.layout();
-        else if (key === 'loading') session.renderEmpty();
+        else if (key === 'datasource') {
+          session.infiniteKnown = typeof (value as { rowCount?: number } | null)?.rowCount === 'number';
+          session.reloadInfinite(true);
+        }
         else if (key === 'quickFilterText') session.refresh('filter');
         else if (key === 'pagination' || key === 'paginationPageSize') {
           session.clampPage();
@@ -1891,7 +2013,7 @@ export class GridSession<TData = any> {
       },
       getFirstDisplayedRowIndex: () => session.firstDisplayed(),
       getLastDisplayedRowIndex: () => session.lastDisplayed(),
-      paginationIsLastPageFound: () => true,
+      paginationIsLastPageFound: () => !session.infiniteMode() || session.infiniteKnown,
       paginationGetPageSize: () => session.paginationPageSize(),
       paginationGetCurrentPage: () => (session.paginationOn() ? session.pageIndex : 0),
       paginationGetTotalPages: () => (session.paginationOn() ? session.pageCount() : 1),
@@ -1901,6 +2023,24 @@ export class GridSession<TData = any> {
       paginationGoToFirstPage: () => session.goToPage(0),
       paginationGoToLastPage: () => session.goToPage(session.pageCount() - 1),
       paginationGoToPage: (page) => session.goToPage(page),
+      refreshInfiniteCache: () => session.reloadInfinite(false),
+      purgeInfiniteCache: () => session.reloadInfinite(true),
+      getInfiniteRowCount: () => (session.infiniteMode() ? session.view.count : undefined),
+      setRowCount: (rowCount, maxRowFound) => {
+        if (maxRowFound !== undefined) session.infiniteKnown = maxRowFound;
+        session.setInfiniteCount(rowCount);
+        session.layout();
+        session.ensureInfinite();
+      },
+      isLastRowIndexKnown: () => (session.infiniteMode() ? session.infiniteKnown : undefined),
+      getCacheBlockState: () => {
+        const size = Math.max(1, session.options.cacheBlockSize ?? 100);
+        const state: Record<string, { blockNumber: number; startRow: number; endRow: number; pageStatus: string }> = {};
+        for (const [block, status] of session.infiniteBlocks) {
+          state[String(block)] = { blockNumber: block, startRow: block * size, endRow: block * size + size, pageStatus: status };
+        }
+        return state;
+      },
       getState: () => session.gridState(),
       setState: (state, ignore) => session.restoreState(state, ignore),
       forEachNode: (callback) => {
