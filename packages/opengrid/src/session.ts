@@ -142,7 +142,10 @@ export class GridSession<TData = any> {
     this.host.replaceChildren(shell);
     this.viewport.addEventListener('scroll', () => this.onScroll(), { passive: true });
     this.viewport.addEventListener('click', (event) => this.onBodyClick(event));
-    this.viewport.addEventListener('pointerdown', (event) => this.onRowDragDown(event));
+    this.viewport.addEventListener('pointerdown', (event) => {
+      this.onFillDown(event);
+      this.onRowDragDown(event);
+    });
     this.viewport.addEventListener('dblclick', (event) => this.onBodyDoubleClick(event));
     this.root.addEventListener('keydown', (event) => this.onKey(event));
     this.root.addEventListener('paste', (event) => {
@@ -980,6 +983,54 @@ export class GridSession<TData = any> {
     this.layout();
     const column = columnFacade(leaf);
     this.emit('columnPinned', { column, columns: [column], source: 'ui' });
+  }
+
+  private fillHandle(): boolean {
+    const selection = this.options.cellSelection;
+    return typeof selection === 'object' && selection.handle?.mode === 'fill';
+  }
+
+  private onFillDown(event: PointerEvent): void {
+    if (!this.fillHandle() || event.button !== 0 || this.cellRanges.length === 0) return;
+    const found = this.hit(event.clientX, event.clientY);
+    if (!found) return;
+    const range = this.cellRanges[0];
+    if (!range) return;
+    const end = Math.max(range.rowStartIndex, range.rowEndIndex);
+    if (found.display !== end || !range.columns.includes(found.leaf.colId)) return;
+    const sourceRow = Math.min(range.rowStartIndex, range.rowEndIndex);
+    let over = end;
+    const move = (ev: PointerEvent) => {
+      const next = this.hit(ev.clientX, ev.clientY);
+      if (next) over = next.display;
+    };
+    const up = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      if (over <= end) return;
+      this.applyFill(range.columns, sourceRow, over);
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+
+  private applyFill(columns: readonly string[], sourceRow: number, endRow: number): void {
+    for (const colId of columns) {
+      const leaf = this.leafByKey(colId);
+      const source = this.sourceAt(sourceRow);
+      if (!leaf || source < 0) continue;
+      const value = this.readSource(source, leaf);
+      const next = this.options.fillOperation?.({ currentValue: value, values: [value] }) ?? value;
+      for (let row = sourceRow + 1; row <= endRow; row++) {
+        const target = this.sourceAt(row);
+        if (target < 0) continue;
+        this.writeSource(target, leaf, next, 'fill');
+      }
+    }
+    const range = this.cellRanges[0];
+    if (range) range.rowEndIndex = endRow;
+    this.paint();
+    this.syncA11y();
   }
 
   private onRowDragDown(event: PointerEvent): void {

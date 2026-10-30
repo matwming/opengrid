@@ -216,7 +216,8 @@ export interface GridOptions<TData = any> {
   pivotMode?: boolean;
   treeData?: boolean;
   getDataPath?: (data: TData) => string[];
-  cellSelection?: boolean;
+  cellSelection?: boolean | { handle?: { mode?: 'fill' } };
+  fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
   sendToClipboard?: (params: { data: string }) => void;
   processCellForClipboard?: (params: { value: string; column: Column }) => string;
   processCellFromClipboard?: (params: { value: string; column: Column }) => unknown;

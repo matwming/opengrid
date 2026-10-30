@@ -52,7 +52,7 @@ Status words mean the following.
 | Advanced filter | [Advanced filter](https://www.ag-grid.com/javascript-data-grid/filter-advanced/) | not started |
 | Range selection | [Cell selection](https://www.ag-grid.com/javascript-data-grid/cell-selection/) | partial. `addCellRange` remembers the rows and columns. `getCellRanges` reads them back. `clearCellSelection` drops them. Dragging a range with the mouse is not started. Not compared with Enterprise. |
 | Clipboard | [Clipboard](https://www.ag-grid.com/javascript-data-grid/clipboard/) | partial. `copySelectedRangeToClipboard` sends tab-separated text through `sendToClipboard`. `processCellForClipboard` can change each cell. A paste event writes the text back into the range and keeps a number as a number. Not compared with Enterprise. |
-| Fill handle | [Fill handle](https://www.ag-grid.com/javascript-data-grid/cell-selection-fill-handle/) | not started |
+| Fill handle | [Fill handle](https://www.ag-grid.com/javascript-data-grid/cell-selection-fill-handle/) | partial. With `cellSelection.handle.mode` set to `fill`, dragging down from the selected cell copies that value through the rows under the pointer. `fillOperation` can change the written value. Not compared with Enterprise. |
 | Excel export | [Excel export](https://www.ag-grid.com/javascript-data-grid/excel-export/) | not started |
 | Server-side row model | [Server-side model](https://www.ag-grid.com/javascript-data-grid/server-side-model/) | not started |
 | Viewport row model | [Viewport](https://www.ag-grid.com/javascript-data-grid/viewport/) | not started |
