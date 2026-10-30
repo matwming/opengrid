@@ -547,6 +547,8 @@ export interface GridApi<TData = any> {
   ensureColumnVisible(key: string | Column, position?: 'auto' | 'start' | 'middle' | 'end'): void;
   getDataAsCsv(params?: CsvExportParams): string;
   exportDataAsCsv(params?: CsvExportParams): void;
+  getDataAsExcel(): Blob;
+  exportDataAsExcel(): void;
   addEventListener(eventType: string, listener: (event: AgEvent<TData>) => void): void;
   removeEventListener(eventType: string, listener: (event: AgEvent<TData>) => void): void;
   getVerticalPixelRange(): { top: number; bottom: number };

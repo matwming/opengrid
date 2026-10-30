@@ -1,5 +1,6 @@
 import { bandsOf, buildLeaves, columnFacade, groupRuns, selectionConfig, visibleLeaves, AUTO_GROUP_COL_ID, autoGroupLeaf, type Leaf, type SelectionConfig } from './columns';
 import { encodeCsv, encodeCsvRaw, downloadCsv } from './csv';
+import { workbookBytes } from './xlsx';
 import { WORKER_ROW_MIN, WorkerEngine } from './engine-client';
 import { applyFilter, applyQuickFilter, hasQuickFilter, queryView, type SortKey, type ViewResult } from './engine';
 import { aggregate, flattenGroups, flattenTree, type FlatRow, type GroupFlat } from './group';
@@ -2109,6 +2110,20 @@ export class GridSession<TData = any> {
     return params?.suppressQuotes ? encodeCsvRaw(lines, params.columnSeparator ?? ',') : encodeCsv(lines, params?.columnSeparator ?? ',');
   }
 
+  private excelRows(): string[][] {
+    const leaves = this.exportLeaves();
+    const lines: string[][] = [leaves.map((leaf) => leaf.headerName)];
+    for (const display of this.exportDisplays()) {
+      const source = this.sourceAt(display);
+      if (source < 0) continue;
+      lines.push(leaves.map((leaf) => {
+        const value = this.exportValue(source, leaf);
+        return value == null ? '' : String(value);
+      }));
+    }
+    return lines;
+  }
+
   private exportLeaves(params?: CsvExportParams): Leaf<TData>[] {
     if (params?.columnKeys) return params.columnKeys.map((key) => this.leafByKey(key)).filter((leaf): leaf is Leaf<TData> => Boolean(leaf));
     if (params?.allColumns) return this.leaves.filter((leaf) => !leaf.selectionColumn);
@@ -2549,6 +2564,16 @@ export class GridSession<TData = any> {
       },
       getDataAsCsv: (params) => session.csv(params),
       exportDataAsCsv: (params) => downloadCsv(session.csv(params), params?.fileName),
+      getDataAsExcel: () => new Blob([Uint8Array.from(workbookBytes(session.excelRows()))], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+      exportDataAsExcel: () => {
+        const blob = new Blob([Uint8Array.from(workbookBytes(session.excelRows()))], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'export.xlsx';
+        link.click();
+        URL.revokeObjectURL(url);
+      },
       addEventListener: (eventType, listener) => {
         const set = session.listeners.get(eventType) ?? new Set();
         set.add(listener);
