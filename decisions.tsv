@@ -38,3 +38,4 @@ ts	phase	decision	why	evidence	result
 2026-10-30T23:19:28Z	range-drag	Drag the pointer across cells to replace the selected range	The drag test covers rows 0 to 2 and the name and qty columns	packages/opengrid/src/range-drag.test.ts	tests green
 2026-10-30T23:20:23Z	chart	Draw a column chart from a cell range and remove it	The chart test reads series 4,9 and two bars, then destroyChart clears the panel	packages/opengrid/src/chart.test.ts	tests green
 2026-10-30T23:21:19Z	spark	Draw one sparkline bar per number in the cell	The sparkline test reads 1,3,2 and three bars	packages/opengrid/src/spark.test.ts	tests green
+2026-10-30T23:22:23Z	side	Hide a column from the columns tool panel and open a filter from the filters tool panel	The side test hides qty and opens the name filter popup	packages/opengrid/src/side.test.ts	tests green

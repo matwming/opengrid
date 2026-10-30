@@ -234,6 +234,7 @@ export interface GridOptions<TData = any> {
   getDataPath?: (data: TData) => string[];
   cellSelection?: boolean | { handle?: { mode?: 'fill' } };
   statusBar?: { statusPanels?: { statusPanel?: string }[] };
+  sideBar?: boolean | { toolPanels?: { id?: string; toolPanel?: string }[] };
   fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
   sendToClipboard?: (params: { data: string }) => void;
   processCellForClipboard?: (params: { value: string; column: Column }) => string;

@@ -179,6 +179,10 @@ function App() {
                 <td><code>cellRenderer: 'agSparklineCellRenderer'</code> 按单元格里的数字数组画柱。数组 <code>[1, 3, 2]</code> 画出三根柱。还没有折线和面积迷你图。没有和企业版并排对照。</td>
               </tr>
               <tr>
+                <td>侧边栏</td>
+                <td><code>sideBar: true</code> 打开列工具面板和过滤工具面板。列面板可以藏起一列。过滤面板打开那一列的过滤。自定义工具面板还没有。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -194,7 +198,7 @@ function App() {
           <h2>还没做</h2>
           <ul>
             <li>多重过滤、高级过滤。</li>
-            <li>视口行模型、侧边栏、工具面板。</li>
+            <li>视口行模型。</li>
           </ul>
         </section>
 

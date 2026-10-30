@@ -177,6 +177,7 @@ export class GridSession<TData = any> {
     }
     this.readColors();
     this.rebuildColumns(options.rowData ?? []);
+    this.mountSide();
     if (this.remoteMode()) this.bootInfinite();
     else this.loadRows(options.rowData ?? [], true);
     this.emit('gridReady', {});
@@ -1054,6 +1055,49 @@ export class GridSession<TData = any> {
     this.layout();
     const column = columnFacade(leaf);
     this.emit('columnPinned', { column, columns: [column], source: 'ui' });
+  }
+
+  private mountSide(): void {
+    const option = this.options.sideBar;
+    if (!option) return;
+    const panels = option === true
+      ? [{ id: 'columns', toolPanel: 'agColumnsToolPanel' }, { id: 'filters', toolPanel: 'agFiltersToolPanel' }]
+      : option.toolPanels ?? [];
+    if (panels.length === 0) return;
+    const side = el('div', 'og-side');
+    for (const panel of panels) {
+      if (panel.toolPanel === 'agColumnsToolPanel' || panel.id === 'columns') side.append(this.columnsToolPanel());
+      if (panel.toolPanel === 'agFiltersToolPanel' || panel.id === 'filters') side.append(this.filtersToolPanel());
+    }
+    this.host.append(side);
+  }
+
+  private columnsToolPanel(): HTMLElement {
+    const box = el('div', 'og-tool-columns');
+    for (const leaf of this.leaves) {
+      if (leaf.selectionColumn) continue;
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = !leaf.hide;
+      input.addEventListener('change', () => this.api.setColumnsVisible([leaf.colId], input.checked));
+      label.append(input, document.createTextNode(leaf.headerName));
+      box.append(label);
+    }
+    return box;
+  }
+
+  private filtersToolPanel(): HTMLElement {
+    const box = el('div', 'og-tool-filters');
+    for (const leaf of this.leaves) {
+      if (!leaf.filter || leaf.selectionColumn) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = leaf.headerName;
+      button.addEventListener('click', () => this.openFilter(leaf, button));
+      box.append(button);
+    }
+    return box;
   }
 
   private fillHandle(): boolean {
