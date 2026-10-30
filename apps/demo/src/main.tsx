@@ -80,6 +80,11 @@ function App() {
 
   return (
     <div className="page">
+      <nav className="site-nav">
+        <a href="/" aria-current="page">演示</a>
+        <a href="/bench">基准</a>
+        <a href="/progress">进度</a>
+      </nav>
       <header className="top">
         <div>
           <p className="kicker">Opengrid</p>

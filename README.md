@@ -62,7 +62,7 @@ BENCH_ROWS=1000000 BENCH_COLS=50 npm run bench
 
 ## Deploy the demo
 
-The Vite app is on Cloudflare Pages: [https://opengrid-cbk.pages.dev](https://opengrid-cbk.pages.dev). The benchmark page is [https://opengrid-cbk.pages.dev/bench](https://opengrid-cbk.pages.dev/bench).
+The Vite app is on Cloudflare Pages: [https://opengrid-cbk.pages.dev](https://opengrid-cbk.pages.dev). The benchmark page is [https://opengrid-cbk.pages.dev/bench](https://opengrid-cbk.pages.dev/bench). Progress, including what is checked and what is still open, is [https://opengrid-cbk.pages.dev/progress](https://opengrid-cbk.pages.dev/progress).
 
 From the repo root, build the library, then the demo, then upload `apps/demo/dist`:
 

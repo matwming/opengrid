@@ -8,11 +8,102 @@ body,
   font: 15px/1.4 "Avenir Next", "Liberation Sans", "Segoe UI", sans-serif;
 }
 
+.site-nav {
+  display: flex;
+  gap: 16px;
+  padding: 10px 20px 0;
+}
+
+.site-nav a {
+  color: #3f342b;
+  font-size: 13px;
+}
+
+.site-nav a[aria-current='page'] {
+  color: #241c16;
+  font-weight: 600;
+}
+
 .page {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+}
+
+.progress-page,
+.progress-page #root {
+  height: auto;
+  min-height: 100%;
+}
+
+.progress-main {
+  padding: 0 20px 32px;
+  max-width: 920px;
+}
+
+.progress-main h2 {
+  margin: 28px 0 8px;
+  font-size: 20px;
+}
+
+.progress-main p,
+.progress-main li {
+  margin: 0 0 8px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.stats p {
+  margin: 0;
+  padding: 12px;
+  background: #fffaf3;
+  border: 1px solid #d9cfc0;
+}
+
+.stats strong {
+  display: block;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats span,
+.note {
+  color: #3f342b;
+  font-size: 13px;
+}
+
+.progress-main table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-main th,
+.progress-main td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 10px;
+  border-bottom: 1px solid #d9cfc0;
+}
+
+.progress-main caption {
+  caption-side: bottom;
+  text-align: left;
+  color: #3f342b;
+  font-size: 13px;
+  padding-top: 8px;
+}
+
+@media (max-width: 800px) {
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .top {
