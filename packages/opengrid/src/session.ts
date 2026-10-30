@@ -14,6 +14,8 @@ import type {
   GridApi,
   GridOptions,
   IRowNode,
+  RowDataTransaction,
+  RowNodeTransaction,
   ProvidedFilterModel,
   SimpleFilterModel,
   SortDirection,
@@ -280,7 +282,7 @@ export class GridSession<TData = any> {
     }
     this.renderChrome();
     this.syncRenderers();
-    this.scheduleA11y();
+    this.syncA11y();
   }
 
   private comparisonSort(filtered: ViewResult, sort: readonly SortKey[]): ViewResult {
@@ -707,6 +709,13 @@ export class GridSession<TData = any> {
         return leaf ? this.textFor(source, leaf) : '';
       },
       selected: (source) => this.selected[source] === 1,
+      styleAt: (source, colId) => {
+        const leaf = this.leafById(colId);
+        if (!leaf) return null;
+        const style = this.paintStyle(source, leaf);
+        if (!style.background && !style.color) return null;
+        return { background: style.background, color: style.color };
+      },
       focusColId: focusLeaf?.colId ?? null,
       focusRow: this.view.count > 0 ? this.focusRow : null,
       colors: this.colors,
@@ -1047,6 +1056,28 @@ export class GridSession<TData = any> {
     return cellRaw(this.store.columns.get(leaf.colId), source);
   }
 
+  private paintStyle(source: number, leaf: Leaf<TData>): { background: string | null; color: string | null; className: string } {
+    if (!leaf.cellStyle && !leaf.cellClass) return { background: null, color: null, className: '' };
+    const params = {
+      value: this.readSource(source, leaf),
+      data: this.rows[source],
+      node: this.nodeFor(source),
+      colDef: leaf.def,
+      column: columnFacade(leaf),
+      api: this.api,
+      context: this.options.context,
+      rowIndex: this.displayIndex(source),
+    };
+    const style = typeof leaf.cellStyle === 'function' ? leaf.cellStyle(params) : leaf.cellStyle;
+    const rawClass = typeof leaf.cellClass === 'function' ? leaf.cellClass(params) : leaf.cellClass;
+    const className = Array.isArray(rawClass) ? rawClass.join(' ') : (rawClass ?? '');
+    return {
+      background: style?.backgroundColor ?? style?.background ?? null,
+      color: style?.color ?? null,
+      className,
+    };
+  }
+
   private textFor(source: number, leaf: Leaf<TData>): string {
     if (leaf.selectionColumn) return '';
     const value = this.readSource(source, leaf);
@@ -1212,6 +1243,10 @@ export class GridSession<TData = any> {
         cell.setAttribute('role', 'gridcell');
         cell.setAttribute('aria-colindex', String(index + 1));
         cell.textContent = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : this.textFor(source, leaf);
+        const paint = this.paintStyle(source, leaf);
+        if (paint.className) cell.classList.add(...paint.className.split(/\s+/).filter(Boolean));
+        if (paint.background) cell.style.backgroundColor = paint.background;
+        if (paint.color) cell.style.color = paint.color;
         row.append(cell);
       });
       fragment.append(row);
@@ -1412,6 +1447,92 @@ export class GridSession<TData = any> {
     return this.readSource(source, leaf);
   }
 
+  private applyTransaction(transaction: RowDataTransaction<TData>): RowNodeTransaction<TData> {
+    const selectedIds = new Set(this.selectedList.map((source) => this.rowId(source)));
+    let next = this.rows.slice();
+    const removed: IRowNode<TData>[] = [];
+    const updatedData: TData[] = [];
+    const addedData: TData[] = [];
+    if (transaction.remove?.length) {
+      const drop = new Set<number>();
+      for (const item of transaction.remove) {
+        const source = this.findRow(item, next);
+        const row = source >= 0 ? next[source] : undefined;
+        if (source < 0 || row === undefined) continue;
+        drop.add(source);
+        removed.push(this.frozenNode(row));
+      }
+      next = next.filter((_, index) => !drop.has(index));
+    }
+    if (transaction.update?.length) {
+      for (const item of transaction.update) {
+        const source = this.findRow(item, next);
+        if (source < 0) continue;
+        next[source] = item;
+        updatedData.push(item);
+      }
+    }
+    if (transaction.add?.length) {
+      const index = transaction.addIndex == null ? next.length : Math.max(0, Math.min(transaction.addIndex, next.length));
+      next.splice(index, 0, ...transaction.add);
+      addedData.push(...transaction.add);
+    }
+    this.loadRows(next, false);
+    this.selected.fill(0);
+    this.selectedList = [];
+    for (let source = 0; source < this.rows.length; source++) {
+      if (!selectedIds.has(this.rowId(source))) continue;
+      this.selected[source] = 1;
+      this.selectedList.push(source);
+    }
+    this.paint();
+    const lookup = (item: TData) => {
+      const source = this.findRow(item, this.rows);
+      return source < 0 ? null : this.nodeFor(source);
+    };
+    return {
+      add: addedData.map(lookup).filter((node): node is RowNode<TData> => node != null),
+      remove: removed,
+      update: updatedData.map(lookup).filter((node): node is RowNode<TData> => node != null),
+    };
+  }
+
+  private findRow(item: TData, rows: readonly TData[]): number {
+    if (this.options.getRowId) {
+      const id = this.options.getRowId({ data: item, level: 0 });
+      for (let index = 0; index < rows.length; index++) {
+        const row = rows[index];
+        if (row !== undefined && this.options.getRowId({ data: row, level: 0 }) === id) return index;
+      }
+      return -1;
+    }
+    return rows.indexOf(item);
+  }
+
+  private frozenNode(data: TData): IRowNode<TData> {
+    const id = this.options.getRowId?.({ data, level: 0 });
+    return {
+      id,
+      data,
+      rowIndex: null,
+      rowPinned: null,
+      displayed: false,
+      selected: false,
+      selectable: false,
+      group: false,
+      rowHeight: this.rowHeight(),
+      rowTop: null,
+      level: 0,
+      setSelected() {},
+      isSelected: () => false,
+      isRowPinned: () => false,
+      setData() {},
+      setDataValue: () => false,
+      addEventListener() {},
+      removeEventListener() {},
+    };
+  }
+
   private announce(text: string): void {
     this.live.textContent = text;
   }
@@ -1540,6 +1661,7 @@ export class GridSession<TData = any> {
       isPinning: () => session.leaves.some((leaf) => !leaf.hide && leaf.pinned != null),
       isPinningLeft: () => session.leaves.some((leaf) => !leaf.hide && leaf.pinned === 'left'),
       isPinningRight: () => session.leaves.some((leaf) => !leaf.hide && leaf.pinned === 'right'),
+      applyTransaction: (transaction) => session.applyTransaction(transaction),
       getDisplayedRowCount: () => session.view.count,
       getDisplayedRowAtIndex: (index) => {
         const source = session.sourceAt(index);

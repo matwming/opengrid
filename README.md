@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Open http://127.0.0.1:44731.
+`npm run dev` builds `dist` first, then starts the demo. Open http://127.0.0.1:44731. The built entry is `dist/index.js` and it loads `dist/worker.js`.
 
 ## Use it
 

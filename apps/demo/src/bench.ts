@@ -164,7 +164,7 @@ const bench = {
     return { frames: frames.length, elapsedMs, fps, p95Ms };
   },
 
-  async sort(): Promise<{ ms: number; ordered: boolean; sample: number[]; computeMs: number }> {
+  async sort(): Promise<{ ms: number; ordered: boolean; sample: Array<number | null>; computeMs: number }> {
     if (!api) throw new Error('no grid');
     const current = api;
     const started = performance.now();
@@ -177,26 +177,22 @@ const bench = {
       current.applyColumnState({ state: [{ colId: 'c0', sort: 'asc' }], defaultState: { sort: null } });
     });
     const ms = performance.now() - started;
-    const sample: number[] = [];
+    const count = current.getDisplayedRowCount();
+    const sample = checkpoints(count).map((index) => current.getDisplayedRowAtIndex(index)?.data?.c0 ?? null);
     let ordered = true;
     let previousValue = -Infinity;
-    const limit = Math.min(current.getDisplayedRowCount(), 400);
-    for (let index = 0; index < limit; index++) {
+    const step = Math.max(1, Math.floor(count / 200));
+    for (let index = 0; index < count; index += step) {
       const value = current.getDisplayedRowAtIndex(index)?.data?.c0;
-      if (typeof value !== 'number') {
-        ordered = false;
-        continue;
-      }
-      if (value < previousValue) ordered = false;
-      previousValue = value;
-      if (sample.length < 8) sample.push(value);
+      if (typeof value !== 'number' || value < previousValue) ordered = false;
+      if (typeof value === 'number') previousValue = value;
     }
     note(`${kind} sort ${ms.toFixed(0)} ms ordered ${ordered}`);
     const computeMs = Number(host?.querySelector('.og-root')?.getAttribute('data-compute-ms') ?? '0');
     return { ms, ordered, sample, computeMs };
   },
 
-  async filter(): Promise<{ ms: number; count: number }> {
+  async filter(): Promise<{ ms: number; count: number; sample: Array<number | null> }> {
     if (!api) throw new Error('no grid');
     const current = api;
     const started = performance.now();
@@ -210,8 +206,9 @@ const bench = {
     });
     const count = current.getDisplayedRowCount();
     const ms = performance.now() - started;
+    const sample = checkpoints(count).map((index) => current.getDisplayedRowAtIndex(index)?.data?.c0 ?? null);
     note(`${kind} filter ${ms.toFixed(0)} ms rows ${count}`);
-    return { ms, count };
+    return { ms, count, sample };
   },
 
   heap(): number | null {
@@ -226,6 +223,12 @@ const bench = {
     host = null;
   },
 };
+
+function checkpoints(count: number): number[] {
+  const points = [0, 1, 9, 10, 100, 1000, 10_000, 100_000];
+  if (count > 0) points.push(count - 1);
+  return points.filter((index) => index >= 0 && index < count);
+}
 
 window.__opengridBench = bench;
 note('bench controller ready');

@@ -151,4 +151,29 @@ describe('createGrid', () => {
     api.destroy();
     host.remove();
   });
+
+  it('applies a row transaction and paints cell style', () => {
+    const { host, api } = mount();
+    api.setGridOption('columnDefs', [
+      { field: 'id' },
+      { field: 'name', cellClass: 'hot', cellStyle: { backgroundColor: 'rgb(1, 2, 3)', color: 'rgb(4, 5, 6)' } },
+      { field: 'qty' },
+      { field: 'when' },
+    ]);
+    const result = api.applyTransaction({
+      remove: [{ id: 'b', name: null, qty: null, when: null }],
+      update: [{ id: 'a', name: 'Nora', qty: 9, when: '2020-05-02' }],
+      add: [{ id: 'z', name: 'Zoe', qty: 1, when: null }],
+    });
+    expect(result?.remove.map((node) => node.id)).toEqual(['b']);
+    expect(api.getRowNode('b')).toBeUndefined();
+    expect(api.getRowNode('a')?.data?.qty).toBe(9);
+    expect(api.getRowNode('z')?.data?.name).toBe('Zoe');
+    expect(api.getDisplayedRowCount()).toBe(6);
+    const styled = host.querySelector('.hot');
+    expect(styled).toBeTruthy();
+    expect(styled?.getAttribute('style') ?? '').toContain('1, 2, 3');
+    api.destroy();
+    host.remove();
+  });
 });

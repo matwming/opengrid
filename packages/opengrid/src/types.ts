@@ -373,6 +373,19 @@ export interface CellPosition {
   column: Column;
 }
 
+export interface RowDataTransaction<TData = any> {
+  add?: TData[];
+  addIndex?: number;
+  update?: TData[];
+  remove?: TData[];
+}
+
+export interface RowNodeTransaction<TData = any> {
+  add: IRowNode<TData>[];
+  remove: IRowNode<TData>[];
+  update: IRowNode<TData>[];
+}
+
 export interface GridApi<TData = any> {
   destroy(): void;
   getGridId(): string;
@@ -402,6 +415,7 @@ export interface GridApi<TData = any> {
   isPinning(): boolean;
   isPinningLeft(): boolean;
   isPinningRight(): boolean;
+  applyTransaction(transaction: RowDataTransaction<TData>): RowNodeTransaction<TData> | null;
   getDisplayedRowCount(): number;
   getDisplayedRowAtIndex(index: number): IRowNode<TData> | undefined;
   getFirstDisplayedRowIndex(): number;

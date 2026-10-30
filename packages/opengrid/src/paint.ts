@@ -21,6 +21,7 @@ export interface PaintFrame {
   sourceAt: (displayIndex: number) => number;
   textAt: (source: number, colId: string) => string;
   selected: (source: number) => boolean;
+  styleAt?: (source: number, colId: string) => { background: string | null; color: string | null } | null;
   focusColId: string | null;
   focusRow: number | null;
   colors: PaintColors;
@@ -72,8 +73,13 @@ export function paintFrame(ctx: CanvasRenderingContext2D, frame: PaintFrame): vo
       const screenX = screenXOf(column, frame);
       if (screenX + column.width < 0 || screenX > width) continue;
       if (column.pinned == null && (screenX + column.width < frame.leftWidth || screenX > width - frame.rightWidth)) continue;
+      const style = frame.styleAt?.(source, column.colId) ?? null;
+      if (style?.background) {
+        ctx.fillStyle = style.background;
+        ctx.fillRect(screenX, y, column.width, rowHeight);
+      }
       if (column.checkbox) drawCheckbox(ctx, screenX, y, column.width, rowHeight, selected, frame.colors);
-      else drawText(ctx, frame.textAt(source, column.colId), screenX, y, column.width, rowHeight, frame.colors.text);
+      else drawText(ctx, frame.textAt(source, column.colId), screenX, y, column.width, rowHeight, style?.color ?? frame.colors.text);
       if (frame.focusRow === display && frame.focusColId === column.colId) {
         ctx.strokeStyle = frame.colors.focus;
         ctx.lineWidth = 2;

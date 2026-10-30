@@ -16,8 +16,8 @@ interface BenchController {
   prepare(rowCount: number, colCount: number): { prepareMs: number; rows: number; cols: number };
   mount(kind: 'opengrid' | 'ag'): Promise<{ firstRenderMs: number; workerWaitMs: number; engine: string; isolated: boolean; rows: number }>;
   scroll(): Promise<ScrollSample>;
-  sort(): Promise<{ ms: number; ordered: boolean; sample: number[]; computeMs: number }>;
-  filter(): Promise<{ ms: number; count: number }>;
+  sort(): Promise<{ ms: number; ordered: boolean; sample: Array<number | null>; computeMs: number }>;
+  filter(): Promise<{ ms: number; count: number; sample: Array<number | null> }>;
   heap(): number | null;
   destroy(): void;
 }
@@ -83,6 +83,8 @@ test(`community comparison ${rows} x ${cols}`, async ({ page }) => {
     expect(run.opengrid.sort.ordered, 'opengrid sort order').toBe(true);
     expect(run.ag.sort.ordered, 'ag-grid sort order').toBe(true);
     expect(run.opengrid.filter.count).toBe(run.ag.filter.count);
+    expect(run.opengrid.sort.sample).toEqual(run.ag.sort.sample);
+    expect(run.opengrid.filter.sample).toEqual(run.ag.filter.sample);
   }
   expect(opengrid.filter.count).toBeGreaterThan(0);
   expect(opengrid.filter.count).toBeLessThan(rows);
