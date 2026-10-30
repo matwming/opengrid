@@ -31,7 +31,7 @@ Status words mean the following.
 | Feature | Doc | Status |
 | --- | --- | --- |
 | Infinite row model | [Infinite scrolling](https://www.ag-grid.com/javascript-data-grid/infinite-scrolling/) | not started |
-| Quick filter | [Filtering](https://www.ag-grid.com/javascript-data-grid/filtering/) | partial. The default search matches `ag-grid-community` 36.2.0. Words are case-insensitive and a row must match every word. `quickFilterParser` and `getQuickFilterText` are not started. |
+| Quick filter | [Filtering](https://www.ag-grid.com/javascript-data-grid/filtering/) | partial. The default search matches `ag-grid-community` 36.2.0, including a hidden column. Words are case-insensitive and a row must match every word. `quickFilterParser` and `getQuickFilterText` are not started. |
 | Row dragging | [Row dragging](https://www.ag-grid.com/javascript-data-grid/row-dragging/) | not started |
 | Pagination | [Row pagination](https://www.ag-grid.com/javascript-data-grid/row-pagination/) | partial. Client-side page size, current page, total pages, and `paginationGoToPage` match 36.2.0. `getDisplayedRowCount` stays the full filtered count. `paginationAutoPageSize` is not started. |
 | State save and restore | [Grid state](https://www.ag-grid.com/javascript-data-grid/grid-state/) | partial. `getState` and `setState` round-trip sort, filter, column order, width, pin, visibility, page, and row selection against 36.2.0. Scroll, focus, and group state are not started. |

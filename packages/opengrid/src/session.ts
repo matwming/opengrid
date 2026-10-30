@@ -317,6 +317,10 @@ export class GridSession<TData = any> {
     return this.options.quickFilterText ?? '';
   }
 
+  private columnFilterPresent(): boolean {
+    return Object.values(this.filterModel).some((model) => model != null && modelActive(model));
+  }
+
   private hasFilter(): boolean {
     return hasQuickFilter(this.quickText()) || Object.values(this.filterModel).some((model) => model != null && modelActive(model));
   }
@@ -1484,13 +1488,14 @@ export class GridSession<TData = any> {
     const hiddenColIds = columns.filter((column) => column.hide).map((column) => column.colId);
     const leftColIds = columns.filter((column) => column.pinned === 'left').map((column) => column.colId);
     const rightColIds = columns.filter((column) => column.pinned === 'right').map((column) => column.colId);
-    const filterModel = this.filterModel;
+    const filterModel = JSON.parse(JSON.stringify(this.filterModel)) as FilterModel;
     const state: GridState = {
       version: '0.1.0',
       columnOrder: { orderedColIds: columns.map((column) => column.colId) },
       columnSizing: {
         columnSizingModel: columns.map((column) => {
-          const item: { colId: string; width?: number; flex?: number } = { colId: column.colId, width: column.width };
+          const item: { colId: string; width?: number; flex?: number } = { colId: column.colId };
+          if (typeof column.width === 'number') item.width = column.width;
           if (column.flex != null) item.flex = column.flex;
           return item;
         }),
@@ -1941,7 +1946,7 @@ export class GridSession<TData = any> {
       },
       getFilterModel: () => ({ ...session.filterModel }),
       isAnyFilterPresent: () => session.hasFilter(),
-      isColumnFilterPresent: () => session.hasFilter(),
+      isColumnFilterPresent: () => session.columnFilterPresent(),
       onFilterChanged: () => session.refresh('filter'),
       showColumnFilter: (colKey) => {
         const leaf = session.leafByKey(colKey);

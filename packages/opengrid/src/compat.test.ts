@@ -186,6 +186,12 @@ describe('community api compatibility', () => {
     agPage.setGridOption('quickFilterText', '2020');
     ogPage.setGridOption('quickFilterText', '2020');
     expect(snapshot(ogPage), 'filtered page').toEqual(snapshot(agPage));
+    agPage.setGridOption('quickFilterText', 'no');
+    ogPage.setGridOption('quickFilterText', 'no');
+    expect(ogPage.isColumnFilterPresent(), 'quick filter is not a column filter').toBe(agPage.isColumnFilterPresent());
+    agPage.setColumnsVisible(['name'], false);
+    ogPage.setColumnsVisible(['name'], false);
+    expect(ids(ogPage), 'hidden name').toEqual(ids(agPage));
     agPage.destroy();
     ogPage.destroy();
   });
