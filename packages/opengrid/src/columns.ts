@@ -19,7 +19,7 @@ export interface Leaf<TData = any> {
   resizable: boolean;
   movable: boolean;
   editable: boolean | EditableCallback<TData>;
-  filter: false | 'text' | 'number' | 'date';
+  filter: false | 'text' | 'number' | 'date' | 'set';
   kind: ColumnKind;
   checkbox: boolean;
   headerCheckbox: boolean;
@@ -273,11 +273,12 @@ function valueSample<TData>(def: ColDef<TData>, field: string | undefined, row: 
   return undefined;
 }
 
-function filterKind(filter: ColDef['filter'], kind: ColumnKind): false | 'text' | 'number' | 'date' {
+function filterKind(filter: ColDef['filter'], kind: ColumnKind): false | 'text' | 'number' | 'date' | 'set' {
   if (filter === false || filter == null) return false;
   if (filter === 'agNumberColumnFilter') return 'number';
   if (filter === 'agDateColumnFilter') return 'date';
   if (filter === 'agTextColumnFilter') return 'text';
+  if (filter === 'agSetColumnFilter') return 'set';
   if (filter === true) {
     if (kind === 'number') return 'number';
     if (kind === 'date') return 'date';

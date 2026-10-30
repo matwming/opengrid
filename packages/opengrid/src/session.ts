@@ -904,6 +904,10 @@ export class GridSession<TData = any> {
   }
 
   private openFilter(leaf: Leaf<TData>, anchor: HTMLElement): void {
+    if (leaf.filter === 'set') {
+      this.openSetFilter(leaf, anchor);
+      return;
+    }
     const current = this.filterModel[leaf.colId];
     const simple = current && 'values' in current ? undefined : current && 'conditions' in current ? current.conditions[0] : current;
     const kind = leaf.filter === 'number' ? 'number' : leaf.filter === 'date' ? 'date' : 'text';
@@ -972,6 +976,45 @@ export class GridSession<TData = any> {
       this.popup.hidden = true;
     });
     this.popup.append(select, input, inputTo, clear);
+    const rect = anchor.getBoundingClientRect();
+    const rootRect = this.root.getBoundingClientRect();
+    this.popup.style.left = `${Math.max(0, rect.left - rootRect.left)}px`;
+    this.popup.style.top = `${rect.bottom - rootRect.top}px`;
+  }
+
+  private openSetFilter(leaf: Leaf<TData>, anchor: HTMLElement): void {
+    const values = new Set<string>();
+    for (let source = 0; source < this.rows.length; source++) {
+      if (this.rows[source] === undefined) continue;
+      values.add(this.textFor(source, leaf));
+    }
+    const current = this.filterModel[leaf.colId];
+    const selected = current && 'values' in current ? new Set(current.values.map((value) => (value == null ? '' : String(value)))) : new Set(values);
+    this.popup.replaceChildren();
+    this.popup.hidden = false;
+    const list = document.createElement('div');
+    for (const value of [...values].sort()) {
+      const label = document.createElement('label');
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.checked = selected.has(value);
+      box.value = value;
+      label.append(box, document.createTextNode(value === '' ? '(Blanks)' : value));
+      list.append(label);
+    }
+    const apply = document.createElement('button');
+    apply.type = 'button';
+    apply.className = 'og-set-apply';
+    apply.textContent = 'Apply';
+    apply.addEventListener('click', () => {
+      const chosen = [...list.querySelectorAll('input')].filter((input) => input.checked).map((input) => input.value);
+      const next = { ...this.filterModel };
+      if (chosen.length === values.size) delete next[leaf.colId];
+      else next[leaf.colId] = { filterType: 'set', values: chosen };
+      this.api.setFilterModel(next);
+      this.popup.hidden = true;
+    });
+    this.popup.append(list, apply);
     const rect = anchor.getBoundingClientRect();
     const rootRect = this.root.getBoundingClientRect();
     this.popup.style.left = `${Math.max(0, rect.left - rootRect.left)}px`;

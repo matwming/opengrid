@@ -144,7 +144,7 @@ function App() {
               </tr>
               <tr>
                 <td>集合过滤</td>
-                <td><code>filterType: 'set'</code> 只留下 <code>values</code> 里的文本。空列表一行都不留。还没有集合过滤弹窗。没有和企业版并排对照。</td>
+                <td><code>filterType: 'set'</code> 只留下 <code>values</code> 里的文本。空列表一行都不留。<code>agSetColumnFilter</code> 打开勾选列表，点 Apply 后只留勾中的值。弹窗里还没有搜索框。没有和企业版并排对照。</td>
               </tr>
               <tr>
                 <td>范围选择</td>
@@ -187,7 +187,6 @@ function App() {
           <ul>
             <li>多重过滤、高级过滤。</li>
             <li>视口行模型、集成图表、迷你图、侧边栏、工具面板。</li>
-            <li>集合过滤弹窗。</li>
           </ul>
         </section>
 
