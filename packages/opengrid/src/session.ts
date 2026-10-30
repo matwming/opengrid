@@ -8,6 +8,7 @@ import { FALLBACK_COLORS, paintFrame, type PaintColors, type PaintColumn } from 
 import { buildStore, cellRaw, formatDay, readPath, sharedMemoryAvailable, writePath, writeVector, type ColumnStore, type StoreField } from './store';
 import type {
   AgEvent,
+  AdvancedFilterModel,
   ApplyColumnStateParams,
   Column,
   ColumnState,
@@ -52,6 +53,7 @@ export class GridSession<TData = any> {
   private cellRanges: { rowStartIndex: number; rowEndIndex: number; columns: string[] }[] = [];
   private chartPanel: HTMLElement | null = null;
   private chartSeq = 0;
+  private advancedModel: AdvancedFilterModel | null = null;
   private reverse: Uint32Array | null = null;
   private selected = new Uint8Array(0);
   private selectedList: number[] = [];
@@ -444,6 +446,40 @@ export class GridSession<TData = any> {
     return String(value);
   }
 
+  private applyAdvanced(view: ViewResult): ViewResult {
+    if (!this.advancedModel) return view;
+    const indices = new Uint32Array(view.count);
+    let count = 0;
+    for (let index = 0; index < view.count; index++) {
+      const source = view.identity ? index : view.indices[index] ?? -1;
+      if (source >= 0 && this.advancedPass(this.advancedModel, source)) indices[count++] = source;
+    }
+    return { indices, count, identity: false };
+  }
+
+  private advancedPass(model: AdvancedFilterModel, source: number): boolean {
+    if (model.filterType === 'join') {
+      const parts = model.conditions ?? [];
+      return model.type === 'OR' ? parts.some((part) => this.advancedPass(part, source)) : parts.every((part) => this.advancedPass(part, source));
+    }
+    const leaf = model.colId ? this.leafByKey(model.colId) : undefined;
+    if (!leaf) return false;
+    if (model.filterType === 'number') {
+      const raw = this.readSource(source, leaf);
+      const value = typeof raw === 'number' ? raw : Number(raw);
+      const target = Number(model.filter);
+      if (Number.isNaN(value) || Number.isNaN(target)) return false;
+      if (model.type === 'greaterThan') return value > target;
+      if (model.type === 'lessThan') return value < target;
+      return value === target;
+    }
+    const text = this.textFor(source, leaf).toLocaleLowerCase();
+    const filter = model.filter == null ? '' : String(model.filter).toLocaleLowerCase();
+    if (model.type === 'equals') return text === filter;
+    if (model.type === 'startsWith') return text.startsWith(filter);
+    return text.includes(filter);
+  }
+
   private attachGroups(): void {
     this.syncGroupColumns();
     const groups = this.groupLeaves();
@@ -609,6 +645,7 @@ export class GridSession<TData = any> {
 
   private applyView(view: ViewResult, generation: number, reason: 'initial' | 'sort' | 'filter' | 'data' | 'edit'): void {
     if (generation !== this.generation) return;
+    view = this.applyAdvanced(view);
     this.leafView = view;
     this.attachGroups();
     this.reverse = null;
@@ -667,7 +704,7 @@ export class GridSession<TData = any> {
   }
 
   private hasFilter(): boolean {
-    return hasQuickFilter(this.quickText()) || Object.values(this.filterModel).some((model) => model != null && modelActive(model));
+    return this.advancedModel != null || hasQuickFilter(this.quickText()) || Object.values(this.filterModel).some((model) => model != null && modelActive(model));
   }
 
   private layout(): void {
@@ -2727,6 +2764,11 @@ export class GridSession<TData = any> {
         session.refresh('filter');
       },
       getFilterModel: () => ({ ...session.filterModel }),
+      setAdvancedFilterModel: (model) => {
+        session.advancedModel = model;
+        session.refresh('filter');
+      },
+      getAdvancedFilterModel: () => session.advancedModel,
       isAnyFilterPresent: () => session.hasFilter(),
       isColumnFilterPresent: () => session.columnFilterPresent(),
       onFilterChanged: () => session.refresh('filter'),

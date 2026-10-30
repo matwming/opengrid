@@ -235,6 +235,7 @@ export interface GridOptions<TData = any> {
   cellSelection?: boolean | { handle?: { mode?: 'fill' } };
   statusBar?: { statusPanels?: { statusPanel?: string }[] };
   sideBar?: boolean | { toolPanels?: { id?: string; toolPanel?: string }[] };
+  enableAdvancedFilter?: boolean;
   fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
   sendToClipboard?: (params: { data: string }) => void;
   processCellForClipboard?: (params: { value: string; column: Column }) => string;
@@ -414,6 +415,14 @@ export interface MultiFilterModel {
   filterModels: (ProvidedFilterModel | null)[];
 }
 
+export interface AdvancedFilterModel {
+  filterType: 'join' | 'text' | 'number';
+  type?: 'AND' | 'OR' | 'contains' | 'equals' | 'startsWith' | 'greaterThan' | 'lessThan';
+  colId?: string;
+  filter?: string | number | null;
+  conditions?: AdvancedFilterModel[];
+}
+
 export type ProvidedFilterModel = SimpleFilterModel | CombinedFilterModel | SetFilterModel | MultiFilterModel;
 export type FilterModel = Record<string, ProvidedFilterModel | null>;
 
@@ -557,6 +566,8 @@ export interface GridApi<TData = any> {
   setNodesSelected(params: { nodes: IRowNode<TData>[]; newValue: boolean; source?: string }): void;
   setFilterModel(model: FilterModel | null): void;
   getFilterModel(): FilterModel;
+  setAdvancedFilterModel(model: AdvancedFilterModel | null): void;
+  getAdvancedFilterModel(): AdvancedFilterModel | null;
   isAnyFilterPresent(): boolean;
   isColumnFilterPresent(): boolean;
   onFilterChanged(): void;

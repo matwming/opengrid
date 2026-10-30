@@ -187,6 +187,10 @@ function App() {
                 <td><code>agMultiColumnFilter</code> 打开两个文本框。Apply 之后，每一条都匹配才留下。没有和企业版并排对照。</td>
               </tr>
               <tr>
+                <td>高级过滤</td>
+                <td><code>setAdvancedFilterModel</code> 用 AND 或 OR 组合文本条件和数字条件。名字包含 a 且数量大于 2 时，留下 Bea 和 Amy。还没有高级过滤的搭建界面。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -201,7 +205,6 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>高级过滤。</li>
             <li>视口行模型。</li>
           </ul>
         </section>
