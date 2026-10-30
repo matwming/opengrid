@@ -62,13 +62,16 @@ BENCH_ROWS=1000000 BENCH_COLS=50 npm run bench
 
 ## Deploy the demo
 
-From `apps/demo`, after `npm run build`:
+The Vite app is on Cloudflare Pages: [https://opengrid-cbk.pages.dev](https://opengrid-cbk.pages.dev). The benchmark page is [https://opengrid-cbk.pages.dev/bench](https://opengrid-cbk.pages.dev/bench).
+
+From the repo root, build the library, then the demo, then upload `apps/demo/dist`:
 
 ```bash
-npx wrangler login
-npx wrangler deploy
+npm run build
+npm run build -w @opengrid/demo
+npx wrangler pages deploy apps/demo/dist --project-name=opengrid --branch=main
 ```
 
-The config is `apps/demo/wrangler.jsonc`. It publishes the Vite `dist` folder as a Worker with static assets. `public/_headers` sends the cross-origin isolation headers the worker needs for shared memory.
+`npx wrangler login` is required once on the machine that deploys. The Pages project name is `opengrid`. `apps/demo/public/_headers` is copied into `dist` and sends the cross-origin isolation headers the grid worker needs for shared memory. `apps/demo/wrangler.jsonc` is the older Worker static-assets config.
 
 The parity list is in `ROADMAP.md`.
