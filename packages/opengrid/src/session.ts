@@ -83,6 +83,8 @@ export class GridSession<TData = any> {
   private infiniteKnown = false;
   private infiniteGen = 0;
   private infiniteBlocks = new Map<number, 'loading' | 'loaded'>();
+  private dragFrom = -1;
+  private dragOver = -1;
   private resizeObserver: ResizeObserver | null = null;
   private paintFrameId = 0;
   private customText = new Map<string, string>();
@@ -133,6 +135,7 @@ export class GridSession<TData = any> {
     this.host.replaceChildren(shell);
     this.viewport.addEventListener('scroll', () => this.onScroll(), { passive: true });
     this.viewport.addEventListener('click', (event) => this.onBodyClick(event));
+    this.viewport.addEventListener('pointerdown', (event) => this.onRowDragDown(event));
     this.viewport.addEventListener('dblclick', (event) => this.onBodyDoubleClick(event));
     this.root.addEventListener('keydown', (event) => this.onKey(event));
     this.root.addEventListener('focus', () => {
@@ -784,6 +787,55 @@ export class GridSession<TData = any> {
     this.layout();
     const column = columnFacade(leaf);
     this.emit('columnPinned', { column, columns: [column], source: 'ui' });
+  }
+
+  private onRowDragDown(event: PointerEvent): void {
+    if (!this.options.rowDragManaged || event.button !== 0) return;
+    const found = this.hit(event.clientX, event.clientY);
+    if (!found?.leaf.def.rowDrag) return;
+    const placed = this.positions.get(found.leaf.colId);
+    if (!placed) return;
+    const rect = this.viewport.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    let screen = placed.x;
+    if (found.leaf.pinned === 'right') screen = this.viewport.clientWidth - this.rightWidth + placed.x;
+    else if (found.leaf.pinned == null) screen = this.leftWidth + placed.x - this.viewport.scrollLeft;
+    if (x < screen || x >= screen + 18) return;
+    this.dragFrom = found.display;
+    this.dragOver = found.display;
+    const move = (ev: PointerEvent) => {
+      const next = this.hit(ev.clientX, ev.clientY);
+      if (next) this.dragOver = next.display;
+    };
+    const up = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      const from = this.dragFrom;
+      const over = this.dragOver;
+      this.dragFrom = -1;
+      if (from >= 0 && over >= 0 && from !== over) this.moveManagedRow(from, over);
+      this.emit('rowDragEnd', { overIndex: over });
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  }
+
+  private moveManagedRow(from: number, over: number): void {
+    const sourceFrom = this.sourceAt(from);
+    const sourceOver = this.sourceAt(over);
+    if (sourceFrom < 0 || sourceOver < 0) return;
+    const next = this.rows.slice();
+    const [row] = next.splice(sourceFrom, 1);
+    if (row === undefined) return;
+    next.splice(sourceOver > sourceFrom ? sourceOver - 1 : sourceOver, 0, row);
+    const selected = new Set(this.selectedIds());
+    this.loadRows(next, false);
+    this.selectedList = [];
+    for (let source = 0; source < this.rows.length; source++) {
+      if (!selected.has(this.rowId(source))) continue;
+      this.selected[source] = 1;
+      this.selectedList.push(source);
+    }
   }
 
   private onScroll(): void {

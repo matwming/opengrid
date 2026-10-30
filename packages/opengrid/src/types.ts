@@ -192,6 +192,7 @@ export interface GridOptions<TData = any> {
   cacheOverflowSize?: number;
   infiniteInitialRowCount?: number;
   getRowId?: (params: GetRowIdParams<TData>) => string;
+  rowDragManaged?: boolean;
   animateRows?: boolean;
   headerHeight?: number;
   groupHeaderHeight?: number;

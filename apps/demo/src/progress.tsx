@@ -115,6 +115,10 @@ function App() {
                 <td><code>cacheBlockSize</code> 为 10 时，首屏请求的块、行数、排序后的重新请求，以及 <code>purgeInfiniteCache</code> 后的缓存键，与 36.2.0 一致。最后一行未知时，行数是已加载终点再加一行。</td>
               </tr>
               <tr>
+                <td>行拖拽</td>
+                <td><code>rowDragManaged</code> 把抓住的行放到指针下那一行的前面，并触发 <code>onRowDragEnd</code>。happy-dom 没有触发 36.2.0 的拖拽事件，所以落点没有并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -125,7 +129,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>行拖拽、Vue 封装、Angular 封装。</li>
+            <li>Vue 封装、Angular 封装。</li>
             <li>分组、聚合、透视、树、主从明细。</li>
             <li>集合过滤、多重过滤、高级过滤。</li>
             <li>范围选择、剪贴板、填充柄、Excel 导出。</li>
