@@ -312,6 +312,7 @@ export interface IRowNode<TData = any> {
   key: string | null;
   expanded: boolean;
   allChildrenCount: number | null;
+  aggData: Record<string, number | null> | null;
   setExpanded(expanded: boolean): void;
   setSelected(newValue: boolean, clearSelection?: boolean, source?: string): void;
   isSelected(): boolean | undefined;

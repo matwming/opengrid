@@ -43,4 +43,30 @@ describe('row grouping', () => {
     expect(ids(api)).toEqual(['g:2020', '2020', '2020', 'g:2021', '2021', '2021']);
     api.destroy();
   });
+
+  it('sums, counts, and averages the leaves under a group', () => {
+    const host = document.createElement('div');
+    host.style.width = '640px';
+    host.style.height = '320px';
+    document.body.appendChild(host);
+    const api = createGrid(host, {
+      columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'sales', aggFunc: 'sum' },
+        { field: 'qty', aggFunc: 'avg' },
+      ],
+      rowData: [
+        { country: 'Ireland', sales: 4, qty: 1 },
+        { country: 'Ireland', sales: 9, qty: 3 },
+        { country: 'USA', sales: 10, qty: 2 },
+      ],
+      groupDefaultExpanded: 0,
+    });
+    const ireland = api.getDisplayedRowAtIndex(0);
+    const usa = api.getDisplayedRowAtIndex(1);
+    expect(ireland?.key).toBe('Ireland');
+    expect(ireland?.aggData).toMatchObject({ sales: 13, qty: 2 });
+    expect(usa?.aggData).toMatchObject({ sales: 10, qty: 2 });
+    api.destroy();
+  });
 });

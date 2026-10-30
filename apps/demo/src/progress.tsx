@@ -127,6 +127,10 @@ function App() {
                 <td>客户端 <code>rowGroup</code> 会生成自动分组列，组键按升序排，<code>groupDefaultExpanded</code> 和 <code>setExpanded</code> 控制展开。<code>setRowGroupColumns</code> 能换分组列。企业版包不在社区依赖里，所以没有并排对照。</td>
               </tr>
               <tr>
+                <td>聚合</td>
+                <td>分组行的 <code>aggData</code> 支持 <code>sum</code>、<code>min</code>、<code>max</code>、<code>count</code> 和 <code>avg</code>。Ireland 的 sales 4 加 9 等于 13，qty 的平均值是 2。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -141,7 +145,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>聚合、透视、树、主从明细。</li>
+            <li>透视、树、主从明细。</li>
             <li>集合过滤、多重过滤、高级过滤。</li>
             <li>范围选择、剪贴板、填充柄、Excel 导出。</li>
             <li>服务端行模型、视口行模型、集成图表、迷你图、状态栏、侧边栏、工具面板。</li>

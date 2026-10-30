@@ -2,7 +2,7 @@ import { bandsOf, buildLeaves, columnFacade, groupRuns, selectionConfig, visible
 import { encodeCsv, encodeCsvRaw, downloadCsv } from './csv';
 import { WORKER_ROW_MIN, WorkerEngine } from './engine-client';
 import { applyFilter, applyQuickFilter, hasQuickFilter, queryView, type SortKey, type ViewResult } from './engine';
-import { flattenGroups, type FlatRow, type GroupFlat } from './group';
+import { aggregate, flattenGroups, type FlatRow, type GroupFlat } from './group';
 import { FALLBACK_COLORS, paintFrame, type PaintColors, type PaintColumn } from './paint';
 import { buildStore, cellRaw, formatDay, readPath, sharedMemoryAvailable, writePath, writeVector, type ColumnStore, type StoreField } from './store';
 import type {
@@ -462,6 +462,13 @@ export class GridSession<TData = any> {
     this.syncA11y();
   }
 
+  private groupAgg(item: GroupFlat, colId: string): number | null {
+    const leaf = this.leafById(colId);
+    const func = leaf?.def.aggFunc;
+    if (!leaf || !func) return null;
+    return aggregate(func, item.leafSources.map((source) => this.readSource(source, leaf)));
+  }
+
   private groupNode(item: GroupFlat): GroupNode<TData> {
     const cached = this.groupNodes.get(item.id);
     if (cached) {
@@ -482,7 +489,10 @@ export class GridSession<TData = any> {
   private groupLabel(display: number, colId: string): string {
     const item = this.flat?.[display];
     if (!item || item.kind !== 'group') return '';
-    if (colId !== AUTO_GROUP_COL_ID) return '';
+    if (colId !== AUTO_GROUP_COL_ID) {
+      const value = item.leafSources.length ? this.groupAgg(item, colId) : null;
+      return value == null ? '' : String(value);
+    }
     const marker = item.expanded ? 'v' : '>';
     return `${'  '.repeat(item.level)}${marker} ${item.key} (${item.leafCount})`;
   }
@@ -2032,6 +2042,7 @@ export class GridSession<TData = any> {
       key: null,
       expanded: false,
       allChildrenCount: null,
+      aggData: null,
       setExpanded() {},
       setSelected() {},
       isSelected: () => false,
@@ -2436,6 +2447,17 @@ class GroupNode<TData> implements IRowNode<TData> {
     return this.item.leafCount;
   }
 
+  get aggData(): Record<string, number | null> | null {
+    const data: Record<string, number | null> = {};
+    let any = false;
+    for (const leaf of this.session['leaves']) {
+      if (!leaf.def.aggFunc || leaf.colId === AUTO_GROUP_COL_ID) continue;
+      any = true;
+      data[leaf.colId] = this.session['groupAgg'](this.item, leaf.colId);
+    }
+    return any ? data : null;
+  }
+
   get rowIndex(): number | null {
     const index = this.session['flat']?.findIndex((item) => item.kind === 'group' && item.id === this.item.id) ?? -1;
     return index < 0 ? null : index;
@@ -2481,6 +2503,7 @@ class RowNode<TData> implements IRowNode<TData> {
   readonly key = null;
   readonly expanded = false;
   readonly allChildrenCount = null;
+  readonly aggData = null;
   private readonly listeners = new Map<string, Set<(event: unknown) => void>>();
 
   constructor(private readonly session: GridSession<TData>, readonly sourceIndex: number) {}

@@ -5,6 +5,7 @@ export interface GroupFlat {
   level: number;
   expanded: boolean;
   leafCount: number;
+  leafSources: number[];
 }
 
 export interface LeafFlat {
@@ -14,6 +15,17 @@ export interface LeafFlat {
 }
 
 export type FlatRow = GroupFlat | LeafFlat;
+
+export function aggregate(func: string, values: readonly unknown[]): number | null {
+  const numbers = values.filter((value): value is number => typeof value === 'number' && !Number.isNaN(value));
+  if (func === 'count') return numbers.length;
+  if (numbers.length === 0) return null;
+  if (func === 'sum') return numbers.reduce((total, value) => total + value, 0);
+  if (func === 'min') return Math.min(...numbers);
+  if (func === 'max') return Math.max(...numbers);
+  if (func === 'avg') return numbers.reduce((total, value) => total + value, 0) / numbers.length;
+  return null;
+}
 
 export function flattenGroups(
   sources: readonly number[],
@@ -40,7 +52,7 @@ export function flattenGroups(
       const children = buckets.get(key) ?? [];
       const id = `${path}${colId}:${key}`;
       const expanded = isExpanded(id, depth);
-      out.push({ kind: 'group', id, key, level: depth, expanded, leafCount: children.length });
+      out.push({ kind: 'group', id, key, level: depth, expanded, leafCount: children.length, leafSources: children });
       if (expanded) walk(children, depth + 1, `${id}/`);
     }
   };

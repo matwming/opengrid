@@ -42,8 +42,8 @@ Status words mean the following.
 
 | Feature | Doc | Status |
 | --- | --- | --- |
-| Row grouping | [Grouping](https://www.ag-grid.com/javascript-data-grid/grouping/) | partial. Client-side `rowGroup` builds one auto group column, sorts keys ascending, and honors `groupDefaultExpanded` and `setExpanded`. `setRowGroupColumns` switches the group. Aggregation and pivot are not started. Enterprise is not in the community package, so this was not compared side by side. |
-| Aggregation | [Aggregation](https://www.ag-grid.com/javascript-data-grid/aggregation/) | not started |
+| Row grouping | [Grouping](https://www.ag-grid.com/javascript-data-grid/grouping/) | partial. Client-side `rowGroup` builds one auto group column, sorts keys ascending, and honors `groupDefaultExpanded` and `setExpanded`. `setRowGroupColumns` switches the group. Pivot is not started. Enterprise is not in the community package, so this was not compared side by side. |
+| Aggregation | [Aggregation](https://www.ag-grid.com/javascript-data-grid/aggregation/) | partial. Group rows expose `aggData` for `sum`, `min`, `max`, `count`, and `avg`. Count ignores values that are not numbers. Not compared with Enterprise. |
 | Pivot | [Pivoting](https://www.ag-grid.com/javascript-data-grid/pivoting/) | not started |
 | Tree data | [Tree data](https://www.ag-grid.com/javascript-data-grid/tree-data/) | not started |
 | Master detail | [Master detail](https://www.ag-grid.com/javascript-data-grid/master-detail/) | not started |
