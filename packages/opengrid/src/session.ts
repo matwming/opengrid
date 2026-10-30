@@ -48,6 +48,7 @@ export class GridSession<TData = any> {
   private groupExpanded = new Map<string, boolean>();
   private groupNodes = new Map<string, GroupNode<TData>>();
   private detailOpen = new Set<number>();
+  private cellRanges: { rowStartIndex: number; rowEndIndex: number; columns: string[] }[] = [];
   private reverse: Uint32Array | null = null;
   private selected = new Uint8Array(0);
   private selectedList: number[] = [];
@@ -2390,6 +2391,27 @@ export class GridSession<TData = any> {
         const leaf = session.leafByKey(colKey);
         const col = leaf ? session.visibleLeaves().indexOf(leaf) : 0;
         session.setFocus(rowIndex, Math.max(0, col), true);
+      },
+      addCellRange: (params) => {
+        session.cellRanges.push({
+          rowStartIndex: params.rowStartIndex,
+          rowEndIndex: params.rowEndIndex,
+          columns: params.columns.map((key) => (typeof key === 'string' ? key : key.getColId())),
+        });
+      },
+      getCellRanges: () => {
+        if (session.cellRanges.length === 0) return null;
+        return session.cellRanges.map((range) => ({
+          startRow: { rowIndex: range.rowStartIndex },
+          endRow: { rowIndex: range.rowEndIndex },
+          columns: range.columns.flatMap((colId) => {
+            const leaf = session.leafByKey(colId);
+            return leaf ? [columnFacade(leaf)] : [];
+          }),
+        }));
+      },
+      clearCellSelection: () => {
+        session.cellRanges = [];
       },
       startEditingCell: (params) => {
         const leaf = session.leafByKey(params.colKey);

@@ -216,6 +216,7 @@ export interface GridOptions<TData = any> {
   pivotMode?: boolean;
   treeData?: boolean;
   getDataPath?: (data: TData) => string[];
+  cellSelection?: boolean;
   masterDetail?: boolean;
   isRowMaster?: (data: TData) => boolean;
   detailCellRenderer?: (params: { data: TData | undefined }) => string;
@@ -416,6 +417,18 @@ export interface CellPosition {
   column: Column;
 }
 
+export interface CellRange {
+  startRow?: { rowIndex: number };
+  endRow?: { rowIndex: number };
+  columns: Column[];
+}
+
+export interface CellRangeParams {
+  rowStartIndex: number;
+  rowEndIndex: number;
+  columns: (string | Column)[];
+}
+
 export interface RowDataTransaction<TData = any> {
   add?: TData[];
   addIndex?: number;
@@ -516,6 +529,9 @@ export interface GridApi<TData = any> {
   onSortChanged(): void;
   getFocusedCell(): CellPosition | null;
   setFocusedCell(rowIndex: number, colKey: string | Column, rowPinned?: 'top' | 'bottom' | null): void;
+  addCellRange(params: CellRangeParams): void;
+  getCellRanges(): CellRange[] | null;
+  clearCellSelection(): void;
   startEditingCell(params: StartEditingCellParams): void;
   stopEditing(cancel?: boolean): void;
   getEditingCells(): { rowIndex: number; colId: string; rowPinned: 'top' | 'bottom' | null }[];

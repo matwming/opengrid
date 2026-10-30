@@ -50,7 +50,7 @@ Status words mean the following.
 | Set filter | [Set filter](https://www.ag-grid.com/javascript-data-grid/filter-set/) | partial. A `filterType: 'set'` model keeps rows whose text is in `values`. An empty list keeps no rows. The set filter popup is not started. Not compared with Enterprise. |
 | Multi filter | [Multi filter](https://www.ag-grid.com/javascript-data-grid/filter-multi/) | not started |
 | Advanced filter | [Advanced filter](https://www.ag-grid.com/javascript-data-grid/filter-advanced/) | not started |
-| Range selection | [Range selection](https://www.ag-grid.com/javascript-data-grid/range-selection/) | not started |
+| Range selection | [Cell selection](https://www.ag-grid.com/javascript-data-grid/cell-selection/) | partial. `addCellRange` remembers the rows and columns. `getCellRanges` reads them back. `clearCellSelection` drops them. Dragging a range with the mouse is not started. Not compared with Enterprise. |
 | Clipboard | [Clipboard](https://www.ag-grid.com/javascript-data-grid/clipboard/) | not started |
 | Fill handle | [Fill handle](https://www.ag-grid.com/javascript-data-grid/cell-selection-fill-handle/) | not started |
 | Excel export | [Excel export](https://www.ag-grid.com/javascript-data-grid/excel-export/) | not started |
