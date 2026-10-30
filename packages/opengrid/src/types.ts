@@ -450,6 +450,16 @@ export interface CellRangeParams {
   columns: (string | Column)[];
 }
 
+export interface CreateRangeChartParams {
+  cellRange: CellRangeParams;
+  chartType?: 'column' | 'bar' | 'line';
+}
+
+export interface ChartRef {
+  chartId: string;
+  destroyChart: () => void;
+}
+
 export interface RowDataTransaction<TData = any> {
   add?: TData[];
   addIndex?: number;
@@ -566,6 +576,7 @@ export interface GridApi<TData = any> {
   exportDataAsCsv(params?: CsvExportParams): void;
   getDataAsExcel(): Blob;
   exportDataAsExcel(): void;
+  createRangeChart(params: CreateRangeChartParams): ChartRef;
   addEventListener(eventType: string, listener: (event: AgEvent<TData>) => void): void;
   removeEventListener(eventType: string, listener: (event: AgEvent<TData>) => void): void;
   getVerticalPixelRange(): { top: number; bottom: number };

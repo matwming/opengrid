@@ -50,6 +50,8 @@ export class GridSession<TData = any> {
   private groupNodes = new Map<string, GroupNode<TData>>();
   private detailOpen = new Set<number>();
   private cellRanges: { rowStartIndex: number; rowEndIndex: number; columns: string[] }[] = [];
+  private chartPanel: HTMLElement | null = null;
+  private chartSeq = 0;
   private reverse: Uint32Array | null = null;
   private selected = new Uint8Array(0);
   private selectedList: number[] = [];
@@ -2220,6 +2222,56 @@ export class GridSession<TData = any> {
     return params?.suppressQuotes ? encodeCsvRaw(lines, params.columnSeparator ?? ',') : encodeCsv(lines, params?.columnSeparator ?? ',');
   }
 
+  private createRangeChart(params: { cellRange: { rowStartIndex: number; rowEndIndex: number; columns: (string | Column)[] }; chartType?: string }): { chartId: string; destroyChart: () => void } {
+    this.chartPanel?.remove();
+    const start = Math.min(params.cellRange.rowStartIndex, params.cellRange.rowEndIndex);
+    const end = Math.max(params.cellRange.rowStartIndex, params.cellRange.rowEndIndex);
+    const colIds = params.cellRange.columns.map((key) => (typeof key === 'string' ? key : key.getColId()));
+    const valueCol = colIds.find((colId) => this.leafByKey(colId)?.kind === 'number') ?? colIds[colIds.length - 1] ?? '';
+    const labelCol = colIds.find((colId) => colId !== valueCol) ?? valueCol;
+    const points: { label: string; value: number }[] = [];
+    for (let row = start; row <= end; row++) {
+      const source = this.sourceAt(row);
+      const valueLeaf = this.leafByKey(valueCol);
+      const labelLeaf = this.leafByKey(labelCol);
+      if (!valueLeaf || source < 0) continue;
+      const raw = this.readSource(source, valueLeaf);
+      const value = typeof raw === 'number' ? raw : Number(raw);
+      points.push({ label: labelLeaf ? this.textFor(source, labelLeaf) : String(row), value: Number.isNaN(value) ? 0 : value });
+    }
+    const panel = document.createElement('div');
+    panel.className = 'og-chart';
+    panel.dataset.chartType = params.chartType ?? 'column';
+    panel.dataset.series = points.map((point) => String(point.value)).join(',');
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 200 80');
+    const max = Math.max(...points.map((point) => point.value), 1);
+    points.forEach((point, index) => {
+      const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      const slot = 200 / Math.max(points.length, 1);
+      const height = (point.value / max) * 70;
+      bar.setAttribute('x', String(index * slot + 4));
+      bar.setAttribute('y', String(75 - height));
+      bar.setAttribute('width', String(Math.max(1, slot - 8)));
+      bar.setAttribute('height', String(height));
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = `${point.label} ${point.value}`;
+      bar.append(title);
+      svg.append(bar);
+    });
+    panel.append(svg);
+    this.host.append(panel);
+    this.chartPanel = panel;
+    const chartId = `chart-${++this.chartSeq}`;
+    return {
+      chartId,
+      destroyChart: () => {
+        panel.remove();
+        if (this.chartPanel === panel) this.chartPanel = null;
+      },
+    };
+  }
+
   private excelRows(): string[][] {
     const leaves = this.exportLeaves();
     const lines: string[][] = [leaves.map((leaf) => leaf.headerName)];
@@ -2684,6 +2736,7 @@ export class GridSession<TData = any> {
         link.click();
         URL.revokeObjectURL(url);
       },
+      createRangeChart: (params) => session.createRangeChart(params),
       addEventListener: (eventType, listener) => {
         const set = session.listeners.get(eventType) ?? new Set();
         set.add(listener);

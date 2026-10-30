@@ -36,3 +36,4 @@ ts	phase	decision	why	evidence	result
 2026-10-30T23:15:37Z	status	Show the displayed row count and update it after a filter	The status test reads Rows: 2, then Rows: 1 after an equals filter	packages/opengrid/src/status.test.ts	tests green
 2026-10-30T23:17:11Z	set-popup	Apply a set filter from the checkbox popup	The popup test unchecks Bea and leaves Ada, with values Ada	packages/opengrid/src/set-filter.test.ts	tests green
 2026-10-30T23:19:28Z	range-drag	Drag the pointer across cells to replace the selected range	The drag test covers rows 0 to 2 and the name and qty columns	packages/opengrid/src/range-drag.test.ts	tests green
+2026-10-30T23:20:23Z	chart	Draw a column chart from a cell range and remove it	The chart test reads series 4,9 and two bars, then destroyChart clears the panel	packages/opengrid/src/chart.test.ts	tests green

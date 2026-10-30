@@ -171,6 +171,10 @@ function App() {
                 <td><code>agTotalRowCountComponent</code> 和 <code>agTotalAndFilteredRowCountComponent</code> 显示当前行数。过滤后数字会跟着变。其他状态面板还没有。没有和企业版并排对照。</td>
               </tr>
               <tr>
+                <td>集成图表</td>
+                <td><code>createRangeChart</code> 按范围里的数字列画出柱形图。<code>destroyChart</code> 把它去掉。还没有其他图种、图表工具条，以及图表和表格的联动。没有和企业版并排对照。</td>
+              </tr>
+              <tr>
                 <td>React</td>
                 <td><code>AgGridReact</code> 接收 gridOptions，<code>ref.api</code> 可用。</td>
               </tr>
@@ -186,7 +190,7 @@ function App() {
           <h2>还没做</h2>
           <ul>
             <li>多重过滤、高级过滤。</li>
-            <li>视口行模型、集成图表、迷你图、侧边栏、工具面板。</li>
+            <li>视口行模型、迷你图、侧边栏、工具面板。</li>
           </ul>
         </section>
 
