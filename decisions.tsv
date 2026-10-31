@@ -69,3 +69,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T02:01:33Z	formula-source	Read formulas from formulaDataSource and keep the row value	=1+2 displays 3 and the row stays total 9 on both grids	packages/opengrid/src/formula-source.test.ts	tests green
 2026-10-31T02:03:04Z	toolbar-menu	Show the toolbar menu labels and the pivot column chip	Copy and Export match enterprise, and the pivot panel text is Year	packages/opengrid/src/toolbar-menu.test.ts	tests green
 2026-10-31T02:03:20Z	find-mark-text	Wrap the matched letters the way enterprise does	Both grids mark Ada twice	packages/opengrid/src/find.test.ts	tests green
+2026-10-31T02:08:08Z	find-active	Mark the current find match like enterprise	After two findNext calls the active mark is the city cell on both grids	packages/opengrid/src/find.test.ts	tests green

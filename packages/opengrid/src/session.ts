@@ -2378,6 +2378,7 @@ export class GridSession<TData = any> {
     const origin = this.displayOrigin();
     const first = Math.max(origin, origin + Math.floor(this.virtualTop() / this.rowHeight()) - 1);
     const last = Math.min(origin + this.scrollRowCount(), first + this.pageSize() + 3);
+    const activeMatch = this.findIndex >= 0 ? this.findMatches()[this.findIndex] : undefined;
     const fragment = document.createDocumentFragment();
     for (let display = first; display < last; display++) {
       const source = this.sourceAt(display);
@@ -2425,6 +2426,7 @@ export class GridSession<TData = any> {
           if (at > 0) cell.append(document.createTextNode(text.slice(0, at)));
           const mark = document.createElement('mark');
           mark.className = 'og-find';
+          if (activeMatch && activeMatch.row === display && activeMatch.col === index) mark.classList.add('og-find-active');
           mark.textContent = text.slice(at, at + query.length);
           cell.append(mark);
           const rest = text.slice(at + query.length);
@@ -2833,6 +2835,14 @@ export class GridSession<TData = any> {
     const match = matches[this.findIndex];
     if (match) this.setFocus(match.row, match.col, true);
     this.syncFindCount();
+    this.markActiveFind();
+  }
+
+  private markActiveFind(): void {
+    this.a11y.querySelectorAll('.og-find-active').forEach((node) => node.classList.remove('og-find-active'));
+    const active = this.findIndex >= 0 ? this.findMatches()[this.findIndex] : undefined;
+    if (!active) return;
+    this.a11y.querySelector(`#${CSS.escape(this.cellDomId(active.row, active.col))} .og-find`)?.classList.add('og-find-active');
   }
 
   private syncFindCount(): void {

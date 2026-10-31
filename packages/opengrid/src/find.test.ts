@@ -28,10 +28,14 @@ describe('find', () => {
     const api = createOpenGrid(host, options);
     expect(api.findGetTotalMatches()).toBe(enterprise.findGetTotalMatches());
     expect(api.findGetTotalMatches()).toBe(2);
+    const activeCol = (root: ParentNode, selector: string) => [...root.querySelectorAll(selector)].map((node) => node.closest('.ag-cell, .og-acell')?.getAttribute('col-id') ?? node.closest('.og-acell')?.getAttribute('data-col-id'));
     api.findNext();
+    enterprise.findNext();
     expect(api.getFocusedCell()?.rowIndex).toBe(0);
     expect(api.getFocusedCell()?.column.getColId()).toBe('name');
+    expect(activeCol(host, '.og-find-active')).toEqual(activeCol(enterpriseHost, '.ag-find-active-match'));
     api.findNext();
+    enterprise.findNext();
     expect(api.getFocusedCell()?.rowIndex).toBe(1);
     expect(api.getFocusedCell()?.column.getColId()).toBe('city');
     expect(host.querySelectorAll('.og-find')).toHaveLength(enterprise.findGetTotalMatches());
@@ -39,6 +43,8 @@ describe('find', () => {
     const ourMarks = [...host.querySelectorAll('.og-find')].map((node) => node.textContent);
     expect(ourMarks).toEqual(enterpriseMarks);
     expect(ourMarks).toEqual(['Ada', 'Ada']);
+    expect(activeCol(host, '.og-find-active')).toEqual(activeCol(enterpriseHost, '.ag-find-active-match'));
+    expect(activeCol(host, '.og-find-active')).toEqual(['city']);
     enterprise.destroy();
     api.destroy();
   });
