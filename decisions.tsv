@@ -84,3 +84,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T03:14:14Z	bench	Split sort-ready from the full column copy	Middle run: sort-ready 12 ms, full copy 1016 ms, first paint 19 ms. Enterprise sort-ready is 0 and first paint is 982 ms	bench/results.json	chromium green
 2026-10-31T03:20:00Z	chart-format	Add line dash, color, padding, and Reverse	Dashed sets stroke-dasharray. Reverse turns the series from 4,9 into 9,4. Enterprise shows Line Dash, Padding, and Reverse	packages/opengrid/src/chart-menu.test.ts	chromium green
 2026-10-31T03:26:27Z	bench	Slice the column copy into 8ms turns	Longest main-thread slice is 10 ms. Wall time for every column is 3936 ms because the copy yields. Sort-ready stays 12 ms	bench/results.json	chromium green
+2026-10-31T05:26:00Z	chart-style	Add markers, shadow blur, and a gradient fill	Two bars get marker dots. Blur turns on a drop shadow. Enterprise format text includes Shadow and Blur	packages/opengrid/src/chart-menu.test.ts	chromium green

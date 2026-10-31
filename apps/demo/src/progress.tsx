@@ -246,7 +246,7 @@ function App() {
               </tr>
               <tr>
                 <td>集成图表</td>
-                <td><code>createRangeChart</code> 覆盖企业版能创建的图种。Edit Chart 打开 Chart、Set Up、Customize。Customize 另有 Line Dash、Color 和 Padding。Set Up 另有 Reverse。Chromium 里企业版格式页同样有 Line Dash 和 Padding，Set Up 同样有 Reverse。虚线选 Dashed 后，图形带 <code>stroke-dasharray</code>。Reverse 把系列从 4,9 调成 9,4。</td>
+                <td><code>createRangeChart</code> 覆盖企业版能创建的图种。Customize 另有 Markers、Shadow、Blur 和 Gradient。打开 Markers 后两根柱各有一个圆点。Blur 大于 0 时图形带投影。Gradient 把柱子填成线性渐变。Chromium 里企业版这张柱状图的格式页有 Shadow 和 Blur。渐变标题 Gradient 是这边的填充开关，企业版柱状图格式页没有这个词。</td>
               </tr>
               <tr>
                 <td>迷你图</td>
@@ -283,7 +283,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>格式面板里的标记、阴影和渐变。</li>
+            <li>标记大小，以及阴影的 X/Y 偏移。</li>
           </ul>
         </section>
 

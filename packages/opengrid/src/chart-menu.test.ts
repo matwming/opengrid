@@ -98,6 +98,17 @@ describe('chart menu', () => {
     padding.value = '12';
     padding.dispatchEvent(new Event('input', { bubbles: true }));
     expect(panel?.getAttribute('data-padding')).toBe('12');
+    (host.querySelector('[aria-label="Markers"]') as HTMLInputElement).click();
+    expect(panel?.getAttribute('data-markers')).toBe('true');
+    expect(host.querySelectorAll('.og-chart-marker').length).toBe(2);
+    const blur = host.querySelector('[aria-label="Blur"]') as HTMLInputElement;
+    blur.value = '6';
+    blur.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(panel?.getAttribute('data-shadow')).toBe('true');
+    expect(host.querySelector('.og-chart svg')?.style.filter).toContain('drop-shadow');
+    (host.querySelector('[aria-label="Gradient"]') as HTMLInputElement).click();
+    expect(panel?.getAttribute('data-gradient')).toBe('true');
+    expect(host.querySelector('.og-chart rect')?.getAttribute('fill')).toBe('url(#og-fill)');
     const title = host.querySelector('[aria-label="Chart Title"]') as HTMLInputElement;
     title.value = 'Sales';
     title.dispatchEvent(new Event('input', { bubbles: true }));

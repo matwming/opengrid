@@ -3606,10 +3606,64 @@ export class GridSession<TData = any> {
       }
       paintChartInk(svg, color.value);
     };
-    dash.addEventListener('change', paintDash);
-    color.addEventListener('input', paintDash);
+    const markerBox = document.createElement('input');
+    markerBox.type = 'checkbox';
+    markerBox.setAttribute('aria-label', 'Markers');
+    const blur = document.createElement('input');
+    blur.type = 'number';
+    blur.value = '0';
+    blur.setAttribute('aria-label', 'Blur');
+    const gradientBox = document.createElement('input');
+    gradientBox.type = 'checkbox';
+    gradientBox.setAttribute('aria-label', 'Gradient');
+    const paintSeriesStyle = () => {
+      panel.dataset.markers = markerBox.checked ? 'true' : 'false';
+      panel.dataset.blur = blur.value;
+      panel.dataset.shadow = Number(blur.value) > 0 ? 'true' : 'false';
+      panel.dataset.gradient = gradientBox.checked ? 'true' : 'false';
+      svg.querySelectorAll('.og-chart-marker').forEach((node) => node.remove());
+      if (markerBox.checked) {
+        for (const rect of svg.querySelectorAll('rect')) {
+          const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          dot.setAttribute('class', 'og-chart-marker');
+          dot.setAttribute('cx', String(Number(rect.getAttribute('x')) + Number(rect.getAttribute('width')) / 2));
+          dot.setAttribute('cy', rect.getAttribute('y') ?? '0');
+          dot.setAttribute('r', '3');
+          dot.setAttribute('data-row', rect.getAttribute('data-row') ?? '');
+          svg.append(dot);
+        }
+      }
+      svg.querySelector('defs')?.remove();
+      if (gradientBox.checked) {
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        defs.innerHTML = '<linearGradient id="og-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#1f4b99"/></linearGradient>';
+        svg.prepend(defs);
+        for (const rect of svg.querySelectorAll('rect')) rect.setAttribute('fill', 'url(#og-fill)');
+      }
+      svg.style.filter = Number(blur.value) > 0 ? `drop-shadow(0 2px ${blur.value}px rgba(0,0,0,.45))` : '';
+    };
+    dash.addEventListener('change', () => { paintDash(); paintSeriesStyle(); });
+    color.addEventListener('input', () => { paintDash(); paintSeriesStyle(); });
     padding.addEventListener('input', paintDash);
-    seriesGroup.append(seriesHeading, thickness, document.createTextNode(' Line Dash '), dash, document.createTextNode(' Color '), color, document.createTextNode(' Padding '), padding);
+    markerBox.addEventListener('change', paintSeriesStyle);
+    blur.addEventListener('input', paintSeriesStyle);
+    gradientBox.addEventListener('change', paintSeriesStyle);
+    seriesGroup.append(
+      seriesHeading,
+      thickness,
+      document.createTextNode(' Line Dash '),
+      dash,
+      document.createTextNode(' Color '),
+      color,
+      document.createTextNode(' Padding '),
+      padding,
+      document.createTextNode(' Markers '),
+      markerBox,
+      document.createTextNode(' Shadow Blur '),
+      blur,
+      document.createTextNode(' Gradient '),
+      gradientBox,
+    );
     const fontGroup = el('section', 'og-chart-format-group');
     const fontHeading = el('h3', 'og-chart-format-title');
     fontHeading.textContent = 'Font';
