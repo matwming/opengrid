@@ -179,6 +179,10 @@ function App() {
                 <td><code>startBatchEdit</code> 期间行数据仍是 Ada，<code>isBatchEditing</code> 为 true。<code>cancelBatchEdit</code> 仍是 Ada。<code>commitBatchEdit</code> 写成 Zoe。和 <code>ag-grid-enterprise</code> 36.2.0 一样。</td>
               </tr>
               <tr>
+                <td>分组过滤</td>
+                <td>子列过滤后，没有匹配子行的组会被藏起。年份等于 2021 时只剩 <code>g:USA</code> 和 2021，和 <code>ag-grid-enterprise</code> 36.2.0 一样。分组列自己的过滤选择器还没有。</td>
+              </tr>
+              <tr>
                 <td>树</td>
                 <td><code>treeData</code> 和 <code>getDataPath</code> 按路径嵌套。CEO 下面有 Sales 和 Support，收起 Sales 后 EU 不再显示。没有和企业版并排对照。</td>
               </tr>
@@ -253,7 +257,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>分组过滤、备注、对齐网格、工具条、分组面板拖拽、公式范围和 SUM、查找高亮。</li>
+            <li>备注、对齐网格、工具条、分组面板拖拽、公式范围和 SUM、查找高亮。</li>
           </ul>
         </section>
 

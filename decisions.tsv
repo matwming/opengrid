@@ -55,3 +55,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:26:27Z	pdf	Return a PDF whose header matches enterprise and whose page contains the cell	The pdf test reads %PDF from both blobs and Ada from the opengrid page	packages/opengrid/src/pdf.test.ts	tests green
 2026-10-31T01:27:45Z	rich	Open a rich select and write the chosen value	Enterprise opens ag-rich-select. The opengrid list is Red and Green, and Green is written	packages/opengrid/src/rich.test.ts	tests green
 2026-10-31T01:29:15Z	batch	Hold cell edits until commit, matching enterprise	During the batch the row stays Ada, cancel keeps Ada, and commit writes Zoe	packages/opengrid/src/batch.test.ts	tests green
+2026-10-31T01:34:23Z	group-filter	Hide groups with no matching child, like enterprise	Equals 2021 leaves g:USA and 2021 on both grids	packages/opengrid/src/group-filter.test.ts	tests green

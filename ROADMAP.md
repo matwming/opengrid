@@ -71,6 +71,7 @@ Status words mean the following.
 | PDF export | [PDF export](https://www.ag-grid.com/javascript-data-grid/pdf-export/) | partial. `getDataAsPdf` returns a file that starts with `%PDF`, the same header as `ag-grid-enterprise` 36.2.0. The page text includes the cell value. Page setup and images are not started. |
 | Rich select | [Rich select](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#rich-select-editor) | partial. `agRichSelectCellEditor` opens a list. Enterprise opens `.ag-rich-select`. The list here is Red and Green, and choosing Green writes that value. The enterprise list stayed on Loading in happy-dom, so the painted rows were not compared. |
 | Batch edit | [Batch editing](https://www.ag-grid.com/javascript-data-grid/batch-editing/) | partial. `startBatchEdit` keeps the row as Ada while `isBatchEditing` is true. `cancelBatchEdit` leaves Ada. `commitBatchEdit` writes Zoe. This matches `ag-grid-enterprise` 36.2.0. |
+| Group filter | [Group filter](https://www.ag-grid.com/javascript-data-grid/grouping/) | partial. A filter on a child column hides groups that have no matching child. Equals `2021` leaves `g:USA` and `2021`, matching `ag-grid-enterprise` 36.2.0. The group-column filter picker is not started. |
 | Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | partial. The columns and filters panels ship with the side bar. A custom `toolPanel` component is not started. |
 
 ## Benchmark
