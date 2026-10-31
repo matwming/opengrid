@@ -617,6 +617,7 @@ export interface GridApi<TData = any> {
   findNext(): void;
   getDataAsExcel(): Blob;
   exportDataAsExcel(): void;
+  getDataAsPdf(): Blob;
   createRangeChart(params: CreateRangeChartParams): ChartRef;
   addEventListener(eventType: string, listener: (event: AgEvent<TData>) => void): void;
   removeEventListener(eventType: string, listener: (event: AgEvent<TData>) => void): void;

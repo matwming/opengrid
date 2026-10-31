@@ -68,6 +68,7 @@ Status words mean the following.
 | Cell spanning | [Cell spanning](https://www.ag-grid.com/javascript-data-grid/cell-spanning/) | partial. `colSpan` widens the accessibility cell and drops the covered column. A span of 2 on a 200px column is 400px, matching `ag-grid-enterprise` 36.2.0. `spanRows` is not started. |
 | Formulas | [Formulas](https://www.ag-grid.com/javascript-data-grid/formulas/) | partial. `allowFormula` displays `=[qty]*2` as 8 and `=1+2` as 3, matching `ag-grid-enterprise` 36.2.0. The row data keeps the formula string. Ranges, `SUM`, and a formula data source are not started. |
 | Find | [Find](https://www.ag-grid.com/javascript-data-grid/find/) | partial. `findSearchValue: 'ada'` reports 2 matches, the same count as `ag-grid-enterprise` 36.2.0. `findNext` moves focus from the name cell to the city cell. Match highlighting is not started. |
+| PDF export | [PDF export](https://www.ag-grid.com/javascript-data-grid/pdf-export/) | partial. `getDataAsPdf` returns a file that starts with `%PDF`, the same header as `ag-grid-enterprise` 36.2.0. The page text includes the cell value. Page setup and images are not started. |
 | Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | partial. The columns and filters panels ship with the side bar. A custom `toolPanel` component is not started. |
 
 ## Benchmark

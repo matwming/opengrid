@@ -167,6 +167,10 @@ function App() {
                 <td><code>findSearchValue: 'ada'</code> 找到 2 处，和 <code>ag-grid-enterprise</code> 36.2.0 的次数一样。<code>findNext</code> 先聚焦名字格，再聚焦城市格。匹配高亮还没有。</td>
               </tr>
               <tr>
+                <td>PDF 导出</td>
+                <td><code>getDataAsPdf</code> 返回以 <code>%PDF</code> 开头的文件，和 <code>ag-grid-enterprise</code> 36.2.0 的文件头一样。页面文字里有单元格的值。页面设置和图片还没有。</td>
+              </tr>
+              <tr>
                 <td>树</td>
                 <td><code>treeData</code> 和 <code>getDataPath</code> 按路径嵌套。CEO 下面有 Sales 和 Support，收起 Sales 后 EU 不再显示。没有和企业版并排对照。</td>
               </tr>
@@ -241,7 +245,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>PDF 导出、富选择编辑器、分组过滤、备注、批量编辑、对齐网格、工具条、分组面板拖拽。</li>
+            <li>富选择编辑器、分组过滤、备注、批量编辑、对齐网格、工具条、分组面板拖拽、公式范围和 SUM、查找高亮。</li>
           </ul>
         </section>
 

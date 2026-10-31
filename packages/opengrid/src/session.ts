@@ -1,6 +1,7 @@
 import { bandsOf, buildLeaves, columnFacade, groupRuns, selectionConfig, visibleLeaves, AUTO_GROUP_COL_ID, autoGroupLeaf, rowNumberLeaf, ROW_NUMBERS_COL_ID, type Leaf, type SelectionConfig } from './columns';
 import { encodeCsv, encodeCsvRaw, downloadCsv } from './csv';
 import { workbookBytes } from './xlsx';
+import { pdfBytes } from './pdf';
 import { WORKER_ROW_MIN, WorkerEngine } from './engine-client';
 import { applyFilter, applyQuickFilter, hasQuickFilter, queryView, type SortKey, type ViewResult } from './engine';
 import { aggregate, flattenGroups, flattenTree, type FlatRow, type GroupFlat } from './group';
@@ -3134,6 +3135,10 @@ export class GridSession<TData = any> {
         link.download = 'export.xlsx';
         link.click();
         URL.revokeObjectURL(url);
+      },
+      getDataAsPdf: () => {
+        const lines = session.excelRows().map((row) => row.join(' '));
+        return new Blob([Uint8Array.from(pdfBytes(lines))], { type: 'application/pdf' });
       },
       createRangeChart: (params) => session.createRangeChart(params),
       addEventListener: (eventType, listener) => {
