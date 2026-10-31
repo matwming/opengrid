@@ -2016,21 +2016,57 @@ export class GridSession<TData = any> {
     return computed == null ? value : computed;
   }
 
-  private evalFormula(expr: string, source: number, seen: Set<string>): number | null {
-    const replaced = expr.replace(/\[([^\]]+)\]/g, (_match, colId: string) => {
-      const key = `${source}:${colId}`;
-      if (seen.has(key)) return '0';
-      const nextSeen = new Set(seen);
-      nextSeen.add(key);
-      const leaf = this.leafByKey(colId);
-      if (!leaf) return '0';
-      const raw = this.readSource(source, leaf);
-      if (leaf.def.allowFormula && typeof raw === 'string' && raw.startsWith('=')) {
-        const inner = this.evalFormula(raw.slice(1), source, nextSeen);
-        return inner == null ? '0' : String(inner);
+  private formulaColumns(): Leaf<TData>[] {
+    return this.visibleLeaves().filter((leaf) => !leaf.selectionColumn && leaf.colId !== ROW_NUMBERS_COL_ID);
+  }
+
+  private columnLabelIndex(label: string): number {
+    let index = 0;
+    for (const char of label.toUpperCase()) index = index * 26 + (char.charCodeAt(0) - 64);
+    return index - 1;
+  }
+
+  private formulaNumber(source: number, leaf: Leaf<TData>, seen: Set<string>): string {
+    const key = `${source}:${leaf.colId}`;
+    if (seen.has(key)) return '0';
+    const raw = this.readSource(source, leaf);
+    if (leaf.def.allowFormula && typeof raw === 'string' && raw.startsWith('=')) {
+      const next = new Set(seen);
+      next.add(key);
+      const inner = this.evalFormula(raw.slice(1), source, next);
+      return inner == null ? '0' : String(inner);
+    }
+    const number = typeof raw === 'number' ? raw : Number(raw);
+    return Number.isFinite(number) ? String(number) : '0';
+  }
+
+  private rangeValues(startCol: string, startRow: string, endCol: string, endRow: string, seen: Set<string>): string {
+    const columns = this.formulaColumns();
+    const colStart = Math.min(this.columnLabelIndex(startCol), this.columnLabelIndex(endCol));
+    const colEnd = Math.max(this.columnLabelIndex(startCol), this.columnLabelIndex(endCol));
+    const rowStart = Math.min(Number(startRow), Number(endRow));
+    const rowEnd = Math.max(Number(startRow), Number(endRow));
+    const values: string[] = [];
+    for (let row = rowStart; row <= rowEnd; row++) {
+      const at = this.sourceAt(row - 1);
+      for (let col = colStart; col <= colEnd; col++) {
+        const leaf = columns[col];
+        values.push(leaf && at >= 0 ? this.formulaNumber(at, leaf, seen) : '0');
       }
-      const number = typeof raw === 'number' ? raw : Number(raw);
-      return Number.isFinite(number) ? String(number) : '0';
+    }
+    return values.join(',');
+  }
+
+  private evalFormula(expr: string, source: number, seen: Set<string>): number | null {
+    const ranged = expr.replace(/\$?([A-Z]+)\$?(\d+)\s*:\s*\$?([A-Z]+)\$?(\d+)/gi, (_match, c1: string, r1: string, c2: string, r2: string) => this.rangeValues(c1, r1, c2, r2, seen));
+    const singled = ranged.replace(/\$?([A-Z]+)\$?(\d+)/gi, (_match, col: string, row: string) => {
+      const leaf = this.formulaColumns()[this.columnLabelIndex(col)];
+      const at = this.sourceAt(Number(row) - 1);
+      return leaf && at >= 0 ? this.formulaNumber(at, leaf, seen) : '0';
+    });
+    const replaced = singled.replace(/\[([^\]]+)\]/g, (_match, colId: string) => {
+      const leaf = this.leafByKey(colId);
+      return leaf ? this.formulaNumber(source, leaf, seen) : '0';
     });
     const summed = replaced.replace(/SUM\s*\(([^)]*)\)/gi, (_match, inner: string) => {
       const total = inner.split(',').reduce((sum, part) => {
