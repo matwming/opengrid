@@ -12,8 +12,9 @@ describe('sparkline', () => {
       rowData: [{ name: 'Ada', trend: [1, 3, 2] }],
     });
     const spark = host.querySelector('.og-spark');
+    expect(spark?.getAttribute('data-type')).toBe('line');
     expect(spark?.getAttribute('data-values')).toBe('1,3,2');
-    expect(spark?.querySelectorAll('rect').length).toBe(3);
+    expect(spark?.querySelector('polyline')).toBeTruthy();
     api.destroy();
   });
 });

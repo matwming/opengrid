@@ -116,7 +116,7 @@ function App() {
               </tr>
               <tr>
                 <td>行拖拽</td>
-                <td><code>rowDragManaged</code> 把抓住的行放到指针下那一行的前面，并触发 <code>onRowDragEnd</code>。happy-dom 没有触发 36.2.0 的拖拽事件，所以落点没有并排对照。</td>
+                <td><code>rowDragManaged</code> 在 Chromium 里把 a 拖到第三行，顺序变成 b、c、a、d，<code>onRowDragEnd</code> 的 <code>overIndex</code> 是 2，和 <code>ag-grid-enterprise</code> 36.2.0 一样。</td>
               </tr>
               <tr>
                 <td>Vue</td>
@@ -220,7 +220,7 @@ function App() {
               </tr>
               <tr>
                 <td>填充柄</td>
-                <td><code>cellSelection.handle.mode</code> 设为 <code>fill</code> 后，从选中格往下拖，会把该格的值抄到指针经过的行。<code>fillOperation</code> 可以改写入的值。没有和企业版并排对照。</td>
+                <td><code>cellSelection.handle.mode</code> 设为 <code>fill</code> 后，在 Chromium 里拖填充柄，把 4 抄到下面两行，范围终点是第 2 行，和 <code>ag-grid-enterprise</code> 36.2.0 一样。<code>fillOperation</code> 可以改写入的值。</td>
               </tr>
               <tr>
                 <td>Excel 导出</td>
@@ -236,11 +236,11 @@ function App() {
               </tr>
               <tr>
                 <td>集成图表</td>
-                <td><code>createRangeChart</code> 按范围里的数字列画出柱形图。<code>destroyChart</code> 把它去掉。这套企业版安装报错 200，Integrated Charts 模块没有绘图层，所以柱形没有并排对上。</td>
+                <td><code>createRangeChart</code> 用数量列画出两根柱，数值是 4 和 9。装上 <code>ag-charts-enterprise</code> 14.2.0 之后，企业版图的 <code>yKey</code> 是 <code>qty</code>。其他图种还没有。</td>
               </tr>
               <tr>
                 <td>迷你图</td>
-                <td><code>cellRenderer: 'agSparklineCellRenderer'</code> 按单元格里的数字数组画柱。数组 <code>[1, 3, 2]</code> 画出三根柱。这套企业版安装报错 200，Sparklines 模块没有绘图层，所以柱没有并排对上。</td>
+                <td><code>cellRenderer: 'agSparklineCellRenderer'</code> 默认画折线。<code>[1, 3, 2]</code> 是一条三个点的线。企业版同一个格子会画出 <code>ag-sparkline-wrapper</code>。指定 <code>sparklineOptions.type: 'bar'</code> 才画柱。</td>
               </tr>
               <tr>
                 <td>侧边栏</td>
@@ -273,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>填充柄和行拖拽的企业版指针拖动需要真实布局，happy-dom 里对不上落点。图表和迷你图的企业版模块在这套安装里报错 200，没有绘图层。</li>
+            <li>柱形以外的图种，以及迷你图的面积图。</li>
           </ul>
         </section>
 

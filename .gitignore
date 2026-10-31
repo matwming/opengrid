@@ -4,6 +4,7 @@ packages/*/dist
 *.tsbuildinfo
 test-results
 playwright-report
+e2e/pointer-harness.js
 blob-report
 .bench
 bench/artifacts

@@ -31,6 +31,7 @@ export interface ColDef<TData = any, TValue = any> {
   spanRows?: boolean | ((params: { valueA: unknown; valueB: unknown }) => boolean);
   allowFormula?: boolean;
   cellRenderer?: CellRenderer<TData> | string;
+  sparklineOptions?: { type?: string };
   cellEditor?: string;
   cellEditorParams?: { values?: string[] };
   cellDataType?: boolean | string;

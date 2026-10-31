@@ -178,6 +178,15 @@
   overflow: hidden;
 }
 
+.og-fill {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #1f4b99;
+  pointer-events: auto;
+  z-index: 3;
+}
+
 .og-editor {
   pointer-events: auto;
   position: absolute;

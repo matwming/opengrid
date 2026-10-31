@@ -30,7 +30,7 @@ describe('managed row drag', () => {
     pointer('pointerup', 80);
     const ids: string[] = [];
     api.forEachNode((node) => ids.push(String(node.data && (node.data as { id: string }).id)));
-    expect(ids).toEqual(['b', 'a', 'c', 'd']);
+    expect(ids).toEqual(['b', 'c', 'a', 'd']);
     expect(ended).toEqual([2]);
     api.destroy();
   });

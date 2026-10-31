@@ -214,7 +214,7 @@ function leafFrom<TData>(
     valueFormatter: def.valueFormatter,
     valueParser: def.valueParser,
     comparator: def.comparator,
-    cellRenderer: sparklineRenderer(def.cellRenderer),
+    cellRenderer: sparklineRenderer(def.cellRenderer, def.sparklineOptions?.type),
     cellClass: def.cellClass,
     cellStyle: def.cellStyle,
     suppressSizeToFit: Boolean(def.suppressSizeToFit),
@@ -279,26 +279,40 @@ function valueSample<TData>(def: ColDef<TData>, field: string | undefined, row: 
   return undefined;
 }
 
-function sparklineRenderer<TData>(renderer: ColDef<TData>['cellRenderer']): Leaf<TData>['cellRenderer'] {
+function sparklineRenderer<TData>(renderer: ColDef<TData>['cellRenderer'], sparklineType?: string): Leaf<TData>['cellRenderer'] {
   if (renderer === 'agSparklineCellRenderer') {
+    const type = sparklineType === 'bar' ? 'bar' : 'line';
     return (params) => {
       const numbers = Array.isArray(params.value) ? params.value.filter((item): item is number => typeof item === 'number') : [];
       const wrap = document.createElement('div');
       wrap.className = 'og-spark';
       wrap.dataset.values = numbers.join(',');
+      wrap.dataset.type = type;
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('viewBox', '0 0 60 20');
       const max = Math.max(...numbers, 1);
-      numbers.forEach((value, index) => {
-        const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        const slot = 60 / Math.max(numbers.length, 1);
-        const height = (value / max) * 18;
-        bar.setAttribute('x', String(index * slot));
-        bar.setAttribute('y', String(20 - height));
-        bar.setAttribute('width', String(Math.max(1, slot - 1)));
-        bar.setAttribute('height', String(height));
-        svg.append(bar);
-      });
+      if (type === 'bar') {
+        numbers.forEach((value, index) => {
+          const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          const slot = 60 / Math.max(numbers.length, 1);
+          const height = (value / max) * 18;
+          bar.setAttribute('x', String(index * slot));
+          bar.setAttribute('y', String(20 - height));
+          bar.setAttribute('width', String(Math.max(1, slot - 1)));
+          bar.setAttribute('height', String(height));
+          svg.append(bar);
+        });
+      } else if (numbers.length > 0) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        line.setAttribute('fill', 'none');
+        line.setAttribute('stroke', '#1f4b99');
+        line.setAttribute('points', numbers.map((value, index) => {
+          const x = numbers.length === 1 ? 30 : (index / (numbers.length - 1)) * 60;
+          const y = 18 - (value / max) * 16;
+          return `${x},${y}`;
+        }).join(' '));
+        svg.append(line);
+      }
       wrap.append(svg);
       return wrap;
     };

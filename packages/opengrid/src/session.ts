@@ -1499,15 +1499,34 @@ export class GridSession<TData = any> {
     document.addEventListener('pointerup', up);
   }
 
-  private onFillDown(event: PointerEvent): void {
-    if (!this.fillHandle() || event.button !== 0 || this.cellRanges.length === 0) return;
-    const found = this.hit(event.clientX, event.clientY);
-    if (!found) return;
+  private fillGrip: HTMLElement | null = null;
+
+  private placeFillHandle(): void {
+    this.fillGrip?.remove();
+    this.fillGrip = null;
+    if (!this.fillHandle() || this.cellRanges.length === 0) return;
     const range = this.cellRanges[0];
     if (!range) return;
     const end = Math.max(range.rowStartIndex, range.rowEndIndex);
-    if (found.display !== end || !range.columns.includes(found.leaf.colId)) return;
-    const sourceRow = Math.min(range.rowStartIndex, range.rowEndIndex);
+    const colId = range.columns[range.columns.length - 1];
+    const leaf = colId ? this.leafByKey(colId) : undefined;
+    const rect = leaf ? this.cellRect(end, leaf) : null;
+    if (!leaf || !rect) return;
+    const grip = el('div', 'og-fill');
+    grip.style.left = `${rect.x + rect.width - 6}px`;
+    grip.style.top = `${rect.y + rect.height - 6}px`;
+    grip.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.trackFill(end, range.columns);
+    });
+    this.floatLayer.append(grip);
+    this.fillGrip = grip;
+  }
+
+  private trackFill(end: number, columns: readonly string[]): void {
+    const sourceRow = Math.min(this.cellRanges[0]?.rowStartIndex ?? end, end);
     let over = end;
     const move = (ev: PointerEvent) => {
       const next = this.hit(ev.clientX, ev.clientY);
@@ -1517,10 +1536,23 @@ export class GridSession<TData = any> {
       document.removeEventListener('pointermove', move);
       document.removeEventListener('pointerup', up);
       if (over <= end) return;
-      this.applyFill(range.columns, sourceRow, over);
+      this.applyFill(columns, sourceRow, over);
+      this.placeFillHandle();
     };
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
+  }
+
+  private onFillDown(event: PointerEvent): void {
+    if (!this.fillHandle() || event.button !== 0 || this.cellRanges.length === 0) return;
+    if (event.target instanceof Element && event.target.closest('.og-fill')) return;
+    const found = this.hit(event.clientX, event.clientY);
+    if (!found) return;
+    const range = this.cellRanges[0];
+    if (!range) return;
+    const end = Math.max(range.rowStartIndex, range.rowEndIndex);
+    if (found.display !== end || !range.columns.includes(found.leaf.colId)) return;
+    this.trackFill(end, range.columns);
   }
 
   private applyFill(columns: readonly string[], sourceRow: number, endRow: number): void {
@@ -1580,7 +1612,7 @@ export class GridSession<TData = any> {
     const next = this.rows.slice();
     const [row] = next.splice(sourceFrom, 1);
     if (row === undefined) return;
-    next.splice(sourceOver > sourceFrom ? sourceOver - 1 : sourceOver, 0, row);
+    next.splice(sourceOver, 0, row);
     const selected = new Set(this.selectedIds());
     this.loadRows(next, false);
     this.selectedList = [];
@@ -3663,6 +3695,7 @@ export class GridSession<TData = any> {
           rowEndIndex: params.rowEndIndex,
           columns: params.columns.map((key) => (typeof key === 'string' ? key : key.getColId())),
         });
+        session.placeFillHandle();
       },
       getCellRanges: () => {
         if (session.cellRanges.length === 0) return null;
@@ -3677,6 +3710,7 @@ export class GridSession<TData = any> {
       },
       clearCellSelection: () => {
         session.cellRanges = [];
+        session.placeFillHandle();
       },
       copySelectedRangeToClipboard: () => {
         session.options.sendToClipboard?.({ data: session.clipboardText() });
