@@ -164,7 +164,7 @@ function App() {
               </tr>
               <tr>
                 <td>查找</td>
-                <td><code>findSearchValue: 'ada'</code> 找到 2 处，和 <code>ag-grid-enterprise</code> 36.2.0 的次数一样。<code>findNext</code> 先聚焦名字格，再聚焦城市格。匹配的无障碍单元格带 <code>og-find</code>。</td>
+                <td><code>findSearchValue: 'ada'</code> 找到 2 处，和 <code>ag-grid-enterprise</code> 36.2.0 的次数一样。<code>findNext</code> 先聚焦名字格，再聚焦城市格。匹配的文字包在 <code>mark.og-find</code> 里，文字是 Ada，和企业版的高亮文字一样。</td>
               </tr>
               <tr>
                 <td>PDF 导出</td>
@@ -273,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>查找高亮。</li>
+            <li>查找的当前匹配色、备注弹层改完写回、工具条菜单快捷键。</li>
           </ul>
         </section>
 

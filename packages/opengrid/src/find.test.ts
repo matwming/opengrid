@@ -35,6 +35,10 @@ describe('find', () => {
     expect(api.getFocusedCell()?.rowIndex).toBe(1);
     expect(api.getFocusedCell()?.column.getColId()).toBe('city');
     expect(host.querySelectorAll('.og-find')).toHaveLength(enterprise.findGetTotalMatches());
+    const enterpriseMarks = [...enterpriseHost.querySelectorAll('.ag-find-match')].map((node) => node.textContent);
+    const ourMarks = [...host.querySelectorAll('.og-find')].map((node) => node.textContent);
+    expect(ourMarks).toEqual(enterpriseMarks);
+    expect(ourMarks).toEqual(['Ada', 'Ada']);
     enterprise.destroy();
     api.destroy();
   });

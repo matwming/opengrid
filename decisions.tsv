@@ -67,3 +67,5 @@ ts	phase	decision	why	evidence	result
 2026-10-31T02:00:12Z	note-popup	Open a note popup with the author line enterprise shows	Clicking the cell shows hello and Ada · 2020-01-02	packages/opengrid/src/note-popup.test.ts	tests green
 2026-10-31T02:01:03Z	span-rows	Merge equal cells down the column like enterprise	USA spans two rows at 83px and Ireland stays a single cell	packages/opengrid/src/span-rows.test.ts	tests green
 2026-10-31T02:01:33Z	formula-source	Read formulas from formulaDataSource and keep the row value	=1+2 displays 3 and the row stays total 9 on both grids	packages/opengrid/src/formula-source.test.ts	tests green
+2026-10-31T02:03:04Z	toolbar-menu	Show the toolbar menu labels and the pivot column chip	Copy and Export match enterprise, and the pivot panel text is Year	packages/opengrid/src/toolbar-menu.test.ts	tests green
+2026-10-31T02:03:20Z	find-mark-text	Wrap the matched letters the way enterprise does	Both grids mark Ada twice	packages/opengrid/src/find.test.ts	tests green

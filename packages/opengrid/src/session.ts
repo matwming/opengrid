@@ -2418,9 +2418,18 @@ export class GridSession<TData = any> {
             if (event.pointerType === 'mouse') open();
           });
         }
-        cell.textContent = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : source < 0 ? this.groupLabel(display, leaf.colId) : this.textFor(source, leaf);
+        const text = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : source < 0 ? this.groupLabel(display, leaf.colId) : this.textFor(source, leaf);
         const query = (this.options.findSearchValue ?? '').toLocaleLowerCase();
-        if (query && (cell.textContent ?? '').toLocaleLowerCase().includes(query)) cell.classList.add('og-find');
+        const at = query ? text.toLocaleLowerCase().indexOf(query) : -1;
+        if (at >= 0) {
+          if (at > 0) cell.append(document.createTextNode(text.slice(0, at)));
+          const mark = document.createElement('mark');
+          mark.className = 'og-find';
+          mark.textContent = text.slice(at, at + query.length);
+          cell.append(mark);
+          const rest = text.slice(at + query.length);
+          if (rest) cell.append(document.createTextNode(rest));
+        } else cell.textContent = text;
         const paint = this.paintStyle(source, leaf);
         if (paint.className) cell.classList.add(...paint.className.split(/\s+/).filter(Boolean));
         if (paint.background) cell.style.backgroundColor = paint.background;
