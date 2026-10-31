@@ -928,6 +928,25 @@ export class GridSession<TData = any> {
     return cell;
   }
 
+  private sortLeaf(leaf: Leaf<TData>, direction: 'asc' | 'desc'): void {
+    if (!leaf.sortable) return;
+    for (const other of this.leaves) {
+      if (other !== leaf) {
+        other.sort = null;
+        other.sortIndex = null;
+      }
+    }
+    leaf.sort = direction;
+    leaf.sortIndex = 0;
+    this.syncLeafDef(leaf);
+    this.refresh('sort');
+  }
+
+  private resetColumns(): void {
+    this.rebuildColumns(this.rows);
+    this.refresh('sort');
+  }
+
   private cycleSort(leaf: Leaf<TData>, additive: boolean): void {
     if (!leaf.sortable) return;
     const order = leaf.sortingOrder.length > 0 ? leaf.sortingOrder : (['asc', 'desc', null] as SortDirection[]);
@@ -1241,13 +1260,17 @@ export class GridSession<TData = any> {
     this.popup.replaceChildren();
     this.popup.hidden = false;
     for (const item of [
-      ['Pin left', () => this.pin(leaf, 'left')],
-      ['Pin right', () => this.pin(leaf, 'right')],
-      ['No pin', () => this.pin(leaf, null)],
-      ['Autosize', () => this.autoSize([leaf.colId], false)],
+      ['Sort Ascending', () => this.sortLeaf(leaf, 'asc')],
+      ['Sort Descending', () => this.sortLeaf(leaf, 'desc')],
+      ['Pin Column', () => this.pin(leaf, leaf.pinned === 'left' ? null : 'left')],
+      ['Autosize This Column', () => this.autoSize([leaf.colId], false)],
+      ['Autosize All Columns', () => this.autoSize(this.visibleLeaves().map((item) => item.colId), false)],
+      ['Choose Columns', () => this.ensureColumnsPanel()],
+      ['Reset Columns', () => this.resetColumns()],
     ] as const) {
       const button = document.createElement('button');
       button.type = 'button';
+      button.className = 'og-colmenu-item';
       button.textContent = item[0];
       button.addEventListener('click', () => {
         item[1]();
@@ -1267,6 +1290,13 @@ export class GridSession<TData = any> {
     this.layout();
     const column = columnFacade(leaf);
     this.emit('columnPinned', { column, columns: [column], source: 'ui' });
+  }
+
+  private ensureColumnsPanel(): void {
+    if (this.host.querySelector('.og-tool-columns')) return;
+    const side = el('div', 'og-side');
+    side.append(this.columnsToolPanel());
+    this.host.append(side);
   }
 
   private mountSide(): void {

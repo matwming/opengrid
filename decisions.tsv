@@ -48,3 +48,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:11:22Z	group-panel	Show the enterprise row group panel placeholder	The panel test reads Drag here to set row groups on both grids, and Country once a column is grouped	packages/opengrid/src/group-panel.test.ts	tests green
 2026-10-31T01:13:12Z	undo	Undo and redo a setDataValue edit like enterprise 36.2.0	Both grids return to Ada after undo and to Zoe after redo	packages/opengrid/src/undo.test.ts	tests green
 2026-10-31T01:16:59Z	context	Show the enterprise context menu labels and copy the cell	The context test lists Cut through Export on both grids, and Copy sends Ada	packages/opengrid/src/context.test.ts	tests green
+2026-10-31T01:17:58Z	column-menu	List the enterprise column menu and sort ascending from it	The menu test matches seven labels, and Sort Ascending puts Ada before Bea	packages/opengrid/src/column-menu.test.ts	tests green
