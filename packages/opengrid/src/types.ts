@@ -278,6 +278,7 @@ export interface GridOptions<TData = any> {
     setNote(params: { column: Column; rowNode: IRowNode<TData>; note: { text: string; author?: string; createdAt?: string; updatedAt?: string } | undefined }): void;
   };
   noteTrigger?: 'hover' | 'click';
+  noteHideDelay?: number;
   formulaDataSource?: {
     getFormula(params: { column: Column; rowNode: IRowNode<TData> }): string | undefined;
     setFormula(params: { column: Column; rowNode: IRowNode<TData>; formula?: string }): void;

@@ -196,7 +196,7 @@ function App() {
               </tr>
               <tr>
                 <td>备注</td>
-                <td><code>notesDataSource</code> 配合 <code>setNote</code> 和 <code>getNote</code> 在名字格记下 hello，和 <code>ag-grid-enterprise</code> 36.2.0 一样。无障碍单元格带 <code>data-note</code>。<code>noteTrigger: 'click'</code> 打开弹层，正文是 hello，作者行是 <code>Ada · 2020-01-02</code>。</td>
+                <td><code>notesDataSource</code> 配合 <code>setNote</code> 和 <code>getNote</code> 在名字格记下 hello，和 <code>ag-grid-enterprise</code> 36.2.0 一样。无障碍单元格带 <code>data-note</code>。<code>noteTrigger: 'click'</code> 打开弹层，正文是 hello，作者行是 <code>Ada · 2020-01-02</code>。把正文改成 there 再离开，两边都写回 there，作者仍是 Ada。</td>
               </tr>
               <tr>
                 <td>树</td>

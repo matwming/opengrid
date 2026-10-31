@@ -209,12 +209,12 @@ export class GridSession<TData = any> {
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.closeNotePopup(false);
     this.emit('gridPreDestroyed', {});
     this.resizeObserver?.disconnect();
     this.worker?.destroy();
     this.worker = null;
     this.options.datasource?.destroy?.();
-    this.notePopup?.remove();
     this.host.replaceChildren();
     this.host.classList.remove('og-host');
   }
@@ -2032,6 +2032,9 @@ export class GridSession<TData = any> {
 
   private notes = new Map<string, { text: string; author?: string; createdAt?: string; updatedAt?: string }>();
   private notePopup: HTMLElement | null = null;
+  private noteEdit: { source: number; colId: string; note: { text: string; author?: string; createdAt?: string; updatedAt?: string }; initial: string } | null = null;
+  private noteCloser: ((event: PointerEvent) => void) | null = null;
+  private noteTimer = 0;
 
   private noteFor(source: number, leaf: Leaf<TData>): { text: string; author?: string; createdAt?: string; updatedAt?: string } | undefined {
     if (this.options.notesDataSource) {
@@ -2055,8 +2058,8 @@ export class GridSession<TData = any> {
     this.syncA11y();
   }
 
-  private openNotePopup(note: { text: string; author?: string; createdAt?: string; updatedAt?: string }): void {
-    this.notePopup?.remove();
+  private openNotePopup(source: number, leaf: Leaf<TData>, note: { text: string; author?: string; createdAt?: string; updatedAt?: string }): void {
+    this.closeNotePopup(false);
     const popup = el('div', 'og-notes');
     popup.setAttribute('aria-label', 'Note');
     const metaText = [note.author, note.updatedAt || note.createdAt].filter((part) => part).join(' · ');
@@ -2071,6 +2074,44 @@ export class GridSession<TData = any> {
     popup.append(editor);
     document.body.append(popup);
     this.notePopup = popup;
+    this.noteEdit = { source, colId: leaf.colId, note, initial: note.text.trim() };
+    this.noteCloser = (event) => {
+      if (event.target instanceof Node && popup.contains(event.target)) return;
+      this.closeNotePopup(true);
+    };
+    document.addEventListener('pointerdown', this.noteCloser);
+    popup.addEventListener('pointerenter', () => this.cancelNoteClose());
+    popup.addEventListener('pointerleave', (event) => {
+      if (event.pointerType === 'mouse') this.scheduleNoteClose();
+    });
+  }
+
+  private scheduleNoteClose(): void {
+    window.clearTimeout(this.noteTimer);
+    this.noteTimer = window.setTimeout(() => this.closeNotePopup(true), this.options.noteHideDelay ?? 220);
+  }
+
+  private cancelNoteClose(): void {
+    window.clearTimeout(this.noteTimer);
+  }
+
+  private closeNotePopup(save: boolean): void {
+    const edit = this.noteEdit;
+    const editor = this.notePopup?.querySelector('textarea');
+    window.clearTimeout(this.noteTimer);
+    if (this.noteCloser) document.removeEventListener('pointerdown', this.noteCloser);
+    this.noteCloser = null;
+    this.notePopup?.remove();
+    this.notePopup = null;
+    this.noteEdit = null;
+    if (!save || !edit || !editor) return;
+    const next = editor.value.trim();
+    if (next === edit.initial) return;
+    this.api.setNote({
+      column: edit.colId,
+      rowNode: this.nodeFor(edit.source),
+      note: next ? { ...edit.note, text: next } : undefined,
+    });
   }
 
   private batchKey(source: number, colId: string): string {
@@ -2413,10 +2454,13 @@ export class GridSession<TData = any> {
         if (note) {
           cell.dataset.note = note.text;
           cell.classList.add('og-has-note');
-          const open = () => this.openNotePopup(note);
+          const open = () => this.openNotePopup(source, leaf, note);
           if ((this.options.noteTrigger ?? 'hover') === 'click') cell.addEventListener('click', open);
           else cell.addEventListener('pointerenter', (event) => {
             if (event.pointerType === 'mouse') open();
+          });
+          cell.addEventListener('pointerleave', (event) => {
+            if (event.pointerType === 'mouse') this.scheduleNoteClose();
           });
         }
         const text = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : source < 0 ? this.groupLabel(display, leaf.colId) : this.textFor(source, leaf);
