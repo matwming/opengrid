@@ -66,6 +66,28 @@ describe('enterprise probe', () => {
     ours.destroy();
   });
 
+  it('matches pivot column ids and the first group aggregate', () => {
+    const options = {
+      columnDefs: [
+        { field: 'country', rowGroup: true },
+        { field: 'year', pivot: true },
+        { field: 'sales', aggFunc: 'sum' },
+      ],
+      rowData: rows,
+      pivotMode: true,
+      groupDefaultExpanded: 0,
+      animateRows: false,
+      suppressAggFuncInHeader: true,
+    };
+    const enterprise = ag(options);
+    const ours = open(options);
+    const idsOf = (api: { getAllGridColumns: () => { getColId: () => string }[] }) => api.getAllGridColumns().map((column) => column.getColId());
+    expect(idsOf(ours)).toEqual(idsOf(enterprise));
+    expect(ours.getDisplayedRowAtIndex(0)?.aggData).toEqual(enterprise.getDisplayedRowAtIndex(0)?.aggData);
+    enterprise.destroy();
+    ours.destroy();
+  });
+
   it('matches a set filter', () => {
     const options = {
       columnDefs: [{ field: 'country', filter: 'agSetColumnFilter' }, { field: 'year' }],

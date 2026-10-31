@@ -29,10 +29,10 @@ describe('pivot', () => {
     const ireland = api.getDisplayedRowAtIndex(0);
     const usa = api.getDisplayedRowAtIndex(1);
     expect(ireland?.key).toBe('Ireland');
-    expect(ireland?.aggData?.['ag-Grid-Pivot-sales-2020']).toBe(4);
-    expect(ireland?.aggData?.['ag-Grid-Pivot-sales-2021']).toBe(9);
-    expect(usa?.aggData?.['ag-Grid-Pivot-sales-2020']).toBe(10);
-    expect(usa?.aggData?.['ag-Grid-Pivot-sales-2021']).toBe(7);
+    expect(ireland?.aggData?.['pivot_year_2020_sales']).toBe(4);
+    expect(ireland?.aggData?.['pivot_year_2021_sales']).toBe(9);
+    expect(usa?.aggData?.['pivot_year_2020_sales']).toBe(10);
+    expect(usa?.aggData?.['pivot_year_2021_sales']).toBe(7);
     api.destroy();
   });
 });

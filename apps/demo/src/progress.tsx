@@ -132,7 +132,7 @@ function App() {
               </tr>
               <tr>
                 <td>透视</td>
-                <td><code>pivotMode</code> 把透视列的每个键变成一列。Ireland 的 2020 年 sales 是 4，2021 年是 9。和企业版 36.2.0 对过列 id。企业版是 <code>pivot_year_2020_sales</code>，这边是 <code>ag-Grid-Pivot-sales-2020</code>，而且 <code>getAllGridColumns</code> 还留着原来的 <code>country</code>、<code>year</code>、<code>sales</code>。</td>
+                <td><code>pivotMode</code> 的列 id 和第一组的 <code>aggData</code> 与 <code>ag-grid-enterprise</code> 36.2.0 对上了。列名是 <code>pivot_year_2020_sales</code> 这种。<code>getAllGridColumns</code> 不再列出原来的分组列、透视列和值列。多列透视和合计列还没有。</td>
               </tr>
               <tr>
                 <td>树</td>

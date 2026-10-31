@@ -592,7 +592,7 @@ export class GridSession<TData = any> {
   private syncPivotColumns(sources: readonly number[]): void {
     if (!this.options.pivotMode) return;
     const pivot = this.leaves.find((leaf) => leaf.def.pivot && leaf.colId !== AUTO_GROUP_COL_ID);
-    const values = this.leaves.filter((leaf) => leaf.def.aggFunc && !leaf.def.pivot && !leaf.colId.startsWith('ag-Grid-Pivot-') && leaf.colId !== AUTO_GROUP_COL_ID);
+    const values = this.leaves.filter((leaf) => leaf.def.aggFunc && !leaf.def.pivot && leaf.def.pivotKey == null && leaf.colId !== AUTO_GROUP_COL_ID);
     if (!pivot || values.length === 0) return;
     pivot.hide = true;
     pivot.groupedHide = true;
@@ -601,7 +601,7 @@ export class GridSession<TData = any> {
       valueLeaf.hide = true;
       valueLeaf.groupedHide = true;
       for (const key of keys) {
-        const colId = `ag-Grid-Pivot-${valueLeaf.colId}-${key}`;
+        const colId = `pivot_${pivot.colId}_${key}_${valueLeaf.colId}`;
         const leaf = autoGroupLeaf<TData>(key, 120);
         leaf.colId = colId;
         leaf.pinned = null;
@@ -617,7 +617,7 @@ export class GridSession<TData = any> {
       if (leaf.groupedHide) leaf.hide = false;
       leaf.groupedHide = false;
     }
-    this.leaves = this.leaves.filter((leaf) => leaf.colId !== AUTO_GROUP_COL_ID && !leaf.colId.startsWith('ag-Grid-Pivot-'));
+    this.leaves = this.leaves.filter((leaf) => leaf.colId !== AUTO_GROUP_COL_ID && leaf.def.pivotKey == null);
     const groups = this.groupLeaves();
     if (groups.length === 0) return;
     for (const leaf of groups) {
@@ -641,13 +641,18 @@ export class GridSession<TData = any> {
     this.syncA11y();
   }
 
+  private reportedColumns(): Leaf<TData>[] {
+    if (!this.options.pivotMode) return this.leaves;
+    return this.leaves.filter((leaf) => leaf.selectionColumn || leaf.colId === AUTO_GROUP_COL_ID || leaf.def.pivotKey != null || (!leaf.def.rowGroup && !leaf.def.pivot && !leaf.def.aggFunc));
+  }
+
   private groupAgg(item: GroupFlat, colId: string): number | null {
     const leaf = this.leafById(colId);
     const func = leaf?.def.aggFunc;
     if (!leaf || !func) return null;
     const valueLeaf = leaf.def.pivotValueColumn ? this.leafById(leaf.def.pivotValueColumn) ?? leaf : leaf;
     const pivotKey = leaf.def.pivotKey;
-    const pivot = this.leaves.find((item) => item.def.pivot && !item.colId.startsWith('ag-Grid-Pivot-'));
+    const pivot = this.leaves.find((item) => item.def.pivot && item.def.pivotKey == null);
     const sources = pivot && pivotKey != null ? item.leafSources.filter((source) => this.groupValue(source, pivot.colId) === pivotKey) : item.leafSources;
     return aggregate(func, sources.map((source) => this.readSource(source, valueLeaf)));
   }
@@ -2657,7 +2662,7 @@ export class GridSession<TData = any> {
         session.emit('columnPinned', { column: columns[0] ?? null, columns, source: 'api' });
       },
       getColumns: () => session.leaves.map((leaf) => columnFacade(leaf)),
-      getAllGridColumns: () => session.leaves.map((leaf) => columnFacade(leaf)),
+      getAllGridColumns: () => session.reportedColumns().map((leaf) => columnFacade(leaf)),
       getDisplayedLeftColumns: () => bandsOf(session.leaves).left.map((leaf) => columnFacade(leaf)),
       getDisplayedCenterColumns: () => bandsOf(session.leaves).center.map((leaf) => columnFacade(leaf)),
       getDisplayedRightColumns: () => bandsOf(session.leaves).right.map((leaf) => columnFacade(leaf)),
@@ -3008,6 +3013,7 @@ class GroupNode<TData> implements IRowNode<TData> {
     let any = false;
     for (const leaf of this.session['leaves']) {
       if (!leaf.def.aggFunc || leaf.colId === AUTO_GROUP_COL_ID) continue;
+      if (this.session['options'].pivotMode && leaf.def.pivotKey == null) continue;
       any = true;
       data[leaf.colId] = this.session['groupAgg'](this.item, leaf.colId);
     }
