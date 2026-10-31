@@ -147,6 +147,10 @@ function App() {
                 <td>打开 <code>undoRedoCellEditing</code> 后，<code>undoCellEditing</code> 和 <code>redoCellEditing</code> 把 <code>setDataValue</code> 的修改退回和重做，结果和 <code>ag-grid-enterprise</code> 36.2.0 一样。默认最多记 10 步。</td>
               </tr>
               <tr>
+                <td>右键菜单</td>
+                <td>右键列出 Cut、Copy、Copy with Headers、Copy with Group Headers、Paste、Export，和企业版 36.2.0 的文字一样。Copy 把单元格文字交给 <code>sendToClipboard</code>。子菜单和快捷键还没有。</td>
+              </tr>
+              <tr>
                 <td>树</td>
                 <td><code>treeData</code> 和 <code>getDataPath</code> 按路径嵌套。CEO 下面有 Sales 和 Support，收起 Sales 后 EU 不再显示。没有和企业版并排对照。</td>
               </tr>
@@ -221,7 +225,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>右键菜单、列菜单、单元格合并、公式、查找、PDF 导出。</li>
+            <li>列菜单、单元格合并、公式、查找、PDF 导出、富选择编辑器、分组过滤、备注、批量编辑、对齐网格、工具条、分组面板拖拽。</li>
           </ul>
         </section>
 

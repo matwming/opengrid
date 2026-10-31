@@ -63,6 +63,7 @@ Status words mean the following.
 | Row numbers | [Row numbers](https://www.ag-grid.com/javascript-data-grid/row-numbers/) | partial. `rowNumbers: true` adds `ag-Grid-RowNumbersColumn` in the same place as `ag-grid-enterprise` 36.2.0. The cells show 1 and 2 for the first two displayed rows. |
 | Row grouping panel | [Row group panel](https://www.ag-grid.com/javascript-data-grid/grouping-group-panel/) | partial. `rowGroupPanelShow: 'always'` shows `Drag here to set row groups`, the same text as `ag-grid-enterprise` 36.2.0. A grouped column appears as its header name. Dragging a column onto the panel is not started. |
 | Undo and redo | [Undo redo edits](https://www.ag-grid.com/javascript-data-grid/undo-redo-edits/) | partial. With `undoRedoCellEditing`, `undoCellEditing` and `redoCellEditing` restore a `setDataValue` edit the same way as `ag-grid-enterprise` 36.2.0. The default stack limit is 10. |
+| Context menu | [Context menu](https://www.ag-grid.com/javascript-data-grid/context-menu/) | partial. A right click lists Cut, Copy, Copy with Headers, Copy with Group Headers, Paste, and Export, the same labels as `ag-grid-enterprise` 36.2.0. Copy sends the cell text through `sendToClipboard`. Submenus and keyboard shortcuts are not started. |
 | Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | partial. The columns and filters panels ship with the side bar. A custom `toolPanel` component is not started. |
 
 ## Benchmark

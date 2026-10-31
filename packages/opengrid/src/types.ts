@@ -252,6 +252,7 @@ export interface GridOptions<TData = any> {
   enableAdvancedFilter?: boolean;
   undoRedoCellEditing?: boolean;
   undoRedoCellEditingLimit?: number;
+  getContextMenuItems?: (params: { defaultItems: string[] }) => (string | { name: string })[];
   fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
   sendToClipboard?: (params: { data: string }) => void;
   processCellForClipboard?: (params: { value: string; column: Column }) => string;

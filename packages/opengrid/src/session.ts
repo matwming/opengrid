@@ -95,6 +95,7 @@ export class GridSession<TData = any> {
   private groupPanel!: HTMLElement;
   private undoStack: { source: number; colId: string; value: unknown }[] = [];
   private redoStack: { source: number; colId: string; value: unknown }[] = [];
+  private lastClipboard = '';
   private pageIndex = 0;
   private infiniteKnown = false;
   private infiniteGen = 0;
@@ -163,6 +164,7 @@ export class GridSession<TData = any> {
       this.onRowDragDown(event);
     });
     this.viewport.addEventListener('dblclick', (event) => this.onBodyDoubleClick(event));
+    this.viewport.addEventListener('contextmenu', (event) => this.onContextMenu(event));
     this.root.addEventListener('keydown', (event) => this.onKey(event));
     this.root.addEventListener('paste', (event) => {
       const text = event.clipboardData?.getData('text/plain');
@@ -1172,6 +1174,67 @@ export class GridSession<TData = any> {
     const rootRect = this.root.getBoundingClientRect();
     this.popup.style.left = `${Math.max(0, rect.left - rootRect.left)}px`;
     this.popup.style.top = `${rect.bottom - rootRect.top}px`;
+  }
+
+  private contextLabels(items: readonly (string | { name: string })[]): string[] {
+    const names: Record<string, string> = {
+      cut: 'Cut',
+      copy: 'Copy',
+      copyWithHeaders: 'Copy with Headers',
+      copyWithGroupHeaders: 'Copy with Group Headers',
+      paste: 'Paste',
+      export: 'Export',
+    };
+    return items.map((item) => (typeof item === 'string' ? names[item] ?? item : item.name));
+  }
+
+  private onContextMenu(event: MouseEvent): void {
+    const found = this.hit(event.clientX, event.clientY);
+    if (!found || found.leaf.selectionColumn) return;
+    event.preventDefault();
+    const defaults = ['cut', 'copy', 'copyWithHeaders', 'copyWithGroupHeaders', 'paste', 'export'];
+    const items = this.options.getContextMenuItems?.({ defaultItems: defaults }) ?? defaults;
+    const labels = this.contextLabels(items);
+    this.popup.replaceChildren();
+    this.popup.hidden = false;
+    this.popup.classList.add('og-context');
+    labels.forEach((label, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'og-context-item';
+      button.textContent = label;
+      button.addEventListener('click', () => {
+        this.runContextItem(typeof items[index] === 'string' ? items[index] : label, found.display, found.leaf);
+        this.popup.hidden = true;
+        this.popup.classList.remove('og-context');
+      });
+      this.popup.append(button);
+    });
+    const rect = this.viewport.getBoundingClientRect();
+    const rootRect = this.root.getBoundingClientRect();
+    this.popup.style.left = `${Math.max(0, event.clientX - rootRect.left)}px`;
+    this.popup.style.top = `${Math.max(0, event.clientY - rect.top)}px`;
+  }
+
+  private runContextItem(token: string, display: number, leaf: Leaf<TData>): void {
+    const copy = (headers: boolean) => {
+      const previous = this.cellRanges.slice();
+      this.cellRanges = [{ rowStartIndex: display, rowEndIndex: display, columns: [leaf.colId] }];
+      let data = this.clipboardText();
+      if (headers) data = `${leaf.groupName ? `${leaf.groupName}\n` : ''}${leaf.headerName}\n${data}`;
+      this.cellRanges = previous;
+      this.lastClipboard = data;
+      this.options.sendToClipboard?.({ data });
+    };
+    if (token === 'copy' || token === 'Copy') copy(false);
+    else if (token === 'copyWithHeaders' || token === 'Copy with Headers' || token === 'copyWithGroupHeaders' || token === 'Copy with Group Headers') copy(true);
+    else if (token === 'cut' || token === 'Cut') {
+      copy(false);
+      const source = this.sourceAt(display);
+      if (source >= 0) this.writeSource(source, leaf, '', 'edit');
+    }
+    else if (token === 'paste' || token === 'Paste') this.pasteClipboard(this.lastClipboard);
+    else if (token === 'export' || token === 'Export') this.options.sendToClipboard?.({ data: this.csv() });
   }
 
   private openMenu(leaf: Leaf<TData>, anchor: HTMLElement): void {
