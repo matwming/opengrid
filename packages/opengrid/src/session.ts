@@ -2839,7 +2839,7 @@ export class GridSession<TData = any> {
       const leaf = this.leafByKey(column.value);
       const kind = leaf?.kind === 'number' ? 'number' : 'text';
       const filter = kind === 'number' ? Number(input.value) : input.value;
-      this.api.setAdvancedFilterModel({ filterType: kind, colId: column.value, type: operator.value, filter });
+      this.api.setAdvancedFilterModel({ filterType: kind, colId: column.value, type: operator.value as 'contains' | 'equals' | 'startsWith' | 'greaterThan' | 'lessThan', filter });
     });
     const clear = document.createElement('button');
     clear.type = 'button';
@@ -3223,7 +3223,7 @@ export class GridSession<TData = any> {
     const colIds = params.cellRange.columns.map((key) => (typeof key === 'string' ? key : key.getColId()));
     const valueCol = colIds.find((colId) => this.leafByKey(colId)?.kind === 'number') ?? colIds[colIds.length - 1] ?? '';
     const labelCol = colIds.find((colId) => colId !== valueCol) ?? valueCol;
-    const points: { label: string; value: number }[] = [];
+    const points: { label: string; value: number; row: number }[] = [];
     for (let row = start; row <= end; row++) {
       const source = this.sourceAt(row);
       const valueLeaf = this.leafByKey(valueCol);
