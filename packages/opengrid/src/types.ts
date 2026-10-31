@@ -210,6 +210,13 @@ export interface IServerSideDatasource<TData = any> {
   }) => void;
 }
 
+export interface ToolbarItem<TData = any> {
+  key?: string;
+  label?: string;
+  action?: (params: { key: string }) => void;
+  toolbarItem?: string;
+}
+
 export type AlignedGrid<TData = any> =
   | GridApi<TData>
   | { api?: GridApi<TData> | null }
@@ -259,6 +266,7 @@ export interface GridOptions<TData = any> {
   rowNumbers?: boolean | { suppressCellFocus?: boolean };
   rowGroupPanelShow?: 'always' | 'onlyWhenGrouping' | 'never';
   alignedGrids?: AlignedGrid[] | (() => AlignedGrid[]);
+  toolbar?: { items: (string | ToolbarItem<TData>)[] };
   enableAdvancedFilter?: boolean;
   undoRedoCellEditing?: boolean;
   undoRedoCellEditingLimit?: number;

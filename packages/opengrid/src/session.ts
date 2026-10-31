@@ -95,6 +95,10 @@ export class GridSession<TData = any> {
   private pager: HTMLElement;
   private status: HTMLElement | null = null;
   private groupPanel!: HTMLElement;
+  private toolbar: HTMLElement | null = null;
+  private findCount: HTMLElement | null = null;
+  private quickTimer = 0;
+  private findTimer = 0;
   private aligning = false;
   private undoStack: { source: number; colId: string; value: unknown }[] = [];
   private redoStack: { source: number; colId: string; value: unknown }[] = [];
@@ -196,6 +200,7 @@ export class GridSession<TData = any> {
     if (this.remoteMode()) this.bootInfinite();
     else if (this.options.rowModelType === 'viewport') this.bootViewport();
     else this.loadRows(options.rowData ?? [], true);
+    this.renderToolbar();
     this.emit('gridReady', {});
   }
 
@@ -2454,10 +2459,16 @@ export class GridSession<TData = any> {
     const groups = this.groupLeaves();
     const show = mode === 'always' || (mode === 'onlyWhenGrouping' && groups.length > 0);
     this.groupPanel.hidden = !show;
-    this.groupPanel.replaceChildren();
-    if (!show) return;
+    if (show) this.fillGroupPanel(this.groupPanel);
+    else this.groupPanel.replaceChildren();
+    this.syncToolbarGroups();
+  }
+
+  private fillGroupPanel(panel: HTMLElement): void {
+    const groups = this.groupLeaves();
+    panel.replaceChildren();
     if (groups.length === 0) {
-      this.groupPanel.textContent = 'Drag here to set row groups';
+      panel.textContent = 'Drag here to set row groups';
       return;
     }
     for (const leaf of groups) {
@@ -2467,8 +2478,113 @@ export class GridSession<TData = any> {
       chip.addEventListener('click', () => {
         this.api.setRowGroupColumns(groups.filter((item) => item !== leaf).map((item) => item.colId));
       });
-      this.groupPanel.append(chip);
+      panel.append(chip);
     }
+  }
+
+  private syncToolbarGroups(): void {
+    this.toolbar?.querySelectorAll<HTMLElement>('.og-toolbar-panel').forEach((panel) => this.fillGroupPanel(panel));
+  }
+
+  private renderToolbar(): void {
+    const shell = this.host.querySelector('.og-shell');
+    const items = this.options.toolbar?.items;
+    this.toolbar?.remove();
+    this.toolbar = null;
+    this.findCount = null;
+    if (!shell || !items?.length) return;
+    this.toolbar = el('div', 'og-toolbar');
+    shell.prepend(this.toolbar);
+    for (const item of items) this.appendToolbarItem(item);
+    this.syncToolbarGroups();
+    this.syncFindCount();
+  }
+
+  private appendToolbarItem(item: string | { key?: string; label?: string; action?: (params: { key: string }) => void; toolbarItem?: string }): void {
+    if (!this.toolbar) return;
+    if (item === 'separator' || (typeof item === 'object' && item.toolbarItem === 'separator')) {
+      this.toolbar.append(el('span', 'og-toolbar-sep'));
+      return;
+    }
+    if (typeof item !== 'object') return;
+    if (item.toolbarItem === 'agQuickFilterToolbarItem') {
+      const input = this.toolbarField('Filter', 'Filter...');
+      input.value = this.options.quickFilterText ?? '';
+      input.addEventListener('input', () => {
+        window.clearTimeout(this.quickTimer);
+        this.quickTimer = window.setTimeout(() => this.api.setGridOption('quickFilterText', input.value), 300);
+      });
+      this.toolbar.append(input);
+      return;
+    }
+    if (item.toolbarItem === 'agFindToolbarItem') {
+      const wrap = el('div', 'og-toolbar-find');
+      const input = this.toolbarField('Find', 'Find...');
+      input.value = this.options.findSearchValue ?? '';
+      const count = el('span', 'og-find-count');
+      this.findCount = count;
+      input.addEventListener('input', () => {
+        window.clearTimeout(this.findTimer);
+        this.findTimer = window.setTimeout(() => this.api.setGridOption('findSearchValue', input.value), 300);
+      });
+      wrap.append(input, count, this.findButton('Previous Match', -1), this.findButton('Next Match', 1));
+      this.toolbar.append(wrap);
+      return;
+    }
+    if (item.toolbarItem === 'agRowGroupPanelToolbarItem') {
+      this.toolbar.append(el('div', 'og-toolbar-panel'));
+      return;
+    }
+    if (!item.label && !item.action) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'og-toolbar-button';
+    const label = document.createElement('span');
+    label.className = 'og-toolbar-button-label';
+    label.textContent = item.label ?? '';
+    button.append(label);
+    button.addEventListener('click', () => item.action?.({ key: item.key ?? '' }));
+    this.toolbar.append(button);
+  }
+
+  private toolbarField(label: string, placeholder: string): HTMLInputElement {
+    const input = document.createElement('input');
+    input.className = 'og-toolbar-input';
+    input.setAttribute('aria-label', label);
+    input.placeholder = placeholder;
+    return input;
+  }
+
+  private findButton(label: string, direction: 1 | -1): HTMLButtonElement {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'og-toolbar-find-button';
+    button.setAttribute('aria-label', label);
+    button.textContent = direction > 0 ? '›' : '‹';
+    button.addEventListener('click', () => this.findStep(direction));
+    return button;
+  }
+
+  private findStep(direction: 1 | -1): void {
+    const matches = this.findMatches();
+    if (matches.length === 0) return;
+    const base = this.findIndex < 0 ? (direction > 0 ? -1 : 0) : this.findIndex;
+    this.findIndex = (base + direction + matches.length) % matches.length;
+    const match = matches[this.findIndex];
+    if (match) this.setFocus(match.row, match.col, true);
+    this.syncFindCount();
+  }
+
+  private syncFindCount(): void {
+    if (!this.findCount) return;
+    const query = this.options.findSearchValue ?? '';
+    if (!query) {
+      this.findCount.textContent = '';
+      return;
+    }
+    const total = this.findMatches().length;
+    const active = this.findIndex >= 0 ? this.findIndex + 1 : 0;
+    this.findCount.textContent = `${active}/${total}`;
   }
 
   private renderStatus(): void {
@@ -2923,6 +3039,12 @@ export class GridSession<TData = any> {
           session.reloadInfinite(true);
         }
         else if (key === 'quickFilterText') session.refresh('filter');
+        else if (key === 'findSearchValue') {
+          session.findIndex = -1;
+          session.syncA11y();
+          session.syncFindCount();
+        }
+        else if (key === 'toolbar') session.renderToolbar();
         else if (key === 'pagination' || key === 'paginationPageSize') {
           session.clampPage();
           session.viewport.scrollTop = 0;
@@ -3128,13 +3250,7 @@ export class GridSession<TData = any> {
       },
       getAdvancedFilterModel: () => session.advancedModel,
       findGetTotalMatches: () => session.findMatches().length,
-      findNext: () => {
-        const matches = session.findMatches();
-        if (matches.length === 0) return;
-        session.findIndex = (session.findIndex + 1) % matches.length;
-        const match = matches[session.findIndex];
-        if (match) session.setFocus(match.row, match.col, true);
-      },
+      findNext: () => session.findStep(1),
       undoCellEditing: () => session.undoCellEditing(),
       redoCellEditing: () => session.redoCellEditing(),
       startBatchEdit: () => {
