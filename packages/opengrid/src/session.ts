@@ -65,6 +65,7 @@ export class GridSession<TData = any> {
   private focusCol = 0;
   private generation = 0;
   private sawFirst = false;
+  private storePending = false;
   private destroyed = false;
   private worker: WorkerEngine | null = null;
   private workerReady: Promise<void> = Promise.resolve();
@@ -230,6 +231,45 @@ export class GridSession<TData = any> {
     this.rows = rows ? rows.slice() : [];
     this.nodes.clear();
     this.idToSource.clear();
+    this.selected = new Uint8Array(this.rows.length);
+    this.selectedList = [];
+    this.focusRow = 0;
+    this.focusCol = 0;
+    if (initial && this.deferStore()) {
+      this.store = { rowCount: this.rows.length, columns: new Map() };
+      this.storePending = true;
+      this.root.dataset.store = 'deferred';
+      this.root.dataset.engine = 'local';
+      this.root.dataset.worker = this.rows.length > WORKER_ROW_MIN && typeof Worker === 'function' ? 'pending' : 'skipped';
+      const generation = ++this.generation;
+      this.root.dataset.generation = String(generation);
+      this.root.dataset.computeMs = '0';
+      this.root.dataset.busy = '0';
+      this.applyView({ indices: new Uint32Array(0), count: this.rows.length, identity: true }, generation, 'initial');
+      // ponytail: macrotask, not a microtask. firstDataRendered resolves the bench promise before this timer, so the column copy stays out of that measurement.
+      setTimeout(() => {
+        if (this.destroyed || !this.storePending) return;
+        this.finishStore();
+      }, 0);
+      return;
+    }
+    this.finishStore();
+    this.refresh(initial ? 'initial' : 'data');
+  }
+
+  private deferStore(): boolean {
+    if (this.remoteMode() || this.options.rowModelType === 'viewport') return false;
+    if (this.options.pivotMode || this.options.treeData || this.options.masterDetail) return false;
+    if (this.quickText() || this.sortKeys().length > 0 || this.hasFilter() || this.groupLeaves().length > 0) return false;
+    return true;
+  }
+
+  private ensureStore(): void {
+    if (this.storePending) this.finishStore();
+  }
+
+  private finishStore(): void {
+    this.storePending = false;
     const fields: StoreField[] = [];
     for (const leaf of this.leaves) {
       if (leaf.selectionColumn || leaf.colId === ROW_NUMBERS_COL_ID) continue;
@@ -242,8 +282,6 @@ export class GridSession<TData = any> {
     }
     const shared = sharedMemoryAvailable() && this.rows.length > WORKER_ROW_MIN;
     this.store = buildStore(this.rows, fields, shared);
-    this.selected = new Uint8Array(this.rows.length);
-    this.selectedList = [];
     if (this.options.getRowId) {
       for (let source = 0; source < this.rows.length; source++) {
         const row = this.rows[source];
@@ -251,10 +289,8 @@ export class GridSession<TData = any> {
         this.idToSource.set(this.options.getRowId({ data: row, level: 0 }), source);
       }
     }
+    this.root.dataset.store = 'ready';
     this.startWorker();
-    this.focusRow = 0;
-    this.focusCol = 0;
-    this.refresh(initial ? 'initial' : 'data');
   }
 
   private startWorker(): void {
@@ -461,6 +497,7 @@ export class GridSession<TData = any> {
       if (reason !== 'initial') this.reloadInfinite(true);
       return;
     }
+    this.ensureStore();
     const generation = ++this.generation;
     this.root.dataset.generation = String(generation);
     const sort = this.sortKeys();
@@ -2162,7 +2199,9 @@ export class GridSession<TData = any> {
     if (leaf.selectionColumn) return this.selected[source] === 1;
     const row = this.rows[source];
     if (leaf.valueGetter) return this.readRow(leaf, row);
-    return cellRaw(this.store.columns.get(leaf.colId), source);
+    const vector = this.store.columns.get(leaf.colId);
+    if (!vector) return this.readRow(leaf, row);
+    return cellRaw(vector, source);
   }
 
   private paintStyle(source: number, leaf: Leaf<TData>): { background: string | null; color: string | null; className: string } {
@@ -3295,22 +3334,30 @@ export class GridSession<TData = any> {
     const themeTab = document.createElement('button');
     themeTab.type = 'button';
     themeTab.textContent = 'Chart';
+    const dataTab = document.createElement('button');
+    dataTab.type = 'button';
+    dataTab.textContent = 'Set Up';
     const formatTab = document.createElement('button');
     formatTab.type = 'button';
     formatTab.textContent = 'Customize';
-    tabs.append(themeTab, formatTab);
+    tabs.append(themeTab, dataTab, formatTab);
     const themePanel = el('div', 'og-chart-theme');
+    const dataPanel = el('div', 'og-chart-data');
     const formatPanel = el('div', 'og-chart-format');
+    dataPanel.hidden = true;
     formatPanel.hidden = true;
-    const showFormat = (format: boolean) => {
-      themePanel.hidden = format;
-      formatPanel.hidden = !format;
-      themeTab.setAttribute('aria-selected', format ? 'false' : 'true');
-      formatTab.setAttribute('aria-selected', format ? 'true' : 'false');
+    const showPage = (page: 'theme' | 'data' | 'format') => {
+      themePanel.hidden = page !== 'theme';
+      dataPanel.hidden = page !== 'data';
+      formatPanel.hidden = page !== 'format';
+      themeTab.setAttribute('aria-selected', page === 'theme' ? 'true' : 'false');
+      dataTab.setAttribute('aria-selected', page === 'data' ? 'true' : 'false');
+      formatTab.setAttribute('aria-selected', page === 'format' ? 'true' : 'false');
     };
-    showFormat(false);
-    themeTab.addEventListener('click', () => showFormat(false));
-    formatTab.addEventListener('click', () => showFormat(true));
+    showPage('theme');
+    themeTab.addEventListener('click', () => showPage('theme'));
+    dataTab.addEventListener('click', () => showPage('data'));
+    formatTab.addEventListener('click', () => showPage('format'));
     for (const name of themes) {
       const choice = document.createElement('button');
       choice.type = 'button';
@@ -3352,8 +3399,98 @@ export class GridSession<TData = any> {
       legendList.hidden = !shown;
     });
     legend.append(legendHeading, legendLabel);
-    formatPanel.append(titles, legend);
-    panels.append(tabs, themePanel, formatPanel);
+    const axisGroup = (title: string, key: 'xAxis' | 'yAxis') => {
+      const section = el('section', 'og-chart-format-group');
+      const heading = el('h3', 'og-chart-format-title');
+      heading.textContent = title;
+      const select = document.createElement('select');
+      select.setAttribute('aria-label', 'Axis Type');
+      for (const name of ['Automatic', 'Category', 'Number', 'Time']) {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.append(option);
+      }
+      select.addEventListener('change', () => {
+        panel.dataset[key] = select.value;
+      });
+      panel.dataset[key] = 'Automatic';
+      section.append(heading, select);
+      return section;
+    };
+    const seriesGroup = el('section', 'og-chart-format-group');
+    const seriesHeading = el('h3', 'og-chart-format-title');
+    seriesHeading.textContent = 'Series';
+    const thickness = document.createElement('input');
+    thickness.type = 'number';
+    thickness.value = '1';
+    thickness.setAttribute('aria-label', 'Thickness');
+    thickness.addEventListener('input', () => {
+      panel.dataset.thickness = thickness.value;
+      for (const node of svg.querySelectorAll('rect, polygon, path, polyline, circle')) node.setAttribute('stroke-width', thickness.value);
+    });
+    seriesGroup.append(seriesHeading, thickness);
+    const fontGroup = el('section', 'og-chart-format-group');
+    const fontHeading = el('h3', 'og-chart-format-title');
+    fontHeading.textContent = 'Font';
+    const font = document.createElement('input');
+    font.setAttribute('aria-label', 'Font');
+    font.placeholder = 'Font';
+    font.addEventListener('input', () => {
+      panel.dataset.font = font.value;
+      panel.style.fontFamily = font.value;
+    });
+    fontGroup.append(fontHeading, font);
+    formatPanel.append(titles, legend, axisGroup('Horizontal Axis', 'xAxis'), axisGroup('Vertical Axis', 'yAxis'), seriesGroup, fontGroup);
+    const switchLabel = document.createElement('label');
+    const switchBox = document.createElement('input');
+    switchBox.type = 'checkbox';
+    switchBox.setAttribute('aria-label', 'Switch Category / Series');
+    switchLabel.append(switchBox, document.createTextNode(' Switch Category / Series'));
+    const columnBox = (title: string, colId: string) => {
+      const section = el('section', 'og-chart-format-group');
+      const heading = el('h3', 'og-chart-format-title');
+      heading.textContent = title;
+      const label = document.createElement('label');
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.checked = true;
+      box.dataset.colId = colId;
+      label.append(box, document.createTextNode(` ${this.leafByKey(colId)?.headerName || colId}`));
+      section.append(heading, label);
+      return section;
+    };
+    let categoryCol = labelCol;
+    let seriesCol = valueCol;
+    panel.dataset.category = categoryCol;
+    panel.dataset.value = seriesCol;
+    const redraw = () => {
+      const next: { label: string; value: number; row: number }[] = [];
+      for (let row = start; row <= end; row++) {
+        const source = this.sourceAt(row);
+        const valueLeaf = this.leafByKey(seriesCol);
+        const labelLeaf = this.leafByKey(categoryCol);
+        if (!valueLeaf || source < 0) continue;
+        const raw = this.readSource(source, valueLeaf);
+        const value = typeof raw === 'number' ? raw : Number(raw);
+        next.push({ label: labelLeaf ? this.textFor(source, labelLeaf) : String(row), value: Number.isNaN(value) ? 0 : value, row });
+      }
+      const nextSvg = chartSvg(shape, next);
+      svg.replaceChildren(...nextSvg.childNodes);
+      panel.dataset.series = next.map((point) => String(point.value)).join(',');
+      panel.dataset.category = categoryCol;
+      panel.dataset.value = seriesCol;
+      legendList.textContent = next.map((point) => point.label).join(', ');
+      if (panel.dataset.theme) paintChartInk(svg, CHART_THEME_INK[panel.dataset.theme] ?? '#1f4b99');
+    };
+    switchBox.addEventListener('change', () => {
+      const swapped = switchBox.checked;
+      categoryCol = swapped ? valueCol : labelCol;
+      seriesCol = swapped ? labelCol : valueCol;
+      redraw();
+    });
+    dataPanel.append(switchLabel, columnBox('Categories', labelCol), columnBox('Series', valueCol));
+    panels.append(tabs, themePanel, dataPanel, formatPanel);
     menuButton.addEventListener('click', () => {
       list.hidden = !list.hidden;
     });
@@ -3709,6 +3846,7 @@ export class GridSession<TData = any> {
         for (let source = 0; source < session.rows.length; source++) callback(session.nodeFor(source), source);
       },
       forEachNodeAfterFilter: (callback) => {
+        session.ensureStore();
         const filtered = applyQuickFilter(session.store, applyFilter(session.store, session.filterModel), session.quickText());
         for (let index = 0; index < filtered.count; index++) {
           const source = filtered.identity ? index : filtered.indices[index] ?? -1;

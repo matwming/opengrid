@@ -281,7 +281,11 @@ window.probeChartMenu = async () => {
   const formatTab = [...document.querySelectorAll('.ag-tab')].find((node) => node.textContent?.includes('Customize'));
   formatTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   await new Promise((resolve) => setTimeout(resolve, 250));
-  const agFormat = (document.querySelector('.ag-chart-format')?.textContent ?? document.body.textContent ?? '').replace(/\s+/g, ' ').slice(0, 500);
+  const agFormat = (document.querySelector('.ag-chart-format')?.textContent ?? document.body.textContent ?? '').replace(/\s+/g, ' ');
+  const setupTab = [...document.querySelectorAll('.ag-tab')].find((node) => node.textContent?.includes('Set Up'));
+  setupTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const agSetup = (document.querySelector('.ag-chart-data-wrapper')?.textContent ?? document.body.textContent ?? '').replace(/\s+/g, ' ');
   (ogHost.querySelector('[aria-label="Chart Menu"]') as HTMLButtonElement | null)?.click();
   (ogHost.querySelector('.og-chart-list button') as HTMLButtonElement | null)?.click();
   const ogTabs = [...ogHost.querySelectorAll('.og-chart-tabs button')].map((button) => button.textContent ?? '');
@@ -299,10 +303,12 @@ window.probeChartMenu = async () => {
     agCards,
     agTheme,
     agFormat,
+    agSetup,
     ogTabs,
     ogThemes,
     ogTheme: ogHost.querySelector('.og-chart')?.getAttribute('data-theme'),
     ogFormat: ogHost.querySelector('.og-chart-format')?.textContent ?? '',
+    ogSetup: ogHost.querySelector('.og-chart-data')?.textContent ?? '',
     ogTitle: ogHost.querySelector('.og-chart-title')?.textContent ?? '',
     classes: [...document.querySelectorAll('[class]')].map((node) => String(node.className)).filter((name) => /ag-chart|ag-tab|ag-group-title/.test(name)).slice(0, 40),
   };

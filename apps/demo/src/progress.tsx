@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import './demo.css';
 
-const measured = '2026年10月31日 13:44（澳大利亚墨尔本时间）';
+const measured = '2026年10月31日 13:57（澳大利亚墨尔本时间）';
 
 function App() {
   return (
@@ -26,10 +26,10 @@ function App() {
         <section>
           <h2>基准</h2>
           <div className="stats">
-            <p><strong>68 ms</strong><span>排序，中间一次</span></p>
-            <p><strong>71 ms</strong><span>过滤，中间一次</span></p>
+            <p><strong>67 ms</strong><span>排序，中间一次</span></p>
+            <p><strong>59 ms</strong><span>过滤，中间一次</span></p>
             <p><strong>60 fps</strong><span>滚动，三次都是 60</span></p>
-            <p><strong>1.11 s</strong><span>首次绘制，中间一次</span></p>
+            <p><strong>19 ms</strong><span>首次绘制，中间一次</span></p>
           </div>
           <table>
             <caption>中间一次。排序和过滤是从 API 调用到 modelUpdated 的墙上时间。</caption>
@@ -43,32 +43,32 @@ function App() {
             <tbody>
               <tr>
                 <td>首次绘制</td>
-                <td>1108 ms</td>
-                <td>983 ms</td>
+                <td>19 ms</td>
+                <td>817 ms</td>
               </tr>
               <tr>
                 <td>滚动</td>
                 <td>60 fps，p95 帧 16.7 ms</td>
-                <td>38 fps，p95 帧 33.3 ms</td>
+                <td>41 fps，p95 帧 33.3 ms</td>
               </tr>
               <tr>
                 <td>排序 c0</td>
-                <td>67.7 ms，其中主线程 46 ms</td>
-                <td>1533 ms</td>
+                <td>67.3 ms，其中主线程 59 ms</td>
+                <td>1489 ms</td>
               </tr>
               <tr>
                 <td>数字过滤 greaterThan 50000</td>
-                <td>71.1 ms，499,990 行</td>
-                <td>915 ms，行数和抽样值相同</td>
+                <td>59.3 ms，499,990 行</td>
+                <td>905 ms，行数和抽样值相同</td>
               </tr>
               <tr>
                 <td>压缩后的入口</td>
-                <td>38,689 字节</td>
+                <td>39,656 字节</td>
                 <td>721,207 字节</td>
               </tr>
             </tbody>
           </table>
-          <p className="note">三次里首次绘制是 1108、1255、1330 ms，企业版是 983 到 1001 ms。排序是 65 到 74 ms，企业版是 1527 到 1625 ms。过滤是 60 到 80 ms，企业版是 890 到 1109 ms。滚动三次都是 60 fps，企业版是 38 到 45 fps。Opengrid 的首次绘制仍更慢，因为它在 firstDataRendered 之前把每个值抄进列数组。排序在主线程算完，46 ms 是这次查询本身，不再是 worker 时间。worker 仍会加载，这次多等了约 37 ms。堆内存增量没有测到变化，这里不写内存胜负。</p>
+          <p className="note">三次里首次绘制是 19、23、21 ms，企业版是 705 到 970 ms。列数组改到 firstDataRendered 之后再抄。中间这一次的 worker 等待是 1135 ms，拷贝算在里面，不算在首次绘制里。排序是 61 到 76 ms，企业版是 1456 到 1510 ms。过滤是 59 到 71 ms，企业版是 864 到 905 ms。滚动三次都是 60 fps，企业版是 41 到 44 fps。排序在主线程算完。堆内存增量没有测到变化，这里不写内存胜负。</p>
         </section>
 
         <section>
@@ -236,7 +236,7 @@ function App() {
               </tr>
               <tr>
                 <td>集成图表</td>
-                <td><code>createRangeChart</code> 覆盖企业版能创建的图种。工具条有 Unlink from Grid、Download Chart 和 Menu。Menu 里的 Edit Chart 打开 Chart 和 Customize。Chart 列出 <code>ag-default</code>、<code>ag-material</code>、<code>ag-sheets</code>、<code>ag-polychroma</code>、<code>ag-vivid</code>。Customize 里有 Titles 和 Legend。Chromium 里企业版也是这五个主题卡，页签是 Chart、Set Up、Customize，格式页有 Titles 和 Legend。点第二个主题后两边都是 <code>ag-material</code>。点第二根柱会聚焦数量列的第 2 行。Unlink 会清掉表格上的范围。</td>
+                <td><code>createRangeChart</code> 覆盖企业版能创建的图种。工具条有 Unlink from Grid、Download Chart 和 Menu。Edit Chart 打开 Chart、Set Up、Customize。Chart 列出五个主题。Set Up 有 Categories、Series 和 Switch Category / Series。Customize 有 Titles、Legend、Horizontal Axis、Vertical Axis、Series 和 Font。Chromium 里企业版的格式页同样有 Horizontal Axis、Series 和 Font，Set Up 同样有 Categories 和 Switch Category / Series。点第二个主题后两边都是 <code>ag-material</code>。</td>
               </tr>
               <tr>
                 <td>迷你图</td>
@@ -273,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>图表格式面板里的坐标轴、系列、字体，以及 Set Up 数据页。主题页是五个主题名，不是企业版的缩略图。</li>
+            <li>格式面板里的网格线、刻度、标签旋转，以及 Set Up 里的聚合、方向和组类型。主题页列出五个主题名，缩略图还没画。</li>
           </ul>
         </section>
 

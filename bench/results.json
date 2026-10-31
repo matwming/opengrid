@@ -1,29 +1,29 @@
 {
-  "measuredAt": "2026-10-31T02:44:09.328Z",
+  "measuredAt": "2026-10-31T02:57:09.075Z",
   "rows": 1000000,
   "cols": 50,
   "repeats": 3,
   "prepare": {
-    "prepareMs": 3584.995000001043,
+    "prepareMs": 3238.800000000745,
     "rows": 1000000,
     "cols": 50
   },
   "opengrid": {
     "mount": {
-      "firstRenderMs": 1107.5100000016391,
-      "workerWaitMs": 37.099999997764826,
+      "firstRenderMs": 19.16000000014901,
+      "workerWaitMs": 1134.785000000149,
       "engine": "worker",
       "isolated": true,
       "rows": 1000000
     },
     "scroll": {
       "frames": 120,
-      "elapsedMs": 1999.923999999999,
-      "fps": 60.00228008664332,
-      "p95Ms": 16.67000000000189
+      "elapsedMs": 1999.924,
+      "fps": 60.00228008664329,
+      "p95Ms": 16.670000000000073
     },
     "sort": {
-      "ms": 67.72499999776483,
+      "ms": 67.28999999910593,
       "ordered": true,
       "sample": [
         0,
@@ -36,10 +36,10 @@
         10000,
         99999
       ],
-      "computeMs": 46
+      "computeMs": 59
     },
     "filter": {
-      "ms": 71.14499999955297,
+      "ms": 59.29499999806285,
       "count": 499990,
       "sample": [
         50001,
@@ -59,20 +59,20 @@
   },
   "ag": {
     "mount": {
-      "firstRenderMs": 983.0800000019372,
-      "workerWaitMs": 0.02499999850988388,
+      "firstRenderMs": 817.2899999991059,
+      "workerWaitMs": 0.030000001192092896,
       "engine": "ag-grid",
       "isolated": true,
       "rows": 1000000
     },
     "scroll": {
-      "frames": 77,
-      "elapsedMs": 2016.589,
-      "fps": 38.18328871178014,
-      "p95Ms": 33.335000000002765
+      "frames": 83,
+      "elapsedMs": 2016.5849999999991,
+      "fps": 41.158691550319,
+      "p95Ms": 33.33499999999913
     },
     "sort": {
-      "ms": 1533.464999999851,
+      "ms": 1489.109999999404,
       "ordered": true,
       "sample": [
         0,
@@ -88,7 +88,7 @@
       "computeMs": 0
     },
     "filter": {
-      "ms": 915.1300000026822,
+      "ms": 905.339999999851,
       "count": 499990,
       "sample": [
         50001,
@@ -111,8 +111,109 @@
       "round": 0,
       "opengrid": {
         "mount": {
-          "firstRenderMs": 1330.445000000298,
-          "workerWaitMs": 36.94500000029802,
+          "firstRenderMs": 19.16000000014901,
+          "workerWaitMs": 1134.785000000149,
+          "engine": "worker",
+          "isolated": true,
+          "rows": 1000000
+        },
+        "scroll": {
+          "frames": 120,
+          "elapsedMs": 1999.924,
+          "fps": 60.00228008664329,
+          "p95Ms": 16.670000000000073
+        },
+        "sort": {
+          "ms": 67.28999999910593,
+          "ordered": true,
+          "sample": [
+            0,
+            0,
+            0,
+            1,
+            10,
+            100,
+            1000,
+            10000,
+            99999
+          ],
+          "computeMs": 59
+        },
+        "filter": {
+          "ms": 59.29499999806285,
+          "count": 499990,
+          "sample": [
+            50001,
+            50001,
+            50001,
+            50002,
+            50011,
+            50101,
+            51001,
+            60001,
+            99999
+          ]
+        },
+        "heapBefore": 1620000000,
+        "heapAfterReady": 1620000000,
+        "traceBeginFrames": 121
+      },
+      "ag": {
+        "mount": {
+          "firstRenderMs": 969.6549999974668,
+          "workerWaitMs": 0.02500000223517418,
+          "engine": "ag-grid",
+          "isolated": true,
+          "rows": 1000000
+        },
+        "scroll": {
+          "frames": 87,
+          "elapsedMs": 1999.9250000000002,
+          "fps": 43.501631311174165,
+          "p95Ms": 33.335000000000946
+        },
+        "sort": {
+          "ms": 1509.625,
+          "ordered": true,
+          "sample": [
+            0,
+            0,
+            0,
+            1,
+            10,
+            100,
+            1000,
+            10000,
+            99999
+          ],
+          "computeMs": 0
+        },
+        "filter": {
+          "ms": 891.5050000026822,
+          "count": 499990,
+          "sample": [
+            50001,
+            50001,
+            50001,
+            50002,
+            50011,
+            50101,
+            51001,
+            60001,
+            99999
+          ]
+        },
+        "heapBefore": 1620000000,
+        "heapAfterReady": 1620000000,
+        "traceBeginFrames": 123
+      }
+    },
+    {
+      "round": 1,
+      "opengrid": {
+        "mount": {
+          "firstRenderMs": 23.184999998658895,
+          "workerWaitMs": 1171.7350000031292,
           "engine": "worker",
           "isolated": true,
           "rows": 1000000
@@ -124,7 +225,7 @@
           "p95Ms": 16.670000000000073
         },
         "sort": {
-          "ms": 65.07000000029802,
+          "ms": 61.01500000059605,
           "ordered": true,
           "sample": [
             0,
@@ -137,10 +238,10 @@
             10000,
             99999
           ],
-          "computeMs": 56
+          "computeMs": 41
         },
         "filter": {
-          "ms": 60.26500000059605,
+          "ms": 70.26999999955297,
           "count": 499990,
           "sample": [
             50001,
@@ -160,121 +261,20 @@
       },
       "ag": {
         "mount": {
-          "firstRenderMs": 998.4600000008941,
-          "workerWaitMs": 0.02499999850988388,
-          "engine": "ag-grid",
-          "isolated": true,
-          "rows": 1000000
-        },
-        "scroll": {
-          "frames": 90,
-          "elapsedMs": 2016.5900000000001,
-          "fps": 44.62979584347834,
-          "p95Ms": 33.335000000000946
-        },
-        "sort": {
-          "ms": 1526.6349999979138,
-          "ordered": true,
-          "sample": [
-            0,
-            0,
-            0,
-            1,
-            10,
-            100,
-            1000,
-            10000,
-            99999
-          ],
-          "computeMs": 0
-        },
-        "filter": {
-          "ms": 1109.1100000031292,
-          "count": 499990,
-          "sample": [
-            50001,
-            50001,
-            50001,
-            50002,
-            50011,
-            50101,
-            51001,
-            60001,
-            99999
-          ]
-        },
-        "heapBefore": 1620000000,
-        "heapAfterReady": 1620000000,
-        "traceBeginFrames": 122
-      }
-    },
-    {
-      "round": 1,
-      "opengrid": {
-        "mount": {
-          "firstRenderMs": 1254.785000000149,
-          "workerWaitMs": 41.309999998658895,
-          "engine": "worker",
-          "isolated": true,
-          "rows": 1000000
-        },
-        "scroll": {
-          "frames": 120,
-          "elapsedMs": 1999.9190000000017,
-          "fps": 60.002430098418934,
-          "p95Ms": 16.67000000000189
-        },
-        "sort": {
-          "ms": 74.41000000014901,
-          "ordered": true,
-          "sample": [
-            0,
-            0,
-            0,
-            1,
-            10,
-            100,
-            1000,
-            10000,
-            99999
-          ],
-          "computeMs": 43
-        },
-        "filter": {
-          "ms": 79.58499999716878,
-          "count": 499990,
-          "sample": [
-            50001,
-            50001,
-            50001,
-            50002,
-            50011,
-            50101,
-            51001,
-            60001,
-            99999
-          ]
-        },
-        "heapBefore": 1620000000,
-        "heapAfterReady": 1620000000,
-        "traceBeginFrames": 121
-      },
-      "ag": {
-        "mount": {
-          "firstRenderMs": 1000.7100000008941,
+          "firstRenderMs": 817.2899999991059,
           "workerWaitMs": 0.030000001192092896,
           "engine": "ag-grid",
           "isolated": true,
           "rows": 1000000
         },
         "scroll": {
-          "frames": 80,
-          "elapsedMs": 1999.920000000002,
-          "fps": 40.001600064002524,
-          "p95Ms": 33.335000000002765
+          "frames": 83,
+          "elapsedMs": 2016.5849999999991,
+          "fps": 41.158691550319,
+          "p95Ms": 33.33499999999913
         },
         "sort": {
-          "ms": 1625.155000001192,
+          "ms": 1489.109999999404,
           "ordered": true,
           "sample": [
             0,
@@ -290,7 +290,7 @@
           "computeMs": 0
         },
         "filter": {
-          "ms": 889.8700000010431,
+          "ms": 905.339999999851,
           "count": 499990,
           "sample": [
             50001,
@@ -313,20 +313,20 @@
       "round": 2,
       "opengrid": {
         "mount": {
-          "firstRenderMs": 1107.5100000016391,
-          "workerWaitMs": 37.099999997764826,
+          "firstRenderMs": 21.33499999716878,
+          "workerWaitMs": 1142.390000000596,
           "engine": "worker",
           "isolated": true,
           "rows": 1000000
         },
         "scroll": {
           "frames": 120,
-          "elapsedMs": 1999.923999999999,
-          "fps": 60.00228008664332,
+          "elapsedMs": 1999.9190000000017,
+          "fps": 60.002430098418934,
           "p95Ms": 16.67000000000189
         },
         "sort": {
-          "ms": 67.72499999776483,
+          "ms": 76.25499999895692,
           "ordered": true,
           "sample": [
             0,
@@ -339,10 +339,10 @@
             10000,
             99999
           ],
-          "computeMs": 46
+          "computeMs": 56
         },
         "filter": {
-          "ms": 71.14499999955297,
+          "ms": 70.92500000074506,
           "count": 499990,
           "sample": [
             50001,
@@ -362,20 +362,20 @@
       },
       "ag": {
         "mount": {
-          "firstRenderMs": 983.0800000019372,
+          "firstRenderMs": 704.9349999986589,
           "workerWaitMs": 0.02499999850988388,
           "engine": "ag-grid",
           "isolated": true,
           "rows": 1000000
         },
         "scroll": {
-          "frames": 77,
-          "elapsedMs": 2016.589,
-          "fps": 38.18328871178014,
-          "p95Ms": 33.335000000002765
+          "frames": 82,
+          "elapsedMs": 1999.920000000002,
+          "fps": 41.00164006560259,
+          "p95Ms": 33.33499999999913
         },
         "sort": {
-          "ms": 1533.464999999851,
+          "ms": 1456.129999998957,
           "ordered": true,
           "sample": [
             0,
@@ -391,7 +391,7 @@
           "computeMs": 0
         },
         "filter": {
-          "ms": 915.1300000026822,
+          "ms": 864.0599999986589,
           "count": 499990,
           "sample": [
             50001,
@@ -407,14 +407,14 @@
         },
         "heapBefore": 1620000000,
         "heapAfterReady": 1620000000,
-        "traceBeginFrames": 122
+        "traceBeginFrames": 121
       }
     }
   ],
   "bundle": {
-    "opengridGzip": 38689,
+    "opengridGzip": 39656,
     "agGridGzip": 721207,
-    "opengridRaw": 131696,
+    "opengridRaw": 135463,
     "agGridRaw": 2585887
   },
   "pageErrors": [],
@@ -431,7 +431,7 @@
   "targets": {
     "scrollNear60Fps": true,
     "sortUnder300ms": true,
-    "fasterReady": false,
+    "fasterReady": true,
     "fasterScroll": true,
     "fasterSort": true,
     "fasterFilter": true,
