@@ -28,6 +28,7 @@ export interface ColDef<TData = any, TValue = any> {
   valueFormatter?: string | ValueFormatterFunc<TData>;
   valueParser?: string | ValueParserFunc<TData>;
   colSpan?: (params: { data?: TData }) => number;
+  cellRenderer?: CellRenderer<TData> | string;
   cellEditor?: string;
   cellDataType?: boolean | string;
   type?: string | string[];
