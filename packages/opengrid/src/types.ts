@@ -28,6 +28,7 @@ export interface ColDef<TData = any, TValue = any> {
   valueFormatter?: string | ValueFormatterFunc<TData>;
   valueParser?: string | ValueParserFunc<TData>;
   colSpan?: (params: { data?: TData }) => number;
+  spanRows?: boolean | ((params: { valueA: unknown; valueB: unknown }) => boolean);
   allowFormula?: boolean;
   cellRenderer?: CellRenderer<TData> | string;
   cellEditor?: string;
@@ -261,6 +262,7 @@ export interface GridOptions<TData = any> {
   treeData?: boolean;
   getDataPath?: (data: TData) => string[];
   cellSelection?: boolean | { handle?: { mode?: 'fill' } };
+  enableCellSpan?: boolean;
   statusBar?: { statusPanels?: { statusPanel?: string }[] };
   sideBar?: boolean | { toolPanels?: { id?: string; toolPanel?: string }[] };
   rowNumbers?: boolean | { suppressCellFocus?: boolean };

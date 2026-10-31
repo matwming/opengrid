@@ -156,7 +156,7 @@ function App() {
               </tr>
               <tr>
                 <td>单元格合并</td>
-                <td><code>colSpan</code> 把无障碍单元格加宽，并去掉被盖住的列。200 像素的列跨 2 列后是 400 像素，和 <code>ag-grid-enterprise</code> 36.2.0 一样。<code>spanRows</code> 还没有。</td>
+                <td><code>colSpan</code> 把无障碍单元格加宽，并去掉被盖住的列。200 像素的列跨 2 列后是 400 像素。<code>enableCellSpan</code> 加上 <code>spanRows</code> 把连续相同的 USA 合成一行，<code>aria-rowspan</code> 是 2，高度是 83 像素，和 <code>ag-grid-enterprise</code> 36.2.0 一样。</td>
               </tr>
               <tr>
                 <td>公式</td>
@@ -273,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>行合并 <code>spanRows</code>、公式数据源、备注弹层、工具条的菜单和透视项。</li>
+            <li>行合并 <code>spanRows</code>、公式数据源、工具条的菜单和透视项。</li>
           </ul>
         </section>
 

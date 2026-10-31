@@ -2353,6 +2353,8 @@ export class GridSession<TData = any> {
       let coveredUntil = 0;
       leaves.forEach((leaf, index) => {
         if (index < coveredUntil) return;
+        const rowSpan = this.rowSpanLength(display, leaf);
+        if (rowSpan === 0) return;
         const span = source >= 0 && typeof leaf.def.colSpan === 'function' ? Math.max(1, Math.floor(leaf.def.colSpan({ data: this.rows[source] }))) : 1;
         coveredUntil = index + span;
         const cell = el('div', 'og-acell');
@@ -2364,6 +2366,10 @@ export class GridSession<TData = any> {
           cell.setAttribute('aria-colspan', String(span));
           const width = leaves.slice(index, index + span).reduce((sum, item) => sum + item.width, 0);
           cell.style.width = `${width}px`;
+        }
+        if (rowSpan > 1) {
+          cell.setAttribute('aria-rowspan', String(rowSpan));
+          cell.style.height = `${rowSpan * this.rowHeight() - (rowSpan - 1)}px`;
         }
         const note = source >= 0 ? this.noteFor(source, leaf) : undefined;
         if (note) {
@@ -2387,6 +2393,28 @@ export class GridSession<TData = any> {
       fragment.append(row);
     }
     this.a11y.replaceChildren(fragment);
+  }
+
+  private rowSpanLength(display: number, leaf: Leaf<TData>): number {
+    if (!this.options.enableCellSpan || !leaf.def.spanRows) return 1;
+    if (display > 0 && this.spanContinues(display - 1, display, leaf)) return 0;
+    let span = 1;
+    while (display + span < this.view.count && this.spanContinues(display + span - 1, display + span, leaf)) span += 1;
+    return span;
+  }
+
+  private spanRaw(display: number, leaf: Leaf<TData>): unknown {
+    const source = this.sourceAt(display);
+    return source < 0 ? undefined : this.readSource(source, leaf);
+  }
+
+  private spanContinues(previous: number, display: number, leaf: Leaf<TData>): boolean {
+    if (this.flat?.[previous]?.kind === 'group' || this.flat?.[display]?.kind === 'group') return false;
+    const valueA = this.spanRaw(previous, leaf);
+    const valueB = this.spanRaw(display, leaf);
+    const spanRows = leaf.def.spanRows;
+    if (typeof spanRows === 'function') return spanRows({ valueA, valueB });
+    return valueA === valueB;
   }
 
   private cellDomId(display: number, col: number): string {
