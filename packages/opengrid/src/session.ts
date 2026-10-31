@@ -3276,8 +3276,93 @@ export class GridSession<TData = any> {
       anchor.click();
       URL.revokeObjectURL(url);
     });
-    menu.append(link, download);
-    panel.append(menu);
+    const menuButton = document.createElement('button');
+    menuButton.type = 'button';
+    menuButton.title = 'Menu';
+    menuButton.setAttribute('aria-label', 'Chart Menu');
+    menuButton.textContent = 'Menu';
+    const list = el('div', 'og-chart-list');
+    list.hidden = true;
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.textContent = 'Edit Chart';
+    list.append(edit);
+    const panels = el('div', 'og-chart-panels');
+    panels.hidden = true;
+    const themes = this.options.chartThemes?.length ? this.options.chartThemes : DEFAULT_CHART_THEMES;
+    panel.dataset.theme = themes[0] ?? 'ag-default';
+    const tabs = el('div', 'og-chart-tabs');
+    const themeTab = document.createElement('button');
+    themeTab.type = 'button';
+    themeTab.textContent = 'Chart';
+    const formatTab = document.createElement('button');
+    formatTab.type = 'button';
+    formatTab.textContent = 'Customize';
+    tabs.append(themeTab, formatTab);
+    const themePanel = el('div', 'og-chart-theme');
+    const formatPanel = el('div', 'og-chart-format');
+    formatPanel.hidden = true;
+    const showFormat = (format: boolean) => {
+      themePanel.hidden = format;
+      formatPanel.hidden = !format;
+      themeTab.setAttribute('aria-selected', format ? 'false' : 'true');
+      formatTab.setAttribute('aria-selected', format ? 'true' : 'false');
+    };
+    showFormat(false);
+    themeTab.addEventListener('click', () => showFormat(false));
+    formatTab.addEventListener('click', () => showFormat(true));
+    for (const name of themes) {
+      const choice = document.createElement('button');
+      choice.type = 'button';
+      choice.textContent = name;
+      choice.addEventListener('click', () => {
+        panel.dataset.theme = name;
+        for (const item of themePanel.querySelectorAll('button')) item.setAttribute('aria-pressed', item === choice ? 'true' : 'false');
+        paintChartInk(svg, CHART_THEME_INK[name] ?? '#1f4b99');
+      });
+      themePanel.append(choice);
+    }
+    themePanel.querySelector('button')?.setAttribute('aria-pressed', 'true');
+    const titles = el('section', 'og-chart-format-group');
+    const titlesHeading = el('h3', 'og-chart-format-title');
+    titlesHeading.textContent = 'Titles';
+    const titleInput = document.createElement('input');
+    titleInput.setAttribute('aria-label', 'Chart Title');
+    titleInput.placeholder = 'Chart Title';
+    const caption = el('p', 'og-chart-title');
+    titleInput.addEventListener('input', () => {
+      caption.textContent = titleInput.value;
+    });
+    titles.append(titlesHeading, titleInput);
+    const legend = el('section', 'og-chart-format-group');
+    const legendHeading = el('h3', 'og-chart-format-title');
+    legendHeading.textContent = 'Legend';
+    const legendBox = document.createElement('input');
+    legendBox.type = 'checkbox';
+    legendBox.checked = true;
+    legendBox.setAttribute('aria-label', 'Enabled');
+    const legendLabel = document.createElement('label');
+    legendLabel.append(legendBox, document.createTextNode(' Enabled'));
+    const legendList = el('p', 'og-chart-legend');
+    legendList.textContent = points.map((point) => point.label).join(', ');
+    panel.dataset.legend = 'true';
+    legendBox.addEventListener('change', () => {
+      const shown = legendBox.checked;
+      panel.dataset.legend = shown ? 'true' : 'false';
+      legendList.hidden = !shown;
+    });
+    legend.append(legendHeading, legendLabel);
+    formatPanel.append(titles, legend);
+    panels.append(tabs, themePanel, formatPanel);
+    menuButton.addEventListener('click', () => {
+      list.hidden = !list.hidden;
+    });
+    edit.addEventListener('click', () => {
+      list.hidden = true;
+      panels.hidden = false;
+    });
+    menu.append(link, download, menuButton);
+    panel.append(menu, list, caption, legendList, panels);
     panel.addEventListener('click', (event) => {
       if (panel.dataset.linked !== 'true') return;
       const node = event.target instanceof Element ? event.target.closest('[data-row]') : null;
@@ -4174,6 +4259,23 @@ const CHART_SHAPE: Record<string, string> = {
 
 function chartShape(chartType: string): string {
   return CHART_SHAPE[chartType] ?? 'bar';
+}
+
+const DEFAULT_CHART_THEMES = ['ag-default', 'ag-material', 'ag-sheets', 'ag-polychroma', 'ag-vivid'];
+// ponytail: distinct inks so a theme click is visible. Not the AG Charts palette.
+const CHART_THEME_INK: Record<string, string> = {
+  'ag-default': '#1f4b99',
+  'ag-material': '#c2185b',
+  'ag-sheets': '#0b8043',
+  'ag-polychroma': '#5e35b1',
+  'ag-vivid': '#ef6c00',
+};
+
+function paintChartInk(svg: SVGSVGElement, color: string): void {
+  for (const node of svg.querySelectorAll('rect, polygon, path, polyline, circle')) {
+    if (node.getAttribute('fill') === 'none') node.setAttribute('stroke', color);
+    else node.setAttribute('fill', color);
+  }
 }
 
 function chartSvg(shape: string, points: { label: string; value: number; row: number }[]): SVGSVGElement {

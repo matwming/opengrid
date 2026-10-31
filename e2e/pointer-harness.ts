@@ -67,6 +67,7 @@ declare global {
     probeSetup: () => unknown;
     probeRead: () => unknown;
     probeChart: () => unknown;
+    probeChartMenu: () => Promise<unknown>;
   }
 }
 
@@ -234,6 +235,76 @@ window.probeChartTypes = async () => {
     agArea: Boolean(host.querySelector('.ag-sparkline-wrapper')),
     ogArea: ours.querySelector('.og-spark')?.getAttribute('data-type'),
     agTrend: host.querySelector('.ag-cell[col-id="trend"]')?.innerHTML.slice(0, 180),
+  };
+};
+
+function themeName(chart: { chart?: { getOptions?: () => { theme?: unknown } } }): string {
+  const theme = chart.chart?.getOptions?.()?.theme;
+  if (typeof theme === 'string') return theme;
+  if (theme && typeof theme === 'object') {
+    const record = theme as { name?: string; baseTheme?: unknown };
+    if (typeof record.name === 'string') return record.name;
+    if (typeof record.baseTheme === 'string') return record.baseTheme;
+    return JSON.stringify(theme).slice(0, 180);
+  }
+  return '';
+}
+
+window.probeChartMenu = async () => {
+  const agHost = document.querySelector('#ag-menu') as HTMLElement;
+  const ogHost = document.querySelector('#og-menu') as HTMLElement;
+  const options = {
+    columnDefs: [{ field: 'name' }, { field: 'qty' }],
+    rowData: [{ name: 'Ada', qty: 4 }, { name: 'Bea', qty: 9 }],
+    cellSelection: true,
+    animateRows: false,
+  };
+  const ag = mount(createAgGrid, agHost, options);
+  const og = mount(createOpenGrid, ogHost, options);
+  const agChart = ag.createRangeChart({ chartType: 'column', cellRange: { rowStartIndex: 0, rowEndIndex: 1, columns: ['name', 'qty'] } });
+  if (agChart.chartElement) agHost.append(agChart.chartElement);
+  og.createRangeChart({ chartType: 'column', cellRange: { rowStartIndex: 0, rowEndIndex: 1, columns: ['name', 'qty'] } });
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  const menu = [...agHost.querySelectorAll('button')].find((button) => button.title === 'Menu' || button.getAttribute('aria-label') === 'Chart Menu');
+  menu?.click();
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  const agMenu = [...document.querySelectorAll('.ag-menu-option-text')].map((node) => node.textContent?.trim() ?? '');
+  const edit = [...document.querySelectorAll('.ag-menu-option')].find((node) => node.textContent?.includes('Edit Chart'));
+  edit?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const agTabs = [...document.querySelectorAll('.ag-tab')].map((node) => node.textContent?.replace(/\s+/g, ' ').trim() ?? '');
+  const agCards = document.querySelectorAll('.ag-chart-settings-card-item').length;
+  const cards = [...document.querySelectorAll('.ag-chart-settings-card-item')];
+  cards[1]?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  const agTheme = themeName(agChart);
+  const formatTab = [...document.querySelectorAll('.ag-tab')].find((node) => node.textContent?.includes('Customize'));
+  formatTab?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const agFormat = (document.querySelector('.ag-chart-format')?.textContent ?? document.body.textContent ?? '').replace(/\s+/g, ' ').slice(0, 500);
+  (ogHost.querySelector('[aria-label="Chart Menu"]') as HTMLButtonElement | null)?.click();
+  (ogHost.querySelector('.og-chart-list button') as HTMLButtonElement | null)?.click();
+  const ogTabs = [...ogHost.querySelectorAll('.og-chart-tabs button')].map((button) => button.textContent ?? '');
+  const ogThemes = [...ogHost.querySelectorAll('.og-chart-theme button')].map((button) => button.textContent ?? '');
+  (ogHost.querySelectorAll('.og-chart-theme button')[1] as HTMLButtonElement | undefined)?.click();
+  (ogHost.querySelectorAll('.og-chart-tabs button')[1] as HTMLButtonElement | undefined)?.click();
+  const title = ogHost.querySelector('[aria-label="Chart Title"]') as HTMLInputElement | null;
+  if (title) {
+    title.value = 'Sales';
+    title.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  return {
+    agMenu,
+    agTabs,
+    agCards,
+    agTheme,
+    agFormat,
+    ogTabs,
+    ogThemes,
+    ogTheme: ogHost.querySelector('.og-chart')?.getAttribute('data-theme'),
+    ogFormat: ogHost.querySelector('.og-chart-format')?.textContent ?? '',
+    ogTitle: ogHost.querySelector('.og-chart-title')?.textContent ?? '',
+    classes: [...document.querySelectorAll('[class]')].map((node) => String(node.className)).filter((name) => /ag-chart|ag-tab|ag-group-title/.test(name)).slice(0, 40),
   };
 };
 

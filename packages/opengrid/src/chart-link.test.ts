@@ -13,7 +13,7 @@ describe('chart toolbar', () => {
     });
     api.createRangeChart({ chartType: 'column', cellRange: { rowStartIndex: 0, rowEndIndex: 1, columns: ['name', 'qty'] } });
     const titles = [...host.querySelectorAll('.og-chart-menu button')].map((button) => button.getAttribute('aria-label'));
-    expect(titles).toEqual(['Unlink from Grid', 'Download Chart']);
+    expect(titles).toEqual(['Unlink from Grid', 'Download Chart', 'Chart Menu']);
     expect(api.getCellRanges()?.[0]?.endRow?.rowIndex).toBe(1);
     host.querySelectorAll('.og-chart rect')[1]?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(api.getFocusedCell()?.rowIndex).toBe(1);

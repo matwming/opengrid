@@ -28,8 +28,8 @@ declare global {
   }
 }
 
-test(`community comparison ${rows} x ${cols}`, async ({ page }) => {
-  test.setTimeout(300_000);
+test(`enterprise comparison ${rows} x ${cols}`, async ({ page }) => {
+  test.setTimeout(600_000);
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(String(error)));
   await page.goto('/bench.html');
@@ -58,13 +58,13 @@ test(`community comparison ${rows} x ${cols}`, async ({ page }) => {
     pageErrors: errors,
     notes: {
       memory: 'performance.memory.usedJSHeapSize did not move between samples in an earlier run, so this report does not claim a heap delta.',
-      bundle: 'Gzip sizes are esbuild bundles of each package entry. ag-grid-community includes the rest of Community. opengrid is the phase 1 entry.',
+      bundle: 'Gzip sizes are esbuild bundles of each package entry. ag-grid-enterprise registers AllEnterpriseModule. opengrid is the phase 1 entry.',
       scroll: 'fps is requestAnimationFrame intervals while the test drives scrollTop for 2 seconds. traceBeginFrames counts Chrome BeginFrame events in the same window.',
-      sort: 'ms is the wait from applyColumnState until modelUpdated. computeMs is the worker query itself when the worker path ran.',
+      sort: 'ms is the wait from applyColumnState until modelUpdated. computeMs is the main-thread query. The worker still loads above 32768 rows but does not run the sort.',
     },
     group: {
       status: 'not-run',
-      reason: 'Row grouping ships in AG Grid Enterprise, so ag-grid-community has no grouping run to compare.',
+      reason: 'This run times create, scroll, sort, and the number filter. Grouping is not in the timed path.',
     },
     targets: {
       scrollNear60Fps: opengrid.scroll.fps >= 55,

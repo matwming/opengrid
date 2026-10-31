@@ -289,3 +289,35 @@
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
 }
+
+.og-chart {
+  margin: 8px;
+  padding: 8px;
+  background: var(--og-pop, #fffaf3);
+  border: 1px solid var(--og-line, #ddd2c2);
+}
+
+.og-chart-menu,
+.og-chart-tabs,
+.og-chart-theme {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.og-chart-list,
+.og-chart-panels,
+.og-chart-format {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.og-chart-title,
+.og-chart-legend {
+  margin: 4px 0;
+}
+
+.og-chart [hidden] {
+  display: none;
+}

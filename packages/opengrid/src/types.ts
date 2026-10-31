@@ -272,6 +272,7 @@ export interface GridOptions<TData = any> {
   alignedGrids?: AlignedGrid[] | (() => AlignedGrid[]);
   toolbar?: { items: (string | ToolbarItem<TData>)[] };
   enableAdvancedFilter?: boolean;
+  chartThemes?: string[];
   undoRedoCellEditing?: boolean;
   undoRedoCellEditingLimit?: number;
   notesDataSource?: {

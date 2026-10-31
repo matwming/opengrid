@@ -1,1 +1,5 @@
-export { createGrid } from 'ag-grid-community';
+import { AllEnterpriseModule, ModuleRegistry, createGrid } from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+
+export { createGrid };

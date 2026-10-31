@@ -1,10 +1,10 @@
-import { AllCommunityModule, ModuleRegistry, createGrid as createAgGrid } from 'ag-grid-community';
+import { AllEnterpriseModule, ModuleRegistry, createGrid as createAgGrid } from 'ag-grid-enterprise';
 import { createGrid as createOpenGrid } from 'opengrid';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import 'opengrid/styles.css';
 
-ModuleRegistry.registerModules([AllCommunityModule]);
+ModuleRegistry.registerModules([AllEnterpriseModule]);
 
 interface Row {
   [key: string]: number;

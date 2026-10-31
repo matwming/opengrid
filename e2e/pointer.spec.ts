@@ -82,6 +82,40 @@ test('chart types and area sparklines match enterprise', async ({ page }) => {
   expect(result.ogArea).toBe('area');
 });
 
+test('chart theme and format panels match enterprise', async ({ page }) => {
+  await page.setContent(`<div id="ag-menu" class="ag-theme-quartz" style="width:640px;height:280px"></div><div id="og-menu" style="width:640px;height:280px"></div>`);
+  await page.addStyleTag({ path: 'node_modules/ag-grid-community/styles/ag-grid.css' });
+  await page.addStyleTag({ path: 'node_modules/ag-grid-community/styles/ag-theme-quartz.css' });
+  await page.addStyleTag({ path: 'packages/opengrid/src/theme.css' });
+  await page.addScriptTag({ path: 'e2e/pointer-harness.js' });
+  const menu = await page.evaluate(() => (window as unknown as { probeChartMenu: () => Promise<{
+    agMenu: string[];
+    agTabs: string[];
+    agCards: number;
+    agTheme: string;
+    agFormat: string;
+    ogTabs: string[];
+    ogThemes: string[];
+    ogTheme: string | null;
+    ogFormat: string;
+    ogTitle: string;
+    classes: string[];
+  }> }).probeChartMenu());
+  console.log(JSON.stringify(menu));
+  expect(menu.agMenu).toEqual(expect.arrayContaining(['Edit Chart']));
+  expect(menu.agTabs).toEqual(expect.arrayContaining(['Chart', 'Customize']));
+  expect(menu.ogTabs).toEqual(['Chart', 'Customize']);
+  expect(menu.agCards).toBe(5);
+  expect(menu.ogThemes).toEqual(['ag-default', 'ag-material', 'ag-sheets', 'ag-polychroma', 'ag-vivid']);
+  expect(menu.agFormat).toContain('Titles');
+  expect(menu.agFormat).toContain('Legend');
+  expect(menu.ogFormat).toContain('Titles');
+  expect(menu.ogFormat).toContain('Legend');
+  expect(menu.ogTitle).toBe('Sales');
+  expect(menu.ogTheme).toBe('ag-material');
+  expect(menu.agTheme).toContain('ag-material');
+});
+
 test('chart toolbar, grid link, and advanced filter builder', async ({ page }) => {
   await page.setContent(`<div id="ag-surface" class="ag-theme-quartz" style="width:520px;height:240px"></div><div id="og-surface" style="width:520px;height:240px"></div>`);
   await page.addStyleTag({ path: 'node_modules/ag-grid-community/styles/ag-grid.css' });

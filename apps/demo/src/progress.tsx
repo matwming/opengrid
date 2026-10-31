@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import './demo.css';
 
-const measured = '2026年10月30日 21:28（澳大利亚墨尔本时间）';
+const measured = '2026年10月31日 13:44（澳大利亚墨尔本时间）';
 
 function App() {
   return (
@@ -20,14 +20,14 @@ function App() {
       <main className="progress-main">
         <p>
           这个站点是唯一的主页。演示在 <a href="/">首页</a>，基准程序在 <a href="/bench">/bench</a>。
-          下面的数字来自 <code>bench/results.json</code>，测量时间是 {measured}。三次重复，100 万行、50 个数字列，Chromium，对照 <code>ag-grid-community</code> 36.2.0。写出的是按排序耗时取中间的那一次。
+          下面的数字来自 <code>bench/results.json</code>，测量时间是 {measured}。三次重复，100 万行、50 个数字列，Chromium，对照 <code>ag-grid-enterprise</code> 36.2.0。写出的是按排序耗时取中间的那一次。
         </p>
 
         <section>
           <h2>基准</h2>
           <div className="stats">
-            <p><strong>81 ms</strong><span>排序，中间一次</span></p>
-            <p><strong>62 ms</strong><span>过滤，中间一次</span></p>
+            <p><strong>68 ms</strong><span>排序，中间一次</span></p>
+            <p><strong>71 ms</strong><span>过滤，中间一次</span></p>
             <p><strong>60 fps</strong><span>滚动，三次都是 60</span></p>
             <p><strong>1.11 s</strong><span>首次绘制，中间一次</span></p>
           </div>
@@ -37,38 +37,38 @@ function App() {
               <tr>
                 <th>指标</th>
                 <th>Opengrid</th>
-                <th>AG Grid Community 36.2.0</th>
+                <th>AG Grid Enterprise 36.2.0</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>首次绘制</td>
-                <td>1106 ms</td>
-                <td>810 ms</td>
+                <td>1108 ms</td>
+                <td>983 ms</td>
               </tr>
               <tr>
                 <td>滚动</td>
                 <td>60 fps，p95 帧 16.7 ms</td>
-                <td>39 fps，p95 帧 33.3 ms</td>
+                <td>38 fps，p95 帧 33.3 ms</td>
               </tr>
               <tr>
                 <td>排序 c0</td>
-                <td>80.9 ms，其中 worker 61 ms</td>
-                <td>1808 ms</td>
+                <td>67.7 ms，其中主线程 46 ms</td>
+                <td>1533 ms</td>
               </tr>
               <tr>
                 <td>数字过滤 greaterThan 50000</td>
-                <td>62.2 ms，499,990 行</td>
-                <td>979 ms，行数和抽样值相同</td>
+                <td>71.1 ms，499,990 行</td>
+                <td>915 ms，行数和抽样值相同</td>
               </tr>
               <tr>
                 <td>压缩后的入口</td>
-                <td>19,414 字节</td>
-                <td>186,044 字节</td>
+                <td>38,689 字节</td>
+                <td>721,207 字节</td>
               </tr>
             </tbody>
           </table>
-          <p className="note">三次里首次绘制是 1106、1131、1323 ms，AG Grid 是 800 到 817 ms。Opengrid 更慢，因为它在 firstDataRendered 之前把每个值抄进列数组。堆内存增量没有测到变化，这里不写内存胜负。</p>
+          <p className="note">三次里首次绘制是 1108、1255、1330 ms，企业版是 983 到 1001 ms。排序是 65 到 74 ms，企业版是 1527 到 1625 ms。过滤是 60 到 80 ms，企业版是 890 到 1109 ms。滚动三次都是 60 fps，企业版是 38 到 45 fps。Opengrid 的首次绘制仍更慢，因为它在 firstDataRendered 之前把每个值抄进列数组。排序在主线程算完，46 ms 是这次查询本身，不再是 worker 时间。worker 仍会加载，这次多等了约 37 ms。堆内存增量没有测到变化，这里不写内存胜负。</p>
         </section>
 
         <section>
@@ -236,7 +236,7 @@ function App() {
               </tr>
               <tr>
                 <td>集成图表</td>
-                <td><code>createRangeChart</code> 覆盖企业版能创建的图种。工具条有 Unlink from Grid 和 Download Chart。点第二根柱会聚焦数量列的第 2 行。Unlink 会清掉表格上的范围。</td>
+                <td><code>createRangeChart</code> 覆盖企业版能创建的图种。工具条有 Unlink from Grid、Download Chart 和 Menu。Menu 里的 Edit Chart 打开 Chart 和 Customize。Chart 列出 <code>ag-default</code>、<code>ag-material</code>、<code>ag-sheets</code>、<code>ag-polychroma</code>、<code>ag-vivid</code>。Customize 里有 Titles 和 Legend。Chromium 里企业版也是这五个主题卡，页签是 Chart、Set Up、Customize，格式页有 Titles 和 Legend。点第二个主题后两边都是 <code>ag-material</code>。点第二根柱会聚焦数量列的第 2 行。Unlink 会清掉表格上的范围。</td>
               </tr>
               <tr>
                 <td>迷你图</td>
@@ -273,14 +273,13 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>图表菜单里的主题和格式面板。</li>
+            <li>图表格式面板里的坐标轴、系列、字体，以及 Set Up 数据页。主题页是五个主题名，不是企业版的缩略图。</li>
           </ul>
         </section>
 
         <section>
           <h2>已知问题</h2>
           <ul>
-            <li>100 万行的首次绘制还没有重新测量。2 万行、1 列在 Chromium 里创建耗时 2 毫秒，企业版是 33 毫秒。</li>
             <li>日期快速过滤只在 <code>YYYY-MM-DD</code> 上核对过。</li>
             <li>分页的首尾行号只在 happy-dom 里核对过。分页条没有跑过浏览器和 axe。</li>
             <li>100 万行上每次按键的快速过滤耗时没有测量。</li>

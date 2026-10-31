@@ -5,7 +5,7 @@ const cols = process.env.BENCH_COLS ?? '50';
 
 export default defineConfig({
   testDir: 'bench',
-  timeout: 300_000,
+  timeout: 600_000,
   retries: 0,
   workers: 1,
   use: {
