@@ -100,6 +100,7 @@ export class GridSession<TData = any> {
   private quickTimer = 0;
   private findTimer = 0;
   private aligning = false;
+  private draggingCol: string | null = null;
   private undoStack: { source: number; colId: string; value: unknown }[] = [];
   private redoStack: { source: number; colId: string; value: unknown }[] = [];
   private batchActive = false;
@@ -157,6 +158,7 @@ export class GridSession<TData = any> {
     this.pager.hidden = true;
     this.groupPanel = el('div', 'og-group-panel');
     this.groupPanel.hidden = true;
+    this.bindGroupDrop(this.groupPanel);
     this.root.append(this.header, body, this.a11y);
     const shell = el('div', 'og-shell');
     shell.append(this.groupPanel, this.root, this.pager, this.popup, this.live, this.empty);
@@ -869,6 +871,7 @@ export class GridSession<TData = any> {
     cell.setAttribute('role', 'columnheader');
     cell.style.width = `${leaf.width}px`;
     cell.dataset.colId = leaf.colId;
+    this.makeGroupDraggable(cell, leaf);
     const colIndex = this.visibleIndex(leaf);
     if (colIndex >= 0) cell.setAttribute('aria-colindex', String(colIndex + 1));
     cell.setAttribute('aria-sort', leaf.sort === 'asc' ? 'ascending' : leaf.sort === 'desc' ? 'descending' : 'none');
@@ -892,6 +895,7 @@ export class GridSession<TData = any> {
       label.type = 'button';
       label.className = 'og-hlabel';
       label.textContent = leaf.headerName;
+      this.makeGroupDraggable(label, leaf);
       label.addEventListener('click', (event) => {
         event.stopPropagation();
         this.cycleSort(leaf, event.shiftKey);
@@ -1021,6 +1025,11 @@ export class GridSession<TData = any> {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       if (!dragging) return;
+      const hit = document.elementFromPoint(next.clientX, next.clientY);
+      if (hit instanceof Element && (this.groupPanel.contains(hit) || hit.closest('.og-toolbar-panel'))) {
+        this.dropOnGroup(leaf.colId);
+        return;
+      }
       const target = this.leafAtClientX(next.clientX) ?? leaf;
       this.moveLeaf(leaf, target);
     };
@@ -2464,6 +2473,35 @@ export class GridSession<TData = any> {
     this.syncToolbarGroups();
   }
 
+  private makeGroupDraggable(cell: HTMLElement, leaf: Leaf<TData>): void {
+    if (leaf.selectionColumn || leaf.colId === ROW_NUMBERS_COL_ID || leaf.colId === AUTO_GROUP_COL_ID) return;
+    const start = (event: DragEvent) => {
+      this.draggingCol = leaf.colId;
+      event.dataTransfer?.setData('application/x-opengrid-col', leaf.colId);
+      event.dataTransfer?.setData('text/plain', leaf.colId);
+    };
+    cell.draggable = true;
+    cell.addEventListener('dragstart', start);
+  }
+
+  private bindGroupDrop(panel: HTMLElement): void {
+    panel.addEventListener('dragover', (event) => event.preventDefault());
+    panel.addEventListener('drop', (event) => {
+      event.preventDefault();
+      const colId = event.dataTransfer?.getData('application/x-opengrid-col') || event.dataTransfer?.getData('text/plain') || this.draggingCol;
+      this.draggingCol = null;
+      if (colId) this.dropOnGroup(colId);
+    });
+  }
+
+  private dropOnGroup(colId: string): void {
+    const leaf = this.leafById(colId);
+    if (!leaf || leaf.selectionColumn || leaf.colId === ROW_NUMBERS_COL_ID || leaf.colId === AUTO_GROUP_COL_ID) return;
+    const ids = this.groupLeaves().map((item) => item.colId);
+    if (ids.includes(colId)) return;
+    this.api.setRowGroupColumns([...ids, colId]);
+  }
+
   private fillGroupPanel(panel: HTMLElement): void {
     const groups = this.groupLeaves();
     panel.replaceChildren();
@@ -2532,7 +2570,9 @@ export class GridSession<TData = any> {
       return;
     }
     if (item.toolbarItem === 'agRowGroupPanelToolbarItem') {
-      this.toolbar.append(el('div', 'og-toolbar-panel'));
+      const panel = el('div', 'og-toolbar-panel');
+      this.bindGroupDrop(panel);
+      this.toolbar.append(panel);
       return;
     }
     if (!item.label && !item.action) return;

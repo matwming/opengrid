@@ -61,3 +61,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:37:40Z	find-mark	Mark find matches on the accessibility cells	Two cells get og-find, the same count enterprise reports for ada	packages/opengrid/src/find.test.ts	tests green
 2026-10-31T01:47:14Z	aligned	Keep scroll and column state in step across aligned grids	Scroll lands on 80, and width, order, and hide match enterprise	packages/opengrid/src/aligned.test.ts	tests green
 2026-10-31T01:49:33Z	toolbar	Match the enterprise toolbar button, filters, find count, and group placeholder	Export runs the action. After 300ms, zoe leaves one row and the find count matches, including after Next Match	packages/opengrid/src/toolbar.test.ts	tests green
+2026-10-31T01:51:28Z	group-drag	Drop a header onto the group panel	The grouped column is country and the chip text matches enterprise	packages/opengrid/src/group-drag.test.ts	tests green

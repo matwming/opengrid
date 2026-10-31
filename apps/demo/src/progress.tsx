@@ -183,6 +183,10 @@ function App() {
                 <td>子列过滤后，没有匹配子行的组会被藏起。年份等于 2021 时只剩 <code>g:USA</code> 和 2021，和 <code>ag-grid-enterprise</code> 36.2.0 一样。分组列自己的过滤选择器还没有。</td>
               </tr>
               <tr>
+                <td>分组面板拖拽</td>
+                <td>把列拖到分组面板上会按该列分组。拖 Country 之后，分组列是 <code>country</code>，面板芯片文字和企业版 36.2.0 的芯片一样。</td>
+              </tr>
+              <tr>
                 <td>工具条</td>
                 <td>按钮 <code>Export</code> 会执行 <code>action</code>。快速过滤占位是 <code>Filter...</code>，查找占位是 <code>Find...</code>，输入停 300 毫秒后生效。查找次数和下一次匹配的显示，以及分组占位 <code>Drag here to set row groups</code>，都和 <code>ag-grid-enterprise</code> 36.2.0 一样。</td>
               </tr>
@@ -269,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>分组面板拖拽、公式单元格范围。</li>
+            <li>公式单元格范围。</li>
           </ul>
         </section>
 
