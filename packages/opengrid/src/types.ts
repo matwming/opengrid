@@ -248,6 +248,7 @@ export interface GridOptions<TData = any> {
   statusBar?: { statusPanels?: { statusPanel?: string }[] };
   sideBar?: boolean | { toolPanels?: { id?: string; toolPanel?: string }[] };
   rowNumbers?: boolean | { suppressCellFocus?: boolean };
+  rowGroupPanelShow?: 'always' | 'onlyWhenGrouping' | 'never';
   enableAdvancedFilter?: boolean;
   fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
   sendToClipboard?: (params: { data: string }) => void;

@@ -92,6 +92,7 @@ export class GridSession<TData = any> {
   private empty: HTMLElement;
   private pager: HTMLElement;
   private status: HTMLElement | null = null;
+  private groupPanel: HTMLElement;
   private pageIndex = 0;
   private infiniteKnown = false;
   private infiniteGen = 0;
@@ -141,9 +142,11 @@ export class GridSession<TData = any> {
     this.empty.hidden = true;
     this.pager = el('div', 'og-pager');
     this.pager.hidden = true;
+    this.groupPanel = el('div', 'og-group-panel');
+    this.groupPanel.hidden = true;
     this.root.append(this.header, body, this.a11y);
     const shell = el('div', 'og-shell');
-    shell.append(this.root, this.pager, this.popup, this.live, this.empty);
+    shell.append(this.groupPanel, this.root, this.pager, this.popup, this.live, this.empty);
     if (this.options.statusBar?.statusPanels?.length) {
       this.status = el('div', 'og-status');
       shell.append(this.status);
@@ -782,6 +785,7 @@ export class GridSession<TData = any> {
     this.renderEmpty();
     this.renderPager();
     this.renderStatus();
+    this.renderGroupPanel();
   }
 
   private renderHeader(): void {
@@ -2169,6 +2173,28 @@ export class GridSession<TData = any> {
     this.viewport.scrollTop = 0;
     this.layout();
     this.syncA11y();
+  }
+
+  private renderGroupPanel(): void {
+    const mode = this.options.rowGroupPanelShow ?? 'never';
+    const groups = this.groupLeaves();
+    const show = mode === 'always' || (mode === 'onlyWhenGrouping' && groups.length > 0);
+    this.groupPanel.hidden = !show;
+    this.groupPanel.replaceChildren();
+    if (!show) return;
+    if (groups.length === 0) {
+      this.groupPanel.textContent = 'Drag here to set row groups';
+      return;
+    }
+    for (const leaf of groups) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.textContent = leaf.headerName;
+      chip.addEventListener('click', () => {
+        this.api.setRowGroupColumns(groups.filter((item) => item !== leaf).map((item) => item.colId));
+      });
+      this.groupPanel.append(chip);
+    }
   }
 
   private renderStatus(): void {
