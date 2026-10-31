@@ -14,6 +14,7 @@ interface Mounted {
   firstRenderMs: number;
   sortReadyMs: number;
   copyMs: number;
+  sliceMs: number;
   workerWaitMs: number;
   engine: string;
   isolated: boolean;
@@ -148,12 +149,13 @@ const bench = {
       firstRenderMs,
       sortReadyMs,
       copyMs: Number(engineNode?.getAttribute('data-copy-ms') ?? '0'),
+      sliceMs: Number(engineNode?.getAttribute('data-slice-ms') ?? '0'),
       workerWaitMs: performance.now() - started - firstRenderMs - sortReadyMs,
       engine,
       isolated: crossOriginIsolated,
       rows: api?.getDisplayedRowCount() ?? 0,
     };
-    note(`${next} first render ${result.firstRenderMs.toFixed(0)} ms, sort-ready ${result.sortReadyMs.toFixed(0)} ms after paint (column copy ${result.copyMs.toFixed(0)} ms, worker not included), engine ${engine}`);
+    note(`${next} first render ${result.firstRenderMs.toFixed(0)} ms, sort-ready ${result.sortReadyMs.toFixed(0)} ms, full column copy ${result.copyMs.toFixed(0)} ms, longest main-thread slice ${result.sliceMs.toFixed(0)} ms, engine ${engine}`);
     return result;
   },
 
@@ -250,7 +252,7 @@ function checkpoints(count: number): number[] {
 }
 
 window.__opengridBench = bench;
-note('sort-ready 是首次绘制之后到可以排序、过滤的等待。用到的列会当场拷贝，不必等全部列。copyMs 是后台把全部列拷完的时间，不包含 worker。企业版绘制完就可以排，所以它的 sort-ready 记 0。');
+note('sort-ready 是首次绘制之后到可以排序、过滤的等待。全部列拷贝拆到空闲时间，slice 是其中最长的一段主线程时间。copyMs 是拷完所有列的墙上时间，不含 worker。企业版绘制完就可以排，所以它的 sort-ready 记 0。');
 note('bench controller ready');
 
 declare global {

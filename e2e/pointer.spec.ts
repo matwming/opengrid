@@ -126,6 +126,13 @@ test('chart theme and format panels match enterprise', async ({ page }) => {
   expect(menu.ogFormat).toContain('Grid Lines');
   expect(menu.ogFormat).toContain('Ticks');
   expect(menu.ogFormat).toContain('Rotation');
+  expect(menu.agFormat).toContain('Line Dash');
+  expect(menu.agFormat).toContain('Padding');
+  expect(menu.ogFormat).toContain('Line Dash');
+  expect(menu.ogFormat).toContain('Color');
+  expect(menu.ogFormat).toContain('Padding');
+  expect(menu.agSetup).toContain('Reverse');
+  expect(menu.ogSetup).toContain('Reverse');
   expect(menu.agSetup).toContain('Aggregate');
   expect(menu.agSetup).toContain('Direction');
   expect(menu.agSetup).toContain('Group Type');

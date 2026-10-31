@@ -27,6 +27,7 @@ describe('first paint', () => {
       };
       check();
     });
+    expect(Number(root?.getAttribute('data-slice-ms'))).toBeLessThan(50);
     api.applyColumnState({ state: [{ colId: 'qty', sort: 'desc' }], defaultState: { sort: null } });
     expect(api.getDisplayedRowAtIndex(0)?.data?.qty).toBe(999);
     api.destroy();

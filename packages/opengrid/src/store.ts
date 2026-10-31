@@ -131,6 +131,36 @@ export function sharedMemoryAvailable(): boolean {
   return typeof SharedArrayBuffer !== 'undefined' && typeof crossOriginIsolated === 'boolean' && crossOriginIsolated;
 }
 
+export function emptyVector(kind: ColumnKind, rowCount: number): Vector {
+  if (kind === 'number') return { kind: 'number', values: new Float64Array(rowCount), nulls: NO_NULLS };
+  if (kind === 'date') return { kind: 'date', values: new Float64Array(rowCount), nulls: new Uint8Array(rowCount) };
+  if (kind === 'boolean') return { kind: 'boolean', values: new Uint8Array(rowCount) };
+  return { kind: 'text', values: new Array(rowCount) };
+}
+
+export function fillFieldRange(rows: readonly unknown[], field: StoreField, vector: Vector, start: number, end: number): void {
+  const name = field.plainField;
+  if (vector.kind === 'number' && name) {
+    const values = vector.values;
+    for (let row = start; row < end; row++) {
+      const source = rows[row];
+      const raw = source != null && typeof source === 'object' ? (source as Record<string, unknown>)[name] : undefined;
+      if (typeof raw === 'number' && raw === raw) values[row] = raw;
+      else {
+        if (vector.nulls.length !== values.length) vector.nulls = new Uint8Array(values.length);
+        vector.nulls[row] = 1;
+      }
+    }
+    return;
+  }
+  for (let row = start; row < end; row++) writeVector(vector, row, name ? plainRead(rows[row], name) : field.read(rows[row]));
+}
+
+function plainRead(row: unknown, name: string): unknown {
+  if (row == null || typeof row !== 'object') return undefined;
+  return (row as Record<string, unknown>)[name];
+}
+
 export function buildStore(rows: readonly unknown[], fields: readonly StoreField[], shared = false): ColumnStore {
   if (fields.every((field) => field.plainField)) return buildPlainStore(rows, fields, shared);
   return buildStoreFromReaders(rows, fields, shared);

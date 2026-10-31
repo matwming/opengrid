@@ -14,7 +14,7 @@ interface ScrollSample {
 
 interface BenchController {
   prepare(rowCount: number, colCount: number): { prepareMs: number; rows: number; cols: number };
-  mount(kind: 'opengrid' | 'ag'): Promise<{ firstRenderMs: number; sortReadyMs: number; copyMs: number; workerWaitMs: number; engine: string; isolated: boolean; rows: number }>;
+  mount(kind: 'opengrid' | 'ag'): Promise<{ firstRenderMs: number; sortReadyMs: number; copyMs: number; sliceMs: number; workerWaitMs: number; engine: string; isolated: boolean; rows: number }>;
   scroll(): Promise<ScrollSample>;
   sort(): Promise<{ ms: number; ordered: boolean; sample: Array<number | null>; computeMs: number }>;
   filter(): Promise<{ ms: number; count: number; sample: Array<number | null> }>;
@@ -61,7 +61,7 @@ test(`enterprise comparison ${rows} x ${cols}`, async ({ page }) => {
       bundle: 'Gzip sizes are esbuild bundles of each package entry. ag-grid-enterprise registers AllEnterpriseModule. opengrid is the phase 1 entry.',
       scroll: 'fps is requestAnimationFrame intervals while the test drives scrollTop for 2 seconds. traceBeginFrames counts Chrome BeginFrame events in the same window.',
       sort: 'ms is the wait from applyColumnState until modelUpdated. computeMs is the main-thread query. The worker still loads above 32768 rows but does not run the sort.',
-      sortReady: 'sortReadyMs is the wait after firstDataRendered until a sort or filter can run. Touched columns are copied inside that call, so this wait does not include the background copy of every column. copyMs is that full copy. Enterprise sortReadyMs is 0.',
+      sortReady: 'sortReadyMs is the wait after firstDataRendered until a sort or filter can run. copyMs is the wall time to copy every column in idle slices. sliceMs is the longest of those slices. Enterprise sortReadyMs is 0.',
     },
     group: {
       status: 'not-run',

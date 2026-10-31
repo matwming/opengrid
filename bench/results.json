@@ -1,31 +1,32 @@
 {
-  "measuredAt": "2026-10-31T03:14:14.537Z",
+  "measuredAt": "2026-10-31T03:26:27.799Z",
   "rows": 1000000,
   "cols": 50,
   "repeats": 3,
   "prepare": {
-    "prepareMs": 3307.429999999702,
+    "prepareMs": 3184.609999999404,
     "rows": 1000000,
     "cols": 50
   },
   "opengrid": {
     "mount": {
-      "firstRenderMs": 19.189999997615814,
-      "sortReadyMs": 11.949999999254942,
-      "copyMs": 1016,
-      "workerWaitMs": 1016.6800000034273,
+      "firstRenderMs": 19.969999998807907,
+      "sortReadyMs": 12.220000002533197,
+      "copyMs": 3936,
+      "sliceMs": 10,
+      "workerWaitMs": 3936.009999997914,
       "engine": "local",
       "isolated": true,
       "rows": 1000000
     },
     "scroll": {
       "frames": 121,
-      "elapsedMs": 2016.5819999999994,
-      "fps": 60.00251911402564,
+      "elapsedMs": 2016.5839999999998,
+      "fps": 60.00245960495571,
       "p95Ms": 16.670000000000073
     },
     "sort": {
-      "ms": 67.9699999988079,
+      "ms": 65.03500000014901,
       "ordered": true,
       "sample": [
         0,
@@ -38,10 +39,10 @@
         10000,
         99999
       ],
-      "computeMs": 60
+      "computeMs": 56
     },
     "filter": {
-      "ms": 60.03999999910593,
+      "ms": 60.11500000208616,
       "count": 499990,
       "sample": [
         50001,
@@ -61,22 +62,23 @@
   },
   "ag": {
     "mount": {
-      "firstRenderMs": 982.2100000008941,
+      "firstRenderMs": 979.5599999986589,
       "sortReadyMs": 0,
       "copyMs": 0,
-      "workerWaitMs": 0.02499999850988388,
+      "sliceMs": 0,
+      "workerWaitMs": 0.03500000014901161,
       "engine": "ag-grid",
       "isolated": true,
       "rows": 1000000
     },
     "scroll": {
-      "frames": 94,
-      "elapsedMs": 2016.5900000000001,
-      "fps": 46.61334232541071,
+      "frames": 92,
+      "elapsedMs": 1999.9249999999993,
+      "fps": 46.00172506468994,
       "p95Ms": 33.33499999999913
     },
     "sort": {
-      "ms": 1553.5799999982119,
+      "ms": 1479.4899999983609,
       "ordered": true,
       "sample": [
         0,
@@ -92,7 +94,7 @@
       "computeMs": 0
     },
     "filter": {
-      "ms": 894.8249999992549,
+      "ms": 858.1849999986589,
       "count": 499990,
       "sample": [
         50001,
@@ -115,22 +117,23 @@
       "round": 0,
       "opengrid": {
         "mount": {
-          "firstRenderMs": 19.189999997615814,
-          "sortReadyMs": 11.949999999254942,
-          "copyMs": 1016,
-          "workerWaitMs": 1016.6800000034273,
+          "firstRenderMs": 19.969999998807907,
+          "sortReadyMs": 12.220000002533197,
+          "copyMs": 3936,
+          "sliceMs": 10,
+          "workerWaitMs": 3936.009999997914,
           "engine": "local",
           "isolated": true,
           "rows": 1000000
         },
         "scroll": {
           "frames": 121,
-          "elapsedMs": 2016.5819999999994,
-          "fps": 60.00251911402564,
+          "elapsedMs": 2016.5839999999998,
+          "fps": 60.00245960495571,
           "p95Ms": 16.670000000000073
         },
         "sort": {
-          "ms": 67.9699999988079,
+          "ms": 65.03500000014901,
           "ordered": true,
           "sample": [
             0,
@@ -143,10 +146,10 @@
             10000,
             99999
           ],
-          "computeMs": 60
+          "computeMs": 56
         },
         "filter": {
-          "ms": 60.03999999910593,
+          "ms": 60.11500000208616,
           "count": 499990,
           "sample": [
             50001,
@@ -166,22 +169,23 @@
       },
       "ag": {
         "mount": {
-          "firstRenderMs": 982.2100000008941,
+          "firstRenderMs": 1020.089999999851,
           "sortReadyMs": 0,
           "copyMs": 0,
-          "workerWaitMs": 0.02499999850988388,
+          "sliceMs": 0,
+          "workerWaitMs": 0.02500000223517418,
           "engine": "ag-grid",
           "isolated": true,
           "rows": 1000000
         },
         "scroll": {
-          "frames": 94,
-          "elapsedMs": 2016.5900000000001,
-          "fps": 46.61334232541071,
-          "p95Ms": 33.33499999999913
+          "frames": 92,
+          "elapsedMs": 1999.9249999999993,
+          "fps": 46.00172506468994,
+          "p95Ms": 33.335000000000946
         },
         "sort": {
-          "ms": 1553.5799999982119,
+          "ms": 1443.890000000596,
           "ordered": true,
           "sample": [
             0,
@@ -197,7 +201,7 @@
           "computeMs": 0
         },
         "filter": {
-          "ms": 894.8249999992549,
+          "ms": 865.339999999851,
           "count": 499990,
           "sample": [
             50001,
@@ -213,29 +217,30 @@
         },
         "heapBefore": 1620000000,
         "heapAfterReady": 1620000000,
-        "traceBeginFrames": 122
+        "traceBeginFrames": 123
       }
     },
     {
       "round": 1,
       "opengrid": {
         "mount": {
-          "firstRenderMs": 28.405000001192093,
-          "sortReadyMs": 12.634999997913837,
-          "copyMs": 1166,
-          "workerWaitMs": 1166.1350000016391,
+          "firstRenderMs": 23.29499999806285,
+          "sortReadyMs": 12.810000002384186,
+          "copyMs": 3996,
+          "sliceMs": 9,
+          "workerWaitMs": 3996.324999999255,
           "engine": "local",
           "isolated": true,
           "rows": 1000000
         },
         "scroll": {
-          "frames": 120,
-          "elapsedMs": 1999.9139999999989,
-          "fps": 60.002580110944805,
+          "frames": 121,
+          "elapsedMs": 2016.5849999999991,
+          "fps": 60.00242985046504,
           "p95Ms": 16.67000000000189
         },
         "sort": {
-          "ms": 60.39000000059605,
+          "ms": 62.55499999970198,
           "ordered": true,
           "sample": [
             0,
@@ -248,10 +253,10 @@
             10000,
             99999
           ],
-          "computeMs": 41
+          "computeMs": 43
         },
         "filter": {
-          "ms": 74.42500000074506,
+          "ms": 76.41000000014901,
           "count": 499990,
           "sample": [
             50001,
@@ -267,26 +272,27 @@
         },
         "heapBefore": 1620000000,
         "heapAfterReady": 1620000000,
-        "traceBeginFrames": 121
+        "traceBeginFrames": 123
       },
       "ag": {
         "mount": {
-          "firstRenderMs": 785.2750000022352,
+          "firstRenderMs": 979.5599999986589,
           "sortReadyMs": 0,
           "copyMs": 0,
+          "sliceMs": 0,
           "workerWaitMs": 0.03500000014901161,
           "engine": "ag-grid",
           "isolated": true,
           "rows": 1000000
         },
         "scroll": {
-          "frames": 86,
-          "elapsedMs": 2016.5849999999991,
-          "fps": 42.646355100330524,
+          "frames": 92,
+          "elapsedMs": 1999.9249999999993,
+          "fps": 46.00172506468994,
           "p95Ms": 33.33499999999913
         },
         "sort": {
-          "ms": 1439.6349999979138,
+          "ms": 1479.4899999983609,
           "ordered": true,
           "sample": [
             0,
@@ -302,7 +308,7 @@
           "computeMs": 0
         },
         "filter": {
-          "ms": 858.0450000017881,
+          "ms": 858.1849999986589,
           "count": 499990,
           "sample": [
             50001,
@@ -325,22 +331,23 @@
       "round": 2,
       "opengrid": {
         "mount": {
-          "firstRenderMs": 22.600000001490116,
-          "sortReadyMs": 13.090000003576279,
-          "copyMs": 1109,
-          "workerWaitMs": 1109.6499999947846,
+          "firstRenderMs": 22.219999998807907,
+          "sortReadyMs": 12.765000000596046,
+          "copyMs": 3895,
+          "sliceMs": 10,
+          "workerWaitMs": 3895.099999997765,
           "engine": "local",
           "isolated": true,
           "rows": 1000000
         },
         "scroll": {
           "frames": 121,
-          "elapsedMs": 2016.5850000000028,
-          "fps": 60.002429850464935,
-          "p95Ms": 16.67000000000189
+          "elapsedMs": 2016.5849999999991,
+          "fps": 60.00242985046504,
+          "p95Ms": 16.67000000000553
         },
         "sort": {
-          "ms": 73.625,
+          "ms": 72.6900000013411,
           "ordered": true,
           "sample": [
             0,
@@ -353,10 +360,10 @@
             10000,
             99999
           ],
-          "computeMs": 54
+          "computeMs": 53
         },
         "filter": {
-          "ms": 71.8099999986589,
+          "ms": 76.07000000029802,
           "count": 499990,
           "sample": [
             50001,
@@ -372,26 +379,27 @@
         },
         "heapBefore": 1620000000,
         "heapAfterReady": 1620000000,
-        "traceBeginFrames": 121
+        "traceBeginFrames": 123
       },
       "ag": {
         "mount": {
-          "firstRenderMs": 960.2949999980628,
+          "firstRenderMs": 963.9050000011921,
           "sortReadyMs": 0,
           "copyMs": 0,
-          "workerWaitMs": 0.030000001192092896,
+          "sliceMs": 0,
+          "workerWaitMs": 0.02499999850988388,
           "engine": "ag-grid",
           "isolated": true,
           "rows": 1000000
         },
         "scroll": {
-          "frames": 88,
+          "frames": 85,
           "elapsedMs": 2016.5849999999991,
-          "fps": 43.63813080033821,
+          "fps": 42.150467250326685,
           "p95Ms": 33.33499999999913
         },
         "sort": {
-          "ms": 1558,
+          "ms": 1520.984999999404,
           "ordered": true,
           "sample": [
             0,
@@ -407,7 +415,7 @@
           "computeMs": 0
         },
         "filter": {
-          "ms": 899.484999999404,
+          "ms": 861.9600000008941,
           "count": 499990,
           "sample": [
             50001,
@@ -428,9 +436,9 @@
     }
   ],
   "bundle": {
-    "opengridGzip": 40690,
+    "opengridGzip": 41429,
     "agGridGzip": 721207,
-    "opengridRaw": 139393,
+    "opengridRaw": 141907,
     "agGridRaw": 2585887
   },
   "pageErrors": [],
@@ -439,7 +447,7 @@
     "bundle": "Gzip sizes are esbuild bundles of each package entry. ag-grid-enterprise registers AllEnterpriseModule. opengrid is the phase 1 entry.",
     "scroll": "fps is requestAnimationFrame intervals while the test drives scrollTop for 2 seconds. traceBeginFrames counts Chrome BeginFrame events in the same window.",
     "sort": "ms is the wait from applyColumnState until modelUpdated. computeMs is the main-thread query. The worker still loads above 32768 rows but does not run the sort.",
-    "sortReady": "sortReadyMs is the wait after firstDataRendered until a sort or filter can run. Touched columns are copied inside that call, so this wait does not include the background copy of every column. copyMs is that full copy. Enterprise sortReadyMs is 0."
+    "sortReady": "sortReadyMs is the wait after firstDataRendered until a sort or filter can run. copyMs is the wall time to copy every column in idle slices. sliceMs is the longest of those slices. Enterprise sortReadyMs is 0."
   },
   "group": {
     "status": "not-run",

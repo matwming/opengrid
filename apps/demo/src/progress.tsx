@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import './demo.css';
 
-const measured = '2026年10月31日 14:14（澳大利亚墨尔本时间）';
+const measured = '2026年10月31日 14:26（澳大利亚墨尔本时间）';
 
 function App() {
   return (
@@ -26,9 +26,9 @@ function App() {
         <section>
           <h2>基准</h2>
           <div className="stats">
-            <p><strong>19 ms</strong><span>首次绘制，中间一次</span></p>
+            <p><strong>20 ms</strong><span>首次绘制，中间一次</span></p>
             <p><strong>12 ms</strong><span>之后可排序、过滤</span></p>
-            <p><strong>1016 ms</strong><span>后台把全部列拷完</span></p>
+            <p><strong>10 ms</strong><span>列拷贝最长的一段主线程</span></p>
             <p><strong>60 fps</strong><span>滚动，三次都是 60</span></p>
           </div>
           <table>
@@ -43,42 +43,42 @@ function App() {
             <tbody>
               <tr>
                 <td>首次绘制</td>
-                <td>19 ms</td>
-                <td>982 ms</td>
+                <td>20 ms</td>
+                <td>980 ms</td>
               </tr>
               <tr>
                 <td>可排序、过滤</td>
-                <td>再等 12 ms。用到的列当场拷，不必等全部列</td>
+                <td>再等 12 ms。用到的列当场拷</td>
                 <td>0 ms，绘制完就可以排</td>
               </tr>
               <tr>
                 <td>延后的全部列拷贝</td>
-                <td>1016 ms。不含 worker。拷贝进行时主线程会忙</td>
+                <td>墙上 3936 ms，拆成多片。最长一片主线程 10 ms</td>
                 <td>0 ms</td>
               </tr>
               <tr>
                 <td>滚动</td>
                 <td>60 fps，p95 帧 16.7 ms</td>
-                <td>47 fps，p95 帧 33.3 ms</td>
+                <td>46 fps，p95 帧 33.3 ms</td>
               </tr>
               <tr>
                 <td>排序 c0</td>
-                <td>68.0 ms，其中主线程 60 ms</td>
-                <td>1554 ms</td>
+                <td>65.0 ms，其中主线程 56 ms</td>
+                <td>1479 ms</td>
               </tr>
               <tr>
                 <td>数字过滤 greaterThan 50000</td>
-                <td>60.0 ms，499,990 行</td>
-                <td>895 ms，行数和抽样值相同</td>
+                <td>60.1 ms，499,990 行</td>
+                <td>858 ms，行数和抽样值相同</td>
               </tr>
               <tr>
                 <td>压缩后的入口</td>
-                <td>40,690 字节</td>
+                <td>41,429 字节</td>
                 <td>721,207 字节</td>
               </tr>
             </tbody>
           </table>
-          <p className="note">三次里首次绘制是 19、28、23 ms，企业版是 785 到 982 ms。可排序等待是 12 到 13 ms。全部列拷贝是 1016 到 1166 ms，比上一轮把拷贝和 worker 混在一起的 1135 ms 短，而且不再挡住第一次排序。若排序赶在拷贝结束前，只用到的那一列会先补上。排序是 60 到 74 ms，企业版是 1440 到 1558 ms。过滤是 60 到 74 ms，企业版是 858 到 899 ms。滚动三次都是 60 fps，企业版是 43 到 47 fps。堆内存增量没有测到变化，这里不写内存胜负。</p>
+          <p className="note">三次里首次绘制是 20、23、22 ms，企业版是 964 到 1020 ms。可排序等待是 12 到 13 ms。全部列拷完的墙上时间是 3895 到 3996 ms，比一次抄完的 1016 ms 长，因为每片大约 8 ms 后就让出主线程。最长的一片是 9 到 10 ms，主线程不再连续忙 1 秒。排序赶在拷贝结束前时，只用到的那一列会先补上。排序是 63 到 73 ms，企业版是 1444 到 1521 ms。过滤是 60 到 76 ms，企业版是 858 到 865 ms。滚动三次都是 60 fps。堆内存增量没有测到变化，这里不写内存胜负。</p>
         </section>
 
         <section>
@@ -246,7 +246,7 @@ function App() {
               </tr>
               <tr>
                 <td>集成图表</td>
-                <td><code>createRangeChart</code> 覆盖企业版能创建的图种。Edit Chart 打开 Chart、Set Up、Customize。每个主题有一张小柱状缩略图。Set Up 有 Categories、Series、Switch Category / Series、Aggregate、Direction 和 Group Type。Customize 有 Titles、Legend、Horizontal Axis、Vertical Axis、Grid Lines、Ticks、Rotation、Series 和 Font。Chromium 里企业版格式页同样有 Grid Lines、Ticks 和 Rotation，Set Up 同样有 Aggregate、Direction 和 Group Type。</td>
+                <td><code>createRangeChart</code> 覆盖企业版能创建的图种。Edit Chart 打开 Chart、Set Up、Customize。Customize 另有 Line Dash、Color 和 Padding。Set Up 另有 Reverse。Chromium 里企业版格式页同样有 Line Dash 和 Padding，Set Up 同样有 Reverse。虚线选 Dashed 后，图形带 <code>stroke-dasharray</code>。Reverse 把系列从 4,9 调成 9,4。</td>
               </tr>
               <tr>
                 <td>迷你图</td>
@@ -283,7 +283,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>格式面板里的虚线、颜色和内边距。Set Up 里的 Reverse。</li>
+            <li>格式面板里的标记、阴影和渐变。</li>
           </ul>
         </section>
 

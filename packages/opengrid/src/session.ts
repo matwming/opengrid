@@ -6,7 +6,7 @@ import { WORKER_ROW_MIN, WorkerEngine } from './engine-client';
 import { applyFilter, applyQuickFilter, hasQuickFilter, queryView, type SortKey, type ViewResult } from './engine';
 import { aggregate, flattenGroups, flattenTree, type FlatRow, type GroupFlat } from './group';
 import { FALLBACK_COLORS, paintFrame, type PaintColors, type PaintColumn } from './paint';
-import { buildStore, cellRaw, formatDay, readPath, sharedMemoryAvailable, writePath, writeVector, type ColumnStore, type StoreField } from './store';
+import { buildStore, cellRaw, emptyVector, fillFieldRange, formatDay, readPath, sharedMemoryAvailable, writePath, writeVector, type ColumnStore, type StoreField, type Vector } from './store';
 import type {
   AgEvent,
   AdvancedFilterModel,
@@ -66,6 +66,7 @@ export class GridSession<TData = any> {
   private generation = 0;
   private sawFirst = false;
   private storePending = false;
+  private copySliceMs = 0;
   private destroyed = false;
   private worker: WorkerEngine | null = null;
   private workerReady: Promise<void> = Promise.resolve();
@@ -259,21 +260,7 @@ export class GridSession<TData = any> {
           }
         }
         this.root.dataset.store = 'partial';
-        const fields = this.columnFields();
-        setTimeout(() => {
-          if (this.destroyed) return;
-          const started = performance.now();
-          const slice = fields.filter((field) => !this.store.columns.has(field.colId));
-          if (slice.length) {
-            const built = buildStore(this.rows, slice, false);
-            for (const [colId, vector] of built.columns) this.store.columns.set(colId, vector);
-          }
-          this.root.dataset.copyMs = String(Math.round(performance.now() - started));
-          this.root.dataset.store = 'ready';
-          setTimeout(() => {
-            if (!this.destroyed) this.startWorker();
-          }, 0);
-        }, 0);
+        this.scheduleColumnCopy(this.columnFields());
       }, 0);
       return;
     }
@@ -286,6 +273,54 @@ export class GridSession<TData = any> {
     if (this.options.pivotMode || this.options.treeData || this.options.masterDetail) return false;
     if (this.quickText() || this.sortKeys().length > 0 || this.hasFilter() || this.groupLeaves().length > 0) return false;
     return true;
+  }
+
+  private scheduleIdle(work: (budget: number) => void): void {
+    // ponytail: 8ms timer slices. Idle callbacks wait a frame while the bench is polling, which stretched a 1s copy to 4s.
+    setTimeout(() => work(8), 0);
+  }
+
+  private scheduleColumnCopy(fields: StoreField[]): void {
+    const rows = this.rows;
+    let fieldIndex = 0;
+    let cursor = 0;
+    let draft: Vector | null = null;
+    const started = performance.now();
+    const step = (budget: number) => {
+      if (this.destroyed) return;
+      const sliceStarted = performance.now();
+      while (fieldIndex < fields.length && performance.now() - sliceStarted < budget) {
+        const field = fields[fieldIndex];
+        if (!field) break;
+        if (this.store.columns.has(field.colId)) {
+          fieldIndex += 1;
+          cursor = 0;
+          draft = null;
+          continue;
+        }
+        if (!draft) draft = emptyVector(field.kind, rows.length);
+        const end = Math.min(rows.length, cursor + 16384);
+        fillFieldRange(rows, field, draft, cursor, end);
+        cursor = end;
+        if (cursor < rows.length) continue;
+        if (!this.store.columns.has(field.colId)) this.store.columns.set(field.colId, draft);
+        draft = null;
+        cursor = 0;
+        fieldIndex += 1;
+      }
+      this.copySliceMs = Math.max(this.copySliceMs, performance.now() - sliceStarted);
+      this.root.dataset.sliceMs = String(Math.round(this.copySliceMs));
+      if (fieldIndex < fields.length) {
+        this.scheduleIdle(step);
+        return;
+      }
+      this.root.dataset.copyMs = String(Math.round(performance.now() - started));
+      this.root.dataset.store = 'ready';
+      this.scheduleIdle(() => {
+        if (!this.destroyed) this.startWorker();
+      });
+    };
+    this.scheduleIdle(step);
   }
 
   private columnFields(): StoreField[] {
@@ -3542,7 +3577,39 @@ export class GridSession<TData = any> {
       panel.dataset.thickness = thickness.value;
       for (const node of svg.querySelectorAll('rect, polygon, path, polyline, circle')) node.setAttribute('stroke-width', thickness.value);
     });
-    seriesGroup.append(seriesHeading, thickness);
+    const dash = document.createElement('select');
+    dash.setAttribute('aria-label', 'Line Dash');
+    for (const name of ['Solid', 'Dashed']) {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      dash.append(option);
+    }
+    const color = document.createElement('input');
+    color.type = 'color';
+    color.value = '#1f4b99';
+    color.setAttribute('aria-label', 'Color');
+    const padding = document.createElement('input');
+    padding.type = 'number';
+    padding.value = '8';
+    padding.setAttribute('aria-label', 'Padding');
+    const paintDash = () => {
+      panel.dataset.lineDash = dash.value;
+      panel.dataset.color = color.value;
+      panel.dataset.padding = padding.value;
+      panel.style.padding = `${padding.value}px`;
+      const pattern = dash.value === 'Dashed' ? '4 3' : '';
+      for (const node of svg.querySelectorAll('.og-chart-grid, .og-chart-tick, polyline, line, rect, path, polygon, circle')) {
+        if (node.closest('.og-chart-thumb')) continue;
+        if (pattern) node.setAttribute('stroke-dasharray', pattern);
+        else node.removeAttribute('stroke-dasharray');
+      }
+      paintChartInk(svg, color.value);
+    };
+    dash.addEventListener('change', paintDash);
+    color.addEventListener('input', paintDash);
+    padding.addEventListener('input', paintDash);
+    seriesGroup.append(seriesHeading, thickness, document.createTextNode(' Line Dash '), dash, document.createTextNode(' Color '), color, document.createTextNode(' Padding '), padding);
     const fontGroup = el('section', 'og-chart-format-group');
     const fontHeading = el('h3', 'og-chart-format-title');
     fontHeading.textContent = 'Font';
@@ -3588,6 +3655,7 @@ export class GridSession<TData = any> {
         const value = typeof raw === 'number' ? raw : Number(raw);
         next.push({ label: labelLeaf ? this.textFor(source, labelLeaf) : String(row), value: Number.isNaN(value) ? 0 : value, row });
       }
+      if (panel.dataset.reverse === 'true') next.reverse();
       const nextSvg = chartSvg(shape, next);
       svg.replaceChildren(...nextSvg.childNodes);
       panel.querySelectorAll('[aria-label="Rotation"]').forEach((node) => node.dispatchEvent(new Event('input', { bubbles: true })));
@@ -3595,7 +3663,8 @@ export class GridSession<TData = any> {
       panel.dataset.category = categoryCol;
       panel.dataset.value = seriesCol;
       legendList.textContent = next.map((point) => point.label).join(', ');
-      if (panel.dataset.theme) paintChartInk(svg, CHART_THEME_INK[panel.dataset.theme] ?? '#1f4b99');
+      if (panel.dataset.color) paintChartInk(svg, panel.dataset.color);
+      else if (panel.dataset.theme) paintChartInk(svg, CHART_THEME_INK[panel.dataset.theme] ?? '#1f4b99');
     };
     switchBox.addEventListener('change', () => {
       const swapped = switchBox.checked;
@@ -3629,6 +3698,16 @@ export class GridSession<TData = any> {
       setupSelect('Direction', ['Vertical', 'Horizontal'], 'direction'),
       setupSelect('Group Type', ['Grouped', 'Stacked', '100% Stacked'], 'group'),
     );
+    const reverseLabel = document.createElement('label');
+    const reverseBox = document.createElement('input');
+    reverseBox.type = 'checkbox';
+    reverseBox.setAttribute('aria-label', 'Reverse');
+    reverseLabel.append(reverseBox, document.createTextNode(' Reverse'));
+    reverseBox.addEventListener('change', () => {
+      panel.dataset.reverse = reverseBox.checked ? 'true' : 'false';
+      redraw();
+    });
+    dataPanel.append(reverseLabel);
     panels.append(tabs, themePanel, dataPanel, formatPanel);
     menuButton.addEventListener('click', () => {
       list.hidden = !list.hidden;
