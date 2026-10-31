@@ -1931,6 +1931,30 @@ export class GridSession<TData = any> {
     this.syncA11y();
   }
 
+  private notes = new Map<string, { text: string }>();
+
+  private noteFor(source: number, leaf: Leaf<TData>): { text: string } | undefined {
+    if (this.options.notesDataSource) {
+      return this.options.notesDataSource.getNote({ column: columnFacade(leaf), rowNode: this.nodeFor(source) });
+    }
+    return this.readNote(this.rowId(source), leaf.colId);
+  }
+
+  private noteKey(rowId: string, colId: string): string {
+    return `${rowId}\0${colId}`;
+  }
+
+  private readNote(rowId: string, colId: string): { text: string } | undefined {
+    return this.notes.get(this.noteKey(rowId, colId));
+  }
+
+  private writeNote(rowId: string, colId: string, note: { text: string } | undefined): void {
+    const key = this.noteKey(rowId, colId);
+    if (!note) this.notes.delete(key);
+    else this.notes.set(key, { text: note.text });
+    this.syncA11y();
+  }
+
   private batchKey(source: number, colId: string): string {
     return `${source}\0${colId}`;
   }
@@ -2211,6 +2235,8 @@ export class GridSession<TData = any> {
           const width = leaves.slice(index, index + span).reduce((sum, item) => sum + item.width, 0);
           cell.style.width = `${width}px`;
         }
+        const note = source >= 0 ? this.noteFor(source, leaf) : undefined;
+        if (note) cell.dataset.note = note.text;
         cell.textContent = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : source < 0 ? this.groupLabel(display, leaf.colId) : this.textFor(source, leaf);
         const paint = this.paintStyle(source, leaf);
         if (paint.className) cell.classList.add(...paint.className.split(/\s+/).filter(Boolean));
@@ -3096,6 +3122,26 @@ export class GridSession<TData = any> {
       commitBatchEdit: () => session.commitBatch(),
       cancelBatchEdit: () => session.cancelBatch(),
       isBatchEditing: () => session.batchActive,
+      setNote: (params) => {
+        const colId = typeof params.column === 'string' ? params.column : params.column.getColId();
+        const rowId = params.rowNode?.id ?? (params.rowIndex == null ? '' : session.rowId(session.sourceAt(params.rowIndex)));
+        if (session.options.notesDataSource) {
+          const column = session.leafByKey(colId);
+          const node = params.rowNode;
+          if (column && node) session.options.notesDataSource.setNote({ column: columnFacade(column), rowNode: node, note: params.note });
+        } else session.writeNote(rowId, colId, params.note);
+        session.syncA11y();
+      },
+      getNote: (params) => {
+        const colId = typeof params.column === 'string' ? params.column : params.column.getColId();
+        if (session.options.notesDataSource && params.rowNode) {
+          const column = session.leafByKey(colId);
+          if (!column) return undefined;
+          return session.options.notesDataSource.getNote({ column: columnFacade(column), rowNode: params.rowNode });
+        }
+        const rowId = params.rowNode?.id ?? (params.rowIndex == null ? '' : session.rowId(session.sourceAt(params.rowIndex)));
+        return session.readNote(rowId, colId);
+      },
       isAnyFilterPresent: () => session.hasFilter(),
       isColumnFilterPresent: () => session.columnFilterPresent(),
       onFilterChanged: () => session.refresh('filter'),

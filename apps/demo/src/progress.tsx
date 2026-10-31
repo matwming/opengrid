@@ -183,6 +183,10 @@ function App() {
                 <td>子列过滤后，没有匹配子行的组会被藏起。年份等于 2021 时只剩 <code>g:USA</code> 和 2021，和 <code>ag-grid-enterprise</code> 36.2.0 一样。分组列自己的过滤选择器还没有。</td>
               </tr>
               <tr>
+                <td>备注</td>
+                <td><code>notesDataSource</code> 配合 <code>setNote</code> 和 <code>getNote</code> 在名字格记下 hello，和 <code>ag-grid-enterprise</code> 36.2.0 一样。无障碍单元格带 <code>data-note</code>。作者、时间和备注弹层还没有。</td>
+              </tr>
+              <tr>
                 <td>树</td>
                 <td><code>treeData</code> 和 <code>getDataPath</code> 按路径嵌套。CEO 下面有 Sales 和 Support，收起 Sales 后 EU 不再显示。没有和企业版并排对照。</td>
               </tr>
@@ -257,7 +261,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>备注、对齐网格、工具条、分组面板拖拽、公式范围和 SUM、查找高亮。</li>
+            <li>对齐网格、工具条、分组面板拖拽、公式范围和 SUM、查找高亮。</li>
           </ul>
         </section>
 

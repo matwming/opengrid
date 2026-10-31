@@ -72,6 +72,7 @@ Status words mean the following.
 | Rich select | [Rich select](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#rich-select-editor) | partial. `agRichSelectCellEditor` opens a list. Enterprise opens `.ag-rich-select`. The list here is Red and Green, and choosing Green writes that value. The enterprise list stayed on Loading in happy-dom, so the painted rows were not compared. |
 | Batch edit | [Batch editing](https://www.ag-grid.com/javascript-data-grid/batch-editing/) | partial. `startBatchEdit` keeps the row as Ada while `isBatchEditing` is true. `cancelBatchEdit` leaves Ada. `commitBatchEdit` writes Zoe. This matches `ag-grid-enterprise` 36.2.0. |
 | Group filter | [Group filter](https://www.ag-grid.com/javascript-data-grid/grouping/) | partial. A filter on a child column hides groups that have no matching child. Equals `2021` leaves `g:USA` and `2021`, matching `ag-grid-enterprise` 36.2.0. The group-column filter picker is not started. |
+| Notes | [Notes](https://www.ag-grid.com/javascript-data-grid/notes/) | partial. `notesDataSource` plus `setNote` and `getNote` store `hello` on the name cell, matching `ag-grid-enterprise` 36.2.0. The accessibility cell exposes `data-note`. Authors, timestamps, and the note popup are not started. |
 | Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | partial. The columns and filters panels ship with the side bar. A custom `toolPanel` component is not started. |
 
 ## Benchmark
