@@ -180,7 +180,7 @@ function App() {
               </tr>
               <tr>
                 <td>分组过滤</td>
-                <td>子列过滤后，没有匹配子行的组会被藏起。年份等于 2021 时只剩 <code>g:USA</code> 和 2021，和 <code>ag-grid-enterprise</code> 36.2.0 一样。分组列自己的过滤选择器还没有。</td>
+                <td>子列过滤后，没有匹配子行的组会被藏起。年份等于 2021 时只剩 <code>g:USA</code> 和 2021。<code>agGroupColumnFilter</code> 打开后先显示 <code>Select field:</code>，可选 Country 和 Year。选 Year 再包含 2021，行和企业版 36.2.0 一样。</td>
               </tr>
               <tr>
                 <td>分组面板拖拽</td>
@@ -273,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>分组列过滤选择器、行合并 <code>spanRows</code>、公式数据源、备注弹层、工具条的菜单和透视项。</li>
+            <li>行合并 <code>spanRows</code>、公式数据源、备注弹层、工具条的菜单和透视项。</li>
           </ul>
         </section>
 

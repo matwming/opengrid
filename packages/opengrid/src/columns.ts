@@ -19,7 +19,7 @@ export interface Leaf<TData = any> {
   resizable: boolean;
   movable: boolean;
   editable: boolean | EditableCallback<TData>;
-  filter: false | 'text' | 'number' | 'date' | 'set' | 'multi';
+  filter: false | 'text' | 'number' | 'date' | 'set' | 'multi' | 'group';
   kind: ColumnKind;
   checkbox: boolean;
   headerCheckbox: boolean;

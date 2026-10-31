@@ -626,6 +626,7 @@ export class GridSession<TData = any> {
     const header = this.options.autoGroupColumnDef?.headerName ?? 'Group';
     const width = this.options.autoGroupColumnDef?.width ?? 220;
     const auto = autoGroupLeaf<TData>(header, width);
+    if (this.options.autoGroupColumnDef?.filter === 'agGroupColumnFilter') auto.filter = 'group';
     const selection = this.leaves.findIndex((leaf) => leaf.selectionColumn);
     this.leaves.splice(selection + 1, 0, auto);
   }
@@ -668,6 +669,7 @@ export class GridSession<TData = any> {
     const header = this.options.autoGroupColumnDef?.headerName ?? 'Group';
     const width = this.options.autoGroupColumnDef?.width ?? 220;
     const auto = autoGroupLeaf<TData>(header, width);
+    if (this.options.autoGroupColumnDef?.filter === 'agGroupColumnFilter') auto.filter = 'group';
     const selection = this.leaves.findIndex((leaf) => leaf.selectionColumn);
     this.leaves.splice(selection + 1, 0, auto);
   }
@@ -1061,6 +1063,11 @@ export class GridSession<TData = any> {
   }
 
   private openFilter(leaf: Leaf<TData>, anchor: HTMLElement): void {
+    this.popup.classList.remove('og-group-filter');
+    if (leaf.filter === 'group') {
+      this.openGroupFilter(anchor);
+      return;
+    }
     if (leaf.filter === 'set') {
       this.openSetFilter(leaf, anchor);
       return;
@@ -1069,11 +1076,55 @@ export class GridSession<TData = any> {
       this.openMultiFilter(leaf, anchor);
       return;
     }
+    this.popup.replaceChildren();
+    this.popup.hidden = false;
+    this.mountSimpleFilter(leaf, this.popup);
+    this.placePopup(anchor);
+  }
+
+  private openGroupFilter(anchor: HTMLElement): void {
+    const sources = this.groupLeaves().filter((leaf) => leaf.filter && leaf.filter !== 'group');
+    this.popup.replaceChildren();
+    this.popup.hidden = false;
+    this.popup.classList.add('og-group-filter');
+    const body = el('div', 'og-group-filter-body');
+    let selected = sources[0];
+    if (sources.length > 1) {
+      const label = document.createElement('label');
+      label.textContent = 'Select field:';
+      const field = document.createElement('select');
+      field.className = 'og-group-filter-field';
+      field.setAttribute('aria-label', 'Select field:');
+      for (const source of sources) {
+        const option = document.createElement('option');
+        option.value = source.colId;
+        option.textContent = source.headerName;
+        field.append(option);
+      }
+      field.addEventListener('change', () => {
+        selected = sources.find((item) => item.colId === field.value) ?? selected;
+        if (selected) this.mountSimpleFilter(selected, body);
+      });
+      label.append(field);
+      this.popup.append(label);
+    }
+    this.popup.append(body);
+    if (selected) this.mountSimpleFilter(selected, body);
+    this.placePopup(anchor);
+  }
+
+  private placePopup(anchor: HTMLElement): void {
+    const rect = anchor.getBoundingClientRect();
+    const rootRect = this.root.getBoundingClientRect();
+    this.popup.style.left = `${Math.max(0, rect.left - rootRect.left)}px`;
+    this.popup.style.top = `${rect.bottom - rootRect.top}px`;
+  }
+
+  private mountSimpleFilter(leaf: Leaf<TData>, parent: HTMLElement): void {
     const current = this.filterModel[leaf.colId];
     const simple = current && ('values' in current || 'filterModels' in current) ? undefined : current && 'conditions' in current ? current.conditions[0] : current;
     const kind = leaf.filter === 'number' ? 'number' : leaf.filter === 'date' ? 'date' : 'text';
-    this.popup.replaceChildren();
-    this.popup.hidden = false;
+    parent.replaceChildren();
     const select = document.createElement('select');
     select.ariaLabel = `${leaf.headerName} filter operator`;
     for (const option of operators(kind)) {
@@ -1136,11 +1187,7 @@ export class GridSession<TData = any> {
       this.api.setFilterModel(next);
       this.popup.hidden = true;
     });
-    this.popup.append(select, input, inputTo, clear);
-    const rect = anchor.getBoundingClientRect();
-    const rootRect = this.root.getBoundingClientRect();
-    this.popup.style.left = `${Math.max(0, rect.left - rootRect.left)}px`;
-    this.popup.style.top = `${rect.bottom - rootRect.top}px`;
+    parent.append(select, input, inputTo, clear);
   }
 
   private openSetFilter(leaf: Leaf<TData>, anchor: HTMLElement): void {
