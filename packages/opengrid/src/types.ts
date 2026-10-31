@@ -31,6 +31,7 @@ export interface ColDef<TData = any, TValue = any> {
   allowFormula?: boolean;
   cellRenderer?: CellRenderer<TData> | string;
   cellEditor?: string;
+  cellEditorParams?: { values?: string[] };
   cellDataType?: boolean | string;
   type?: string | string[];
   checkboxSelection?: boolean | ((params: { data: TData | undefined; node: IRowNode<TData> }) => boolean);

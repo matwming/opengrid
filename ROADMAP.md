@@ -69,6 +69,7 @@ Status words mean the following.
 | Formulas | [Formulas](https://www.ag-grid.com/javascript-data-grid/formulas/) | partial. `allowFormula` displays `=[qty]*2` as 8 and `=1+2` as 3, matching `ag-grid-enterprise` 36.2.0. The row data keeps the formula string. Ranges, `SUM`, and a formula data source are not started. |
 | Find | [Find](https://www.ag-grid.com/javascript-data-grid/find/) | partial. `findSearchValue: 'ada'` reports 2 matches, the same count as `ag-grid-enterprise` 36.2.0. `findNext` moves focus from the name cell to the city cell. Match highlighting is not started. |
 | PDF export | [PDF export](https://www.ag-grid.com/javascript-data-grid/pdf-export/) | partial. `getDataAsPdf` returns a file that starts with `%PDF`, the same header as `ag-grid-enterprise` 36.2.0. The page text includes the cell value. Page setup and images are not started. |
+| Rich select | [Rich select](https://www.ag-grid.com/javascript-data-grid/provided-cell-editors/#rich-select-editor) | partial. `agRichSelectCellEditor` opens a list. Enterprise opens `.ag-rich-select`. The list here is Red and Green, and choosing Green writes that value. The enterprise list stayed on Loading in happy-dom, so the painted rows were not compared. |
 | Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | partial. The columns and filters panels ship with the side bar. A custom `toolPanel` component is not started. |
 
 ## Benchmark

@@ -1748,6 +1748,22 @@ export class GridSession<TData = any> {
     this.floatLayer.append(input);
     this.editor = { input, displayRow: display, source, leaf };
     this.positionEditor();
+    if (leaf.def.cellEditor === 'agRichSelectCellEditor') {
+      const list = document.createElement('div');
+      list.className = 'og-rich';
+      for (const value of leaf.def.cellEditorParams?.values ?? []) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = value;
+        button.addEventListener('mousedown', (event) => {
+          event.preventDefault();
+          input.value = value;
+          this.closeEditor(false);
+        });
+        list.append(button);
+      }
+      this.floatLayer.append(list);
+    }
     input.focus();
     if (seed == null) input.select();
     else input.setSelectionRange(input.value.length, input.value.length);
@@ -1782,6 +1798,7 @@ export class GridSession<TData = any> {
     this.closingEditor = true;
     if (!cancel) this.writeEditor(editor);
     editor.input.remove();
+    this.floatLayer.querySelectorAll('.og-rich').forEach((node) => node.remove());
     this.editor = null;
     this.closingEditor = false;
     const node = this.nodeFor(editor.source);
