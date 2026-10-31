@@ -203,6 +203,7 @@ export class GridSession<TData = any> {
     else if (this.options.rowModelType === 'viewport') this.bootViewport();
     else this.loadRows(options.rowData ?? [], true);
     this.renderToolbar();
+    this.renderAdvanced();
     this.emit('gridReady', {});
   }
 
@@ -223,7 +224,6 @@ export class GridSession<TData = any> {
     this.selection = selectionConfig(this.options);
     this.leaves = buildLeaves(this.options, sample);
     if (this.options.rowNumbers) this.leaves.unshift(rowNumberLeaf<TData>());
-    this.layout();
   }
 
   private loadRows(rows: TData[] | null | undefined, initial: boolean): void {
@@ -465,32 +465,13 @@ export class GridSession<TData = any> {
     this.root.dataset.generation = String(generation);
     const sort = this.sortKeys();
     const custom = sort.some((key) => this.leafById(key.colId)?.comparator);
-    const initial = reason === 'initial';
-    const useWorker = Boolean(this.worker) && !custom && this.rows.length > WORKER_ROW_MIN && !initial;
-    if (!useWorker) {
-      const quick = this.quickText();
-      const filtered = applyQuickFilter(this.store, applyFilter(this.store, this.filterModel), quick);
-      const view = custom ? this.comparisonSort(filtered, sort) : queryView(this.store, sort, this.filterModel, quick);
-      this.applyView(view, generation, reason);
-      if (initial && this.worker && (sort.length > 0 || this.hasFilter())) {
-        void this.workerReady.then(() => {
-          if (this.generation === generation) this.refresh('sort');
-        });
-      }
-      return;
-    }
-    this.root.dataset.busy = '1';
-    void this.workerReady.then(() => this.worker?.query(sort, this.filterModel, this.quickText())).then((view) => {
-      if (!view || generation !== this.generation || this.destroyed) return;
-      this.root.dataset.computeMs = String(Math.round(view.computeMs));
-      this.applyView(view, generation, reason);
-    }).catch(() => {
-      if (generation !== this.generation) return;
-      this.worker?.destroy();
-      this.worker = null;
-      this.root.dataset.engine = 'local';
-      this.refresh(reason);
-    });
+    const started = performance.now();
+    const quick = this.quickText();
+    const filtered = applyQuickFilter(this.store, applyFilter(this.store, this.filterModel), quick);
+    const view = custom ? this.comparisonSort(filtered, sort) : queryView(this.store, sort, this.filterModel, quick);
+    this.root.dataset.computeMs = String(Math.round(performance.now() - started));
+    this.root.dataset.busy = '0';
+    this.applyView(view, generation, reason);
   }
 
   private groupLeaves(): Leaf<TData>[] {
@@ -2828,6 +2809,49 @@ export class GridSession<TData = any> {
     this.toolbar?.querySelectorAll<HTMLElement>('.og-pivot-panel').forEach((panel) => this.fillPivotPanel(panel));
   }
 
+  private renderAdvanced(): void {
+    if (!this.options.enableAdvancedFilter) return;
+    const bar = el('div', 'og-advanced');
+    const column = document.createElement('select');
+    column.setAttribute('aria-label', 'Select a column');
+    for (const leaf of this.leaves) {
+      if (leaf.selectionColumn || leaf.colId === ROW_NUMBERS_COL_ID) continue;
+      const option = document.createElement('option');
+      option.value = leaf.colId;
+      option.textContent = leaf.headerName;
+      column.append(option);
+    }
+    const operator = document.createElement('select');
+    operator.setAttribute('aria-label', 'Select an option');
+    for (const name of ['contains', 'equals', 'startsWith', 'greaterThan', 'lessThan']) {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      operator.append(option);
+    }
+    const input = document.createElement('input');
+    input.placeholder = 'Enter a value...';
+    input.setAttribute('aria-label', 'Enter a value...');
+    const apply = document.createElement('button');
+    apply.type = 'button';
+    apply.textContent = 'Apply';
+    apply.addEventListener('click', () => {
+      const leaf = this.leafByKey(column.value);
+      const kind = leaf?.kind === 'number' ? 'number' : 'text';
+      const filter = kind === 'number' ? Number(input.value) : input.value;
+      this.api.setAdvancedFilterModel({ filterType: kind, colId: column.value, type: operator.value, filter });
+    });
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.textContent = 'Clear';
+    clear.addEventListener('click', () => {
+      input.value = '';
+      this.api.setAdvancedFilterModel(null);
+    });
+    bar.append(column, operator, input, apply, clear);
+    this.host.querySelector('.og-shell')?.prepend(bar);
+  }
+
   private renderToolbar(): void {
     const shell = this.host.querySelector('.og-shell');
     const items = this.options.toolbar?.items;
@@ -3207,7 +3231,7 @@ export class GridSession<TData = any> {
       if (!valueLeaf || source < 0) continue;
       const raw = this.readSource(source, valueLeaf);
       const value = typeof raw === 'number' ? raw : Number(raw);
-      points.push({ label: labelLeaf ? this.textFor(source, labelLeaf) : String(row), value: Number.isNaN(value) ? 0 : value });
+      points.push({ label: labelLeaf ? this.textFor(source, labelLeaf) : String(row), value: Number.isNaN(value) ? 0 : value, row });
     }
     const chartType = params.chartType ?? 'column';
     const shape = chartShape(chartType);
@@ -3215,8 +3239,56 @@ export class GridSession<TData = any> {
     panel.className = 'og-chart';
     panel.dataset.chartType = chartType;
     panel.dataset.shape = shape;
+    panel.dataset.linked = 'true';
     panel.dataset.series = points.map((point) => String(point.value)).join(',');
-    panel.append(chartSvg(shape, points));
+    const svg = chartSvg(shape, points);
+    panel.append(svg);
+    const menu = el('div', 'og-chart-menu');
+    const link = document.createElement('button');
+    link.type = 'button';
+    const download = document.createElement('button');
+    download.type = 'button';
+    download.title = 'Download Chart';
+    download.setAttribute('aria-label', 'Download Chart');
+    download.textContent = 'Download Chart';
+    const range = { rowStartIndex: start, rowEndIndex: end, columns: colIds };
+    const paintLink = () => {
+      const linked = panel.dataset.linked === 'true';
+      link.title = linked ? 'Linked to Grid' : 'Unlinked from Grid';
+      link.setAttribute('aria-label', linked ? 'Unlink from Grid' : 'Link to Grid');
+      link.textContent = link.getAttribute('aria-label') ?? '';
+    };
+    paintLink();
+    link.addEventListener('click', () => {
+      const linked = panel.dataset.linked !== 'true';
+      panel.dataset.linked = linked ? 'true' : 'false';
+      this.cellRanges = linked ? [{ ...range, columns: [...range.columns] }] : [];
+      this.placeFillHandle();
+      this.paint();
+      paintLink();
+    });
+    download.addEventListener('click', () => {
+      const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'chart.svg';
+      anchor.click();
+      URL.revokeObjectURL(url);
+    });
+    menu.append(link, download);
+    panel.append(menu);
+    panel.addEventListener('click', (event) => {
+      if (panel.dataset.linked !== 'true') return;
+      const node = event.target instanceof Element ? event.target.closest('[data-row]') : null;
+      if (!node) return;
+      const row = Number(node.getAttribute('data-row'));
+      const leaf = this.leafByKey(valueCol);
+      const col = leaf ? this.visibleLeaves().indexOf(leaf) : 0;
+      this.setFocus(row, Math.max(0, col), true);
+    });
+    this.cellRanges = [{ ...range, columns: [...range.columns] }];
+    this.placeFillHandle();
     this.host.append(panel);
     this.chartPanel = panel;
     const chartId = `chart-${++this.chartSeq}`;
@@ -4104,12 +4176,13 @@ function chartShape(chartType: string): string {
   return CHART_SHAPE[chartType] ?? 'bar';
 }
 
-function chartSvg(shape: string, points: { label: string; value: number }[]): SVGSVGElement {
+function chartSvg(shape: string, points: { label: string; value: number; row: number }[]): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 200 80');
   const max = Math.max(...points.map((point) => point.value), 1);
   const slot = 200 / Math.max(points.length, 1);
-  const mark = (node: SVGElement, point: { label: string; value: number }) => {
+  const mark = (node: SVGElement, point: { label: string; value: number; row: number }) => {
+    node.setAttribute('data-row', String(point.row));
     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
     title.textContent = `${point.label} ${point.value}`;
     node.append(title);
@@ -4121,6 +4194,14 @@ function chartSvg(shape: string, points: { label: string; value: number }[]): SV
     line.setAttribute('points', points.map((point, index) => `${index * slot + slot / 2},${75 - (point.value / max) * 70}`).join(' '));
     if (points[0]) mark(line, points[0]);
     svg.append(line);
+    points.forEach((point, index) => {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', String(index * slot + slot / 2));
+      dot.setAttribute('cy', String(75 - (point.value / max) * 70));
+      dot.setAttribute('r', '5');
+      mark(dot, point);
+      svg.append(dot);
+    });
     return svg;
   }
   if (shape === 'area' || shape === 'radar-area' || shape === 'range-area') {

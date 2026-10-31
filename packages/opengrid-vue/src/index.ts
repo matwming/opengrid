@@ -1,5 +1,5 @@
-import { createGrid, type GridApi, type GridOptions } from 'opengrid';
-import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch, type PropType } from 'vue';
+import { createGrid, type ColDef, type GridApi, type GridOptions } from 'opengrid';
+import { defineComponent, h, onBeforeUnmount, onMounted, ref, render, watch, type Component, type PropType } from 'vue';
 
 const OPTION_KEYS = [
   'columnDefs',
@@ -47,12 +47,31 @@ function eventName(handler: string): string {
   return raw.charAt(0).toLowerCase() + raw.slice(1).replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
+function isVueComponent(value: unknown): value is Component {
+  return Boolean(value) && typeof value === 'object' && ('setup' in value || 'render' in value || 'template' in value);
+}
+
+function vueColumns(defs: GridOptions['columnDefs']): GridOptions['columnDefs'] {
+  return defs?.map((def) => {
+    if ('children' in def) return { ...def, children: vueColumns(def.children) ?? [] };
+    if (!isVueComponent(def.cellRenderer)) return def;
+    const component = def.cellRenderer;
+    const cellRenderer = (params: { value: unknown }) => {
+      const host = document.createElement('div');
+      render(h(component, { params }), host);
+      return host;
+    };
+    return { ...def, cellRenderer } as ColDef;
+  });
+}
+
 function readOptions(props: Record<string, unknown>): GridOptions {
   const options: GridOptions = { ...((props.gridOptions as GridOptions | undefined) ?? {}) };
   for (const key of OPTION_KEYS) {
     if (key.startsWith('on')) continue;
     if (props[key] !== undefined) options[key] = props[key] as never;
   }
+  options.columnDefs = vueColumns(options.columnDefs);
   return options;
 }
 

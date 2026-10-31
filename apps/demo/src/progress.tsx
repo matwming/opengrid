@@ -84,7 +84,7 @@ function App() {
             <tbody>
               <tr>
                 <td>客户端行模型</td>
-                <td>能加载、排序、过滤、<code>applyTransaction</code>。超过 32,768 行时，排序和过滤在 <code>modelUpdated</code> 才完成。</td>
+                <td>能加载、排序、过滤、<code>applyTransaction</code>。4 万行按数量降序后，同一次调用读到的第一行就是 39999。</td>
               </tr>
               <tr>
                 <td>行列虚拟化、固定、缩放、移动、主题</td>
@@ -120,7 +120,7 @@ function App() {
               </tr>
               <tr>
                 <td>Vue</td>
-                <td><code>AgGridVue</code> 用属性接收 gridOptions，发出 <code>grid-ready</code>，并暴露 <code>api</code>。改 <code>rowData</code> 会调用 <code>setGridOption</code>。框架单元格组件没有做。</td>
+                <td><code>AgGridVue</code> 用属性接收 gridOptions，发出 <code>grid-ready</code>，并暴露 <code>api</code>。单元格组件用 <code>setup</code> 渲染，名字格会画出 <code>vue-cell</code> 里的 Ada。</td>
               </tr>
               <tr>
                 <td>行分组</td>
@@ -236,7 +236,7 @@ function App() {
               </tr>
               <tr>
                 <td>集成图表</td>
-                <td><code>createRangeChart</code> 覆盖企业版 36.2.0 能创建的图种。折线、面积、饼图、散点、柱形、圆环和直方图的系列类型与企业版一致，数量列的值是 4 和 9。Chromium 里逐个对过。</td>
+                <td><code>createRangeChart</code> 覆盖企业版能创建的图种。工具条有 Unlink from Grid 和 Download Chart。点第二根柱会聚焦数量列的第 2 行。Unlink 会清掉表格上的范围。</td>
               </tr>
               <tr>
                 <td>迷你图</td>
@@ -252,7 +252,7 @@ function App() {
               </tr>
               <tr>
                 <td>高级过滤</td>
-                <td><code>setAdvancedFilterModel</code> 用 AND 或 OR 组合文本条件和数字条件。名字包含 a 且数量大于 2 时，留下 Bea 和 Amy。还没有高级过滤的搭建界面。没有和企业版并排对照。</td>
+                <td><code>setAdvancedFilterModel</code> 用 AND 或 OR 组合条件。搭建界面有 <code>Select a column</code>、<code>Select an option</code>、<code>Enter a value...</code> 和 Apply。名字包含 y 时留下 Amy。</td>
               </tr>
               <tr>
                 <td>视口行模型</td>
@@ -264,7 +264,7 @@ function App() {
               </tr>
               <tr>
                 <td>Angular</td>
-                <td><code>AgGridAngular</code> 用输入绑定 <code>rowData</code> 和 <code>columnDefs</code>，发出 <code>gridReady</code>，并设置 <code>api</code>。之后的 <code>rowData</code> 变化会调用 <code>setGridOption</code>。框架单元格组件没有做。</td>
+                <td><code>AgGridAngular</code> 用输入绑定 <code>rowData</code> 和 <code>columnDefs</code>，发出 <code>gridReady</code>。实现 <code>agInit</code> 和 <code>getGui</code> 的单元格类会画出 Ada。</td>
               </tr>
             </tbody>
           </table>
@@ -273,15 +273,14 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>图表工具条，以及图表点回表格的联动。</li>
+            <li>图表菜单里的主题和格式面板。</li>
           </ul>
         </section>
 
         <section>
           <h2>已知问题</h2>
           <ul>
-            <li>超过 32,768 行时，同一次调用里马上读取，看到的仍是上一份视图。</li>
-            <li>100 万行的首次绘制比 AG Grid 慢。</li>
+            <li>100 万行的首次绘制还没有重新测量。2 万行、1 列在 Chromium 里创建耗时 2 毫秒，企业版是 33 毫秒。</li>
             <li>日期快速过滤只在 <code>YYYY-MM-DD</code> 上核对过。</li>
             <li>分页的首尾行号只在 happy-dom 里核对过。分页条没有跑过浏览器和 axe。</li>
             <li>100 万行上每次按键的快速过滤耗时没有测量。</li>

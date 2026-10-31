@@ -14,6 +14,8 @@ test('fill, row drag, chart, and sparkline match enterprise in Chromium', async 
     <div id="ag-chart" class="ag-theme-quartz" style="width:480px;height:220px"></div>
     <div id="ag-types" class="ag-theme-quartz" style="width:480px;height:180px"></div>
     <div id="og-types" style="width:480px;height:180px"></div>
+    <div id="ag-surface" class="ag-theme-quartz" style="width:520px;height:240px"></div>
+    <div id="og-surface" style="width:520px;height:240px"></div>
     <div id="og-chart" style="width:480px;height:220px"></div>
   </body></html>`);
   await page.addStyleTag({ path: 'node_modules/ag-grid-community/styles/ag-grid.css' });
@@ -78,4 +80,21 @@ test('chart types and area sparklines match enterprise', async ({ page }) => {
   expect(result.charts.filter((item) => item.series).every((item) => item.shape === item.series)).toBe(true);
   expect(result.agArea).toBe(true);
   expect(result.ogArea).toBe('area');
+});
+
+test('chart toolbar, grid link, and advanced filter builder', async ({ page }) => {
+  await page.setContent(`<div id="ag-surface" class="ag-theme-quartz" style="width:520px;height:240px"></div><div id="og-surface" style="width:520px;height:240px"></div>`);
+  await page.addStyleTag({ path: 'node_modules/ag-grid-community/styles/ag-grid.css' });
+  await page.addStyleTag({ path: 'node_modules/ag-grid-community/styles/ag-theme-quartz.css' });
+  await page.addStyleTag({ path: 'packages/opengrid/src/theme.css' });
+  await page.addScriptTag({ path: 'e2e/pointer-harness.js' });
+  const surface = await page.evaluate(() => (window as unknown as { probeSurface: () => { agTitles: string[]; ogTitles: string[]; agRange: number; ogRange: number; agFilter: boolean; ogFilter: boolean; agMs: number; ogMs: number } }).probeSurface());
+  console.log(JSON.stringify(surface));
+  expect(surface.ogTitles).toEqual(expect.arrayContaining(['Linked to Grid', 'Download Chart']));
+  expect(surface.ogRange).toBeGreaterThan(0);
+  expect(surface.agRange).toBeGreaterThan(0);
+  expect(surface.ogFilter).toBe(true);
+  await page.locator('#og-surface .og-chart rect').nth(1).click();
+  const focused = await page.evaluate(() => (document.querySelector('#og-surface .og-root') as HTMLElement | null)?.getAttribute('aria-activedescendant') ?? '');
+  expect(focused).toContain('-r1-');
 });

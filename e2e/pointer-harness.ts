@@ -158,6 +158,46 @@ window.probeChart = () => {
 
 const chartTypes = ['column', 'groupedColumn', 'stackedColumn', 'normalizedColumn', 'bar', 'groupedBar', 'stackedBar', 'normalizedBar', 'line', 'stackedLine', 'normalizedLine', 'scatter', 'bubble', 'pie', 'donut', 'doughnut', 'area', 'stackedArea', 'normalizedArea', 'histogram', 'radarLine', 'radarArea', 'nightingale', 'radialColumn', 'radialBar', 'sunburst', 'rangeBar', 'rangeArea', 'boxPlot', 'treemap', 'heatmap', 'waterfall', 'columnLineCombo', 'areaColumnCombo', 'funnel', 'coneFunnel', 'pyramid'] as const;
 
+window.probeSurface = () => {
+  const agHost = document.querySelector('#ag-surface') as HTMLElement;
+  const ogHost = document.querySelector('#og-surface') as HTMLElement;
+  const options = {
+    columnDefs: [{ field: 'name' }, { field: 'qty' }],
+    rowData: [{ name: 'Ada', qty: 4 }, { name: 'Bea', qty: 9 }, { name: 'Amy', qty: 3 }],
+    enableAdvancedFilter: true,
+    cellSelection: true,
+    animateRows: false,
+  };
+  const ag = mount(createAgGrid, agHost, options);
+  const og = mount(createOpenGrid, ogHost, options);
+  const agChart = ag.createRangeChart({ chartType: 'column', cellRange: { rowStartIndex: 0, rowEndIndex: 1, columns: ['name', 'qty'] } });
+  if (agChart.chartElement) agHost.append(agChart.chartElement);
+  og.createRangeChart({ chartType: 'column', cellRange: { rowStartIndex: 0, rowEndIndex: 1, columns: ['name', 'qty'] } });
+  const rows = Array.from({ length: 20_000 }, (_, index) => ({ qty: index }));
+  const time = (create: typeof createAgGrid) => {
+    const host = document.createElement('div');
+    host.style.width = '400px';
+    host.style.height = '200px';
+    document.body.appendChild(host);
+    const started = performance.now();
+    const api = create(host, { columnDefs: [{ field: 'qty' }], rowData: rows, animateRows: false });
+    const ms = Math.round(performance.now() - started);
+    api.destroy();
+    host.remove();
+    return ms;
+  };
+  return {
+    agTitles: [...agHost.querySelectorAll('[title]')].map((node) => node.getAttribute('title')).filter(Boolean),
+    ogTitles: [...ogHost.querySelectorAll('.og-chart-menu button')].map((button) => button.title),
+    agRange: ag.getCellRanges?.()?.length ?? 0,
+    ogRange: og.getCellRanges?.()?.length ?? 0,
+    agFilter: agHost.textContent?.includes('Enter a value') || agHost.textContent?.includes('Advanced Filter'),
+    ogFilter: ogHost.querySelector('[aria-label="Enter a value..."]') instanceof HTMLInputElement,
+    agMs: time(createAgGrid),
+    ogMs: time(createOpenGrid),
+  };
+};
+
 window.probeChartTypes = async () => {
   const host = document.querySelector('#ag-types') as HTMLElement;
   const ours = document.querySelector('#og-types') as HTMLElement;

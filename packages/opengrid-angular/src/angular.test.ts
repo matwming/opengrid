@@ -29,5 +29,28 @@ describe('AgGridAngular', () => {
     expect(grid.api?.getDisplayedRowCount()).toBe(1);
     expect(grid.api?.getDisplayedRowAtIndex(0)?.data).toMatchObject({ id: 'c' });
     grid.ngOnDestroy();
+
+    class NameCell {
+      private el = document.createElement('span');
+      agInit(params: { value?: unknown }): void {
+        this.el.className = 'ng-cell';
+        this.el.textContent = String(params.value ?? '');
+      }
+      getGui(): HTMLElement {
+        return this.el;
+      }
+    }
+    const cellHost = document.createElement('div');
+    cellHost.style.width = '400px';
+    cellHost.style.height = '200px';
+    document.body.appendChild(cellHost);
+    const cells = new AgGridAngular<{ name: string }>();
+    cells.hostElement = cellHost;
+    cells.columnDefs = [{ field: 'name', cellRenderer: NameCell }];
+    cells.rowData = [{ name: 'Ada' }];
+    cells.ngAfterViewInit();
+    expect(cellHost.querySelector('.ng-cell')?.textContent).toBe('Ada');
+    cells.ngOnDestroy();
+    grid.ngOnDestroy();
   });
 });

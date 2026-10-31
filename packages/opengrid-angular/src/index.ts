@@ -70,5 +70,24 @@ export class AgGridAngular<TData = any> implements OnChanges, OnDestroy {
     for (const key of fields) {
       if (this[key] !== undefined) options[key] = this[key] as never;
     }
+    options.columnDefs = angularColumns(options.columnDefs);
   }
+}
+
+function angularColumns<TData>(defs: GridOptions<TData>['columnDefs']): GridOptions<TData>['columnDefs'] {
+  return defs?.map((def) => {
+    if ('children' in def) return { ...def, children: angularColumns(def.children) ?? [] };
+    const renderer = def.cellRenderer;
+    if (typeof renderer !== 'function' || !renderer.prototype) return def;
+    const proto = renderer.prototype as { agInit?: (params: unknown) => void; getGui?: () => HTMLElement };
+    if (typeof proto.agInit !== 'function' && typeof proto.getGui !== 'function') return def;
+    return {
+      ...def,
+      cellRenderer: (params: { value: unknown }) => {
+        const instance = new (renderer as new () => { agInit?: (params: unknown) => void; getGui?: () => HTMLElement })();
+        instance.agInit?.(params);
+        return instance.getGui?.() ?? document.createElement('span');
+      },
+    };
+  });
 }
