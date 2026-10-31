@@ -35,9 +35,13 @@ describe('toolbar menu and pivot', () => {
     (host.querySelector('.og-toolbar-button') as HTMLButtonElement).click();
     await new Promise((resolve) => setTimeout(resolve, 30));
     const enterpriseItems = [...document.body.querySelectorAll('.ag-menu-option-text')].map((node) => node.textContent?.trim());
-    const ourItems = [...host.querySelectorAll('.og-menu-option')].map((node) => node.textContent);
+    const ourItems = [...host.querySelectorAll('.og-menu-option-text')].map((node) => node.textContent);
     expect(ourItems).toEqual(enterpriseItems);
     expect(ourItems).toEqual(['Copy', 'Export']);
+    const enterpriseKeys = [...document.body.querySelectorAll('.ag-menu-option-shortcut')].map((node) => node.textContent?.trim()).filter(Boolean);
+    const ourKeys = [...host.querySelectorAll('.og-menu-shortcut')].map((node) => node.textContent);
+    expect(ourKeys).toEqual(enterpriseKeys);
+    expect(ourKeys).toEqual(['Ctrl+C']);
     enterprise.destroy();
     api.destroy();
   });

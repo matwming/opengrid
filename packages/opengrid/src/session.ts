@@ -1314,7 +1314,18 @@ export class GridSession<TData = any> {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'og-menu-option';
-      button.textContent = label;
+      const name = document.createElement('span');
+      name.className = 'og-menu-option-text';
+      name.textContent = label;
+      button.append(name);
+      const token = items[index];
+      const shortcut = this.menuShortcut(typeof token === 'string' ? token : label);
+      if (shortcut) {
+        const keys = document.createElement('span');
+        keys.className = 'og-menu-shortcut';
+        keys.textContent = shortcut;
+        button.append(keys);
+      }
       button.addEventListener('click', () => {
         this.popup.hidden = true;
         const token = items[index];
@@ -1324,6 +1335,13 @@ export class GridSession<TData = any> {
       });
       this.popup.append(button);
     });
+  }
+
+  private menuShortcut(token: string): string {
+    if (token === 'copy' || token === 'Copy') return 'Ctrl+C';
+    if (token === 'cut' || token === 'Cut') return 'Ctrl+X';
+    if (token === 'paste' || token === 'Paste') return 'Ctrl+V';
+    return '';
   }
 
   private runContextItem(token: string, display: number, leaf: Leaf<TData>): void {

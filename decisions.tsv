@@ -71,3 +71,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T02:03:20Z	find-mark-text	Wrap the matched letters the way enterprise does	Both grids mark Ada twice	packages/opengrid/src/find.test.ts	tests green
 2026-10-31T02:08:08Z	find-active	Mark the current find match like enterprise	After two findNext calls the active mark is the city cell on both grids	packages/opengrid/src/find.test.ts	tests green
 2026-10-31T02:10:06Z	note-edit	Write an edited note back when the pointer leaves	Both grids store there and keep the author Ada	packages/opengrid/src/note-edit.test.ts	tests green
+2026-10-31T02:10:25Z	toolbar-shortcut	Show Ctrl+C beside Copy in the toolbar menu	The shortcut text matches enterprise	packages/opengrid/src/toolbar-menu.test.ts	tests green

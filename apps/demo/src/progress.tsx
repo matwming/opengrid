@@ -188,7 +188,7 @@ function App() {
               </tr>
               <tr>
                 <td>工具条</td>
-                <td>按钮 <code>Export</code> 会执行 <code>action</code>。快速过滤占位是 <code>Filter...</code>，查找占位是 <code>Find...</code>，输入停 300 毫秒后生效。查找次数和下一次匹配的显示，以及分组占位 <code>Drag here to set row groups</code>，都和 <code>ag-grid-enterprise</code> 36.2.0 一样。菜单项列出 Copy 和 Export。透视模式下列出 Year，空的时候是 <code>Drag here to set column labels</code>。</td>
+                <td>按钮 <code>Export</code> 会执行 <code>action</code>。快速过滤占位是 <code>Filter...</code>，查找占位是 <code>Find...</code>，输入停 300 毫秒后生效。查找次数和下一次匹配的显示，以及分组占位 <code>Drag here to set row groups</code>，都和 <code>ag-grid-enterprise</code> 36.2.0 一样。菜单项列出 Copy 和 Export。透视模式下列出 Year。Copy 旁边的快捷键是 <code>Ctrl+C</code>，和 <code>ag-grid-enterprise</code> 36.2.0 一样。</td>
               </tr>
               <tr>
                 <td>对齐网格</td>
@@ -273,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>备注弹层改完写回、工具条菜单快捷键。</li>
+            <li>工具条菜单快捷键。</li>
           </ul>
         </section>
 
