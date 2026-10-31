@@ -49,3 +49,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:13:12Z	undo	Undo and redo a setDataValue edit like enterprise 36.2.0	Both grids return to Ada after undo and to Zoe after redo	packages/opengrid/src/undo.test.ts	tests green
 2026-10-31T01:16:59Z	context	Show the enterprise context menu labels and copy the cell	The context test lists Cut through Export on both grids, and Copy sends Ada	packages/opengrid/src/context.test.ts	tests green
 2026-10-31T01:17:58Z	column-menu	List the enterprise column menu and sort ascending from it	The menu test matches seven labels, and Sort Ascending puts Ada before Bea	packages/opengrid/src/column-menu.test.ts	tests green
+2026-10-31T01:19:45Z	span	Widen a cell across the next column like enterprise	The span test sees one name cell at 400px on both grids	packages/opengrid/src/span.test.ts	tests green

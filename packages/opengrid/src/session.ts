@@ -2094,11 +2094,20 @@ export class GridSession<TData = any> {
       row.setAttribute('role', 'row');
       row.setAttribute('aria-rowindex', String(headerRows + display + 1));
       if (source >= 0 && this.selected[source] === 1) row.setAttribute('aria-selected', 'true');
+      let coveredUntil = 0;
       leaves.forEach((leaf, index) => {
+        if (index < coveredUntil) return;
+        const span = source >= 0 && typeof leaf.def.colSpan === 'function' ? Math.max(1, Math.floor(leaf.def.colSpan({ data: this.rows[source] }))) : 1;
+        coveredUntil = index + span;
         const cell = el('div', 'og-acell');
         cell.id = this.cellDomId(display, index);
         cell.setAttribute('role', 'gridcell');
         cell.setAttribute('aria-colindex', String(index + 1));
+        if (span > 1) {
+          cell.setAttribute('aria-colspan', String(span));
+          const width = leaves.slice(index, index + span).reduce((sum, item) => sum + item.width, 0);
+          cell.style.width = `${width}px`;
+        }
         cell.textContent = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : source < 0 ? this.groupLabel(display, leaf.colId) : this.textFor(source, leaf);
         const paint = this.paintStyle(source, leaf);
         if (paint.className) cell.classList.add(...paint.className.split(/\s+/).filter(Boolean));

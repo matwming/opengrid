@@ -65,6 +65,7 @@ Status words mean the following.
 | Undo and redo | [Undo redo edits](https://www.ag-grid.com/javascript-data-grid/undo-redo-edits/) | partial. With `undoRedoCellEditing`, `undoCellEditing` and `redoCellEditing` restore a `setDataValue` edit the same way as `ag-grid-enterprise` 36.2.0. The default stack limit is 10. |
 | Context menu | [Context menu](https://www.ag-grid.com/javascript-data-grid/context-menu/) | partial. A right click lists Cut, Copy, Copy with Headers, Copy with Group Headers, Paste, and Export, the same labels as `ag-grid-enterprise` 36.2.0. Copy sends the cell text through `sendToClipboard`. Submenus and keyboard shortcuts are not started. |
 | Column menu | [Column menu](https://www.ag-grid.com/javascript-data-grid/column-menu/) | partial. The header menu lists Sort Ascending, Sort Descending, Pin Column, Autosize This Column, Autosize All Columns, Choose Columns, and Reset Columns, the same labels as `ag-grid-enterprise` 36.2.0. Sort Ascending orders the rows. Pin and filter submenus are not started. |
+| Cell spanning | [Cell spanning](https://www.ag-grid.com/javascript-data-grid/cell-spanning/) | partial. `colSpan` widens the accessibility cell and drops the covered column. A span of 2 on a 200px column is 400px, matching `ag-grid-enterprise` 36.2.0. `spanRows` is not started. |
 | Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | partial. The columns and filters panels ship with the side bar. A custom `toolPanel` component is not started. |
 
 ## Benchmark
