@@ -96,6 +96,8 @@ export class GridSession<TData = any> {
   private groupPanel!: HTMLElement;
   private undoStack: { source: number; colId: string; value: unknown }[] = [];
   private redoStack: { source: number; colId: string; value: unknown }[] = [];
+  private batchActive = false;
+  private batchPending = new Map<string, unknown>();
   private lastClipboard = '';
   private pageIndex = 0;
   private infiniteKnown = false;
@@ -1838,6 +1840,12 @@ export class GridSession<TData = any> {
 
   private writeSource(source: number, leaf: Leaf<TData>, next: unknown, eventSource: string): boolean {
     if (leaf.selectionColumn) return false;
+    if (this.batchActive && eventSource !== 'batch-commit') {
+      this.batchPending.set(this.batchKey(source, leaf.colId), next);
+      this.paint();
+      this.syncA11y();
+      return true;
+    }
     const oldValue = this.readSource(source, leaf);
     if (this.options.undoRedoCellEditing && eventSource !== 'undo' && eventSource !== 'redo') {
       this.undoStack.push({ source, colId: leaf.colId, value: oldValue });
@@ -1902,7 +1910,33 @@ export class GridSession<TData = any> {
     return undefined;
   }
 
+  private commitBatch(): void {
+    if (!this.batchActive) return;
+    const pending = [...this.batchPending.entries()];
+    this.batchActive = false;
+    this.batchPending.clear();
+    for (const [key, value] of pending) {
+      const split = key.indexOf('\0');
+      const source = Number(key.slice(0, split));
+      const leaf = this.leafByKey(key.slice(split + 1));
+      if (leaf) this.writeSource(source, leaf, value, 'batch-commit');
+    }
+  }
+
+  private cancelBatch(): void {
+    if (!this.batchActive) return;
+    this.batchActive = false;
+    this.batchPending.clear();
+    this.paint();
+    this.syncA11y();
+  }
+
+  private batchKey(source: number, colId: string): string {
+    return `${source}\0${colId}`;
+  }
+
   private readSource(source: number, leaf: Leaf<TData>): unknown {
+    if (this.batchActive && this.batchPending.has(this.batchKey(source, leaf.colId))) return this.batchPending.get(this.batchKey(source, leaf.colId));
     if (leaf.selectionColumn) return this.selected[source] === 1;
     const row = this.rows[source];
     if (leaf.valueGetter) return this.readRow(leaf, row);
@@ -3056,6 +3090,12 @@ export class GridSession<TData = any> {
       },
       undoCellEditing: () => session.undoCellEditing(),
       redoCellEditing: () => session.redoCellEditing(),
+      startBatchEdit: () => {
+        session.batchActive = true;
+      },
+      commitBatchEdit: () => session.commitBatch(),
+      cancelBatchEdit: () => session.cancelBatch(),
+      isBatchEditing: () => session.batchActive,
       isAnyFilterPresent: () => session.hasFilter(),
       isColumnFilterPresent: () => session.columnFilterPresent(),
       onFilterChanged: () => session.refresh('filter'),

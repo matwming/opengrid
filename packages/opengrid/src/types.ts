@@ -591,6 +591,10 @@ export interface GridApi<TData = any> {
   getAdvancedFilterModel(): AdvancedFilterModel | null;
   undoCellEditing(): void;
   redoCellEditing(): void;
+  startBatchEdit(): void;
+  commitBatchEdit(): void;
+  cancelBatchEdit(): void;
+  isBatchEditing(): boolean;
   isAnyFilterPresent(): boolean;
   isColumnFilterPresent(): boolean;
   onFilterChanged(): void;

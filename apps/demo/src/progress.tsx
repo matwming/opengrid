@@ -175,6 +175,10 @@ function App() {
                 <td><code>agRichSelectCellEditor</code> 打开选项列表。企业版会打开 <code>.ag-rich-select</code>。这边列出 Red 和 Green，选 Green 会写入。happy-dom 里企业版列表停在 Loading，所以没有对上画出来的行。</td>
               </tr>
               <tr>
+                <td>批量编辑</td>
+                <td><code>startBatchEdit</code> 期间行数据仍是 Ada，<code>isBatchEditing</code> 为 true。<code>cancelBatchEdit</code> 仍是 Ada。<code>commitBatchEdit</code> 写成 Zoe。和 <code>ag-grid-enterprise</code> 36.2.0 一样。</td>
+              </tr>
+              <tr>
                 <td>树</td>
                 <td><code>treeData</code> 和 <code>getDataPath</code> 按路径嵌套。CEO 下面有 Sales 和 Support，收起 Sales 后 EU 不再显示。没有和企业版并排对照。</td>
               </tr>
@@ -249,7 +253,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>分组过滤、备注、批量编辑、对齐网格、工具条、分组面板拖拽、公式范围和 SUM、查找高亮。</li>
+            <li>分组过滤、备注、对齐网格、工具条、分组面板拖拽、公式范围和 SUM、查找高亮。</li>
           </ul>
         </section>
 
