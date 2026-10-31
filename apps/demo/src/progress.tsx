@@ -236,11 +236,11 @@ function App() {
               </tr>
               <tr>
                 <td>集成图表</td>
-                <td><code>createRangeChart</code> 用数量列画出两根柱，数值是 4 和 9。装上 <code>ag-charts-enterprise</code> 14.2.0 之后，企业版图的 <code>yKey</code> 是 <code>qty</code>。其他图种还没有。</td>
+                <td><code>createRangeChart</code> 覆盖企业版 36.2.0 能创建的图种。折线、面积、饼图、散点、柱形、圆环和直方图的系列类型与企业版一致，数量列的值是 4 和 9。Chromium 里逐个对过。</td>
               </tr>
               <tr>
                 <td>迷你图</td>
-                <td><code>cellRenderer: 'agSparklineCellRenderer'</code> 默认画折线。<code>[1, 3, 2]</code> 是一条三个点的线。企业版同一个格子会画出 <code>ag-sparkline-wrapper</code>。指定 <code>sparklineOptions.type: 'bar'</code> 才画柱。</td>
+                <td><code>cellRenderer: 'agSparklineCellRenderer'</code> 默认画折线。<code>sparklineOptions.type: 'area'</code> 画面积，<code>'bar'</code> 画柱。<code>[1, 3, 2]</code> 的面积图在 Chromium 里和企业版一样出现 <code>ag-sparkline-wrapper</code>。</td>
               </tr>
               <tr>
                 <td>侧边栏</td>
@@ -273,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>柱形以外的图种，以及迷你图的面积图。</li>
+            <li>图表工具条，以及图表点回表格的联动。</li>
           </ul>
         </section>
 

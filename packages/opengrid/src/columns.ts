@@ -281,7 +281,7 @@ function valueSample<TData>(def: ColDef<TData>, field: string | undefined, row: 
 
 function sparklineRenderer<TData>(renderer: ColDef<TData>['cellRenderer'], sparklineType?: string): Leaf<TData>['cellRenderer'] {
   if (renderer === 'agSparklineCellRenderer') {
-    const type = sparklineType === 'bar' ? 'bar' : 'line';
+    const type = sparklineType === 'bar' ? 'bar' : sparklineType === 'area' ? 'area' : 'line';
     return (params) => {
       const numbers = Array.isArray(params.value) ? params.value.filter((item): item is number => typeof item === 'number') : [];
       const wrap = document.createElement('div');
@@ -291,6 +291,11 @@ function sparklineRenderer<TData>(renderer: ColDef<TData>['cellRenderer'], spark
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('viewBox', '0 0 60 20');
       const max = Math.max(...numbers, 1);
+      const sparkPoints = numbers.map((value, index) => {
+        const x = numbers.length === 1 ? 30 : (index / (numbers.length - 1)) * 60;
+        const y = 18 - (value / max) * 16;
+        return `${x},${y}`;
+      }).join(' ');
       if (type === 'bar') {
         numbers.forEach((value, index) => {
           const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -302,6 +307,11 @@ function sparklineRenderer<TData>(renderer: ColDef<TData>['cellRenderer'], spark
           bar.setAttribute('height', String(height));
           svg.append(bar);
         });
+      } else if (type === 'area' && numbers.length > 0) {
+        const area = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        area.setAttribute('fill', '#1f4b99');
+        area.setAttribute('points', `0,20 ${sparkPoints} 60,20`);
+        svg.append(area);
       } else if (numbers.length > 0) {
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
         line.setAttribute('fill', 'none');

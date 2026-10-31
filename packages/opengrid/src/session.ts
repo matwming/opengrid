@@ -3209,27 +3209,14 @@ export class GridSession<TData = any> {
       const value = typeof raw === 'number' ? raw : Number(raw);
       points.push({ label: labelLeaf ? this.textFor(source, labelLeaf) : String(row), value: Number.isNaN(value) ? 0 : value });
     }
+    const chartType = params.chartType ?? 'column';
+    const shape = chartShape(chartType);
     const panel = document.createElement('div');
     panel.className = 'og-chart';
-    panel.dataset.chartType = params.chartType ?? 'column';
+    panel.dataset.chartType = chartType;
+    panel.dataset.shape = shape;
     panel.dataset.series = points.map((point) => String(point.value)).join(',');
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 200 80');
-    const max = Math.max(...points.map((point) => point.value), 1);
-    points.forEach((point, index) => {
-      const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      const slot = 200 / Math.max(points.length, 1);
-      const height = (point.value / max) * 70;
-      bar.setAttribute('x', String(index * slot + 4));
-      bar.setAttribute('y', String(75 - height));
-      bar.setAttribute('width', String(Math.max(1, slot - 8)));
-      bar.setAttribute('height', String(height));
-      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-      title.textContent = `${point.label} ${point.value}`;
-      bar.append(title);
-      svg.append(bar);
-    });
-    panel.append(svg);
+    panel.append(chartSvg(shape, points));
     this.host.append(panel);
     this.chartPanel = panel;
     const chartId = `chart-${++this.chartSeq}`;
@@ -4096,6 +4083,97 @@ function compareCells<TData>(left: unknown, right: unknown, leaf: Leaf<TData>, n
   if (a < b) return -1;
   if (a > b) return 1;
   return 0;
+}
+
+const CHART_SHAPE: Record<string, string> = {
+  column: 'bar', groupedColumn: 'bar', stackedColumn: 'bar', normalizedColumn: 'bar',
+  bar: 'bar', groupedBar: 'bar', stackedBar: 'bar', normalizedBar: 'bar',
+  line: 'line', stackedLine: 'line', normalizedLine: 'line',
+  scatter: 'scatter', bubble: 'bubble',
+  pie: 'pie', donut: 'donut', doughnut: 'donut',
+  area: 'area', stackedArea: 'area', normalizedArea: 'area',
+  histogram: 'histogram', radarLine: 'radar-line', radarArea: 'radar-area',
+  nightingale: 'nightingale', radialColumn: 'radial-column', radialBar: 'radial-bar',
+  sunburst: 'sunburst', rangeBar: 'range-bar', rangeArea: 'range-area', boxPlot: 'box-plot',
+  treemap: 'treemap', heatmap: 'heatmap', waterfall: 'waterfall',
+  columnLineCombo: 'bar', areaColumnCombo: 'area',
+  funnel: 'funnel', coneFunnel: 'cone-funnel', pyramid: 'pyramid',
+};
+
+function chartShape(chartType: string): string {
+  return CHART_SHAPE[chartType] ?? 'bar';
+}
+
+function chartSvg(shape: string, points: { label: string; value: number }[]): SVGSVGElement {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 200 80');
+  const max = Math.max(...points.map((point) => point.value), 1);
+  const slot = 200 / Math.max(points.length, 1);
+  const mark = (node: SVGElement, point: { label: string; value: number }) => {
+    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+    title.textContent = `${point.label} ${point.value}`;
+    node.append(title);
+  };
+  if (shape === 'line' || shape === 'radar-line') {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', '#1f4b99');
+    line.setAttribute('points', points.map((point, index) => `${index * slot + slot / 2},${75 - (point.value / max) * 70}`).join(' '));
+    if (points[0]) mark(line, points[0]);
+    svg.append(line);
+    return svg;
+  }
+  if (shape === 'area' || shape === 'radar-area' || shape === 'range-area') {
+    const area = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    const coords = points.map((point, index) => `${index * slot + slot / 2},${75 - (point.value / max) * 70}`);
+    area.setAttribute('points', `0,75 ${coords.join(' ')} 200,75`);
+    area.setAttribute('fill', '#1f4b99');
+    if (points[0]) mark(area, points[0]);
+    svg.append(area);
+    return svg;
+  }
+  if (shape === 'scatter' || shape === 'bubble') {
+    points.forEach((point, index) => {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', String(index * slot + slot / 2));
+      dot.setAttribute('cy', String(75 - (point.value / max) * 70));
+      dot.setAttribute('r', shape === 'bubble' ? String(4 + point.value / max * 8) : '4');
+      mark(dot, point);
+      svg.append(dot);
+    });
+    return svg;
+  }
+  if (shape === 'pie' || shape === 'donut' || shape === 'nightingale') {
+    const total = points.reduce((sum, point) => sum + Math.max(point.value, 0), 0) || 1;
+    let angle = -Math.PI / 2;
+    points.forEach((point) => {
+      const sweep = (Math.max(point.value, 0) / total) * Math.PI * 2;
+      const wedge = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const r = shape === 'nightingale' ? 20 + (point.value / max) * 18 : 36;
+      const x1 = 100 + Math.cos(angle) * r;
+      const y1 = 40 + Math.sin(angle) * r;
+      const x2 = 100 + Math.cos(angle + sweep) * r;
+      const y2 = 40 + Math.sin(angle + sweep) * r;
+      const large = sweep > Math.PI ? 1 : 0;
+      const inner = shape === 'donut' ? `L ${100 + Math.cos(angle + sweep) * 18} ${40 + Math.sin(angle + sweep) * 18} A 18 18 0 ${large} 0 ${100 + Math.cos(angle) * 18} ${40 + Math.sin(angle) * 18}` : 'L 100 40';
+      wedge.setAttribute('d', `M 100 40 L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} ${inner} Z`);
+      mark(wedge, point);
+      svg.append(wedge);
+      angle += sweep;
+    });
+    return svg;
+  }
+  points.forEach((point, index) => {
+    const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    const height = (point.value / max) * 70;
+    bar.setAttribute('x', String(index * slot + 4));
+    bar.setAttribute('y', String(75 - height));
+    bar.setAttribute('width', String(Math.max(1, slot - 8)));
+    bar.setAttribute('height', String(height));
+    mark(bar, point);
+    svg.append(bar);
+  });
+  return svg;
 }
 
 function modelActive(model: ProvidedFilterModel): boolean {

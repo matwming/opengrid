@@ -156,6 +156,47 @@ window.probeChart = () => {
   return true;
 };
 
+const chartTypes = ['column', 'groupedColumn', 'stackedColumn', 'normalizedColumn', 'bar', 'groupedBar', 'stackedBar', 'normalizedBar', 'line', 'stackedLine', 'normalizedLine', 'scatter', 'bubble', 'pie', 'donut', 'doughnut', 'area', 'stackedArea', 'normalizedArea', 'histogram', 'radarLine', 'radarArea', 'nightingale', 'radialColumn', 'radialBar', 'sunburst', 'rangeBar', 'rangeArea', 'boxPlot', 'treemap', 'heatmap', 'waterfall', 'columnLineCombo', 'areaColumnCombo', 'funnel', 'coneFunnel', 'pyramid'] as const;
+
+window.probeChartTypes = async () => {
+  const host = document.querySelector('#ag-types') as HTMLElement;
+  const ours = document.querySelector('#og-types') as HTMLElement;
+  const options = {
+    columnDefs: [
+      { field: 'name', width: 80 },
+      { field: 'qty', width: 80 },
+      { field: 'bonus', width: 80 },
+      { field: 'size', width: 80 },
+      { field: 'trend', width: 80, cellRenderer: 'agSparklineCellRenderer', sparklineOptions: { type: 'area' } },
+    ],
+    rowData: [{ name: 'Ada', qty: 4, bonus: 1, size: 3, trend: [1, 3, 2] }, { name: 'Bea', qty: 9, bonus: 2, size: 5, trend: [4, 1] }],
+    animateRows: false,
+  };
+  const api = mount(createAgGrid, host, options);
+  const og = mount(createOpenGrid, ours, options);
+  const charts: { chartType: string; series?: string; shape?: string | null; values?: string | null; error?: string }[] = [];
+  for (const chartType of chartTypes) {
+    try {
+      const chart = api.createRangeChart({ chartType, cellRange: { rowStartIndex: 0, rowEndIndex: 1, columns: ['name', 'qty', 'bonus', 'size'] } });
+      const series = (chart.chart?.getOptions?.() as { series?: { type?: string }[] } | undefined)?.series?.[0]?.type;
+      chart.destroyChart();
+      const drawn = og.createRangeChart({ chartType, cellRange: { rowStartIndex: 0, rowEndIndex: 1, columns: ['name', 'qty', 'bonus', 'size'] } });
+      const panel = ours.querySelector('.og-chart');
+      charts.push({ chartType, series, shape: panel?.getAttribute('data-shape'), values: panel?.getAttribute('data-series') });
+      drawn.destroyChart();
+    } catch (error) {
+      charts.push({ chartType, error: String(error).slice(0, 100) });
+    }
+  }
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  return {
+    charts,
+    agArea: Boolean(host.querySelector('.ag-sparkline-wrapper')),
+    ogArea: ours.querySelector('.og-spark')?.getAttribute('data-type'),
+    agTrend: host.querySelector('.ag-cell[col-id="trend"]')?.innerHTML.slice(0, 180),
+  };
+};
+
 window.probeChartRead = () => {
   const saved = (window as unknown as { __chartHosts: { host: HTMLElement; ours: HTMLElement; chart: { chart?: { getOptions?: () => { series?: Record<string, unknown>[] } }; chartElement?: HTMLElement } } }).__chartHosts;
   const { host, ours, chart } = saved;

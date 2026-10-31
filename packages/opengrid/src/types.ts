@@ -517,7 +517,7 @@ export interface CellRangeParams {
 
 export interface CreateRangeChartParams {
   cellRange: CellRangeParams;
-  chartType?: 'column' | 'bar' | 'line';
+  chartType?: string;
 }
 
 export interface ChartRef {

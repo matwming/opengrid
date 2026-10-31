@@ -24,6 +24,13 @@ describe('integrated chart', () => {
     expect(panel?.querySelector('title')?.textContent).toBe('Ada 4');
     chart.destroyChart();
     expect(host.querySelector('.og-chart')).toBeNull();
+    for (const [chartType, shape, tag] of [['line', 'line', 'polyline'], ['area', 'area', 'polygon'], ['pie', 'pie', 'path'], ['scatter', 'scatter', 'circle']] as const) {
+      api.createRangeChart({ chartType, cellRange: { rowStartIndex: 0, rowEndIndex: 1, columns: ['name', 'qty'] } });
+      const next = host.querySelector('.og-chart');
+      expect(next?.getAttribute('data-shape')).toBe(shape);
+      expect(next?.getAttribute('data-series')).toBe('4,9');
+      expect(next?.querySelector(tag)).toBeTruthy();
+    }
     api.destroy();
   });
 });

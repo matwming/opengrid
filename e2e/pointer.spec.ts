@@ -12,6 +12,8 @@ test('fill, row drag, chart, and sparkline match enterprise in Chromium', async 
     <div id="ag-drag" class="ag-theme-quartz" style="width:320px;height:260px"></div>
     <div id="og-drag" style="width:320px;height:260px"></div>
     <div id="ag-chart" class="ag-theme-quartz" style="width:480px;height:220px"></div>
+    <div id="ag-types" class="ag-theme-quartz" style="width:480px;height:180px"></div>
+    <div id="og-types" style="width:480px;height:180px"></div>
     <div id="og-chart" style="width:480px;height:220px"></div>
   </body></html>`);
   await page.addStyleTag({ path: 'node_modules/ag-grid-community/styles/ag-grid.css' });
@@ -57,4 +59,23 @@ test('fill, row drag, chart, and sparkline match enterprise in Chromium', async 
   expect(drawn.sparkline).toBe(true);
   expect(drawn.ogSpark).toBe('1,3,2');
   expect(drawn.ogSparkType).toBe('line');
+});
+
+test('chart types and area sparklines match enterprise', async ({ page }) => {
+  await page.setContent(`<div id="ag-types" class="ag-theme-quartz" style="width:480px;height:180px"></div><div id="og-types" style="width:480px;height:180px"></div>`);
+  await page.addStyleTag({ path: 'node_modules/ag-grid-community/styles/ag-grid.css' });
+  await page.addStyleTag({ path: 'node_modules/ag-grid-community/styles/ag-theme-quartz.css' });
+  await page.addStyleTag({ path: 'packages/opengrid/src/theme.css' });
+  await page.addScriptTag({ path: 'e2e/pointer-harness.js' });
+  const result = await page.evaluate(() => (window as unknown as { probeChartTypes: () => { charts: { chartType: string; series?: string; shape?: string | null; values?: string | null; error?: string }[]; agArea: boolean; ogArea: string | null } }).probeChartTypes());
+  const wanted = ['line', 'area', 'pie', 'scatter', 'bar', 'donut', 'histogram'];
+  for (const chartType of wanted) {
+    const row = result.charts.find((item) => item.chartType === chartType);
+    expect(row?.error).toBeUndefined();
+    expect(row?.shape).toBe(row?.series);
+    expect(row?.values).toBe('4,9');
+  }
+  expect(result.charts.filter((item) => item.series).every((item) => item.shape === item.series)).toBe(true);
+  expect(result.agArea).toBe(true);
+  expect(result.ogArea).toBe('area');
 });

@@ -16,5 +16,17 @@ describe('sparkline', () => {
     expect(spark?.getAttribute('data-values')).toBe('1,3,2');
     expect(spark?.querySelector('polyline')).toBeTruthy();
     api.destroy();
+    const areaHost = document.createElement('div');
+    areaHost.style.width = '640px';
+    areaHost.style.height = '240px';
+    document.body.appendChild(areaHost);
+    const area = createGrid(areaHost, {
+      columnDefs: [{ field: 'trend', width: 120, cellRenderer: 'agSparklineCellRenderer', sparklineOptions: { type: 'area' } }],
+      rowData: [{ trend: [1, 3, 2] }],
+    });
+    const areaSpark = areaHost.querySelector('.og-spark');
+    expect(areaSpark?.getAttribute('data-type')).toBe('area');
+    expect(areaSpark?.querySelector('polygon')).toBeTruthy();
+    area.destroy();
   });
 });
