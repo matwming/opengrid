@@ -2012,9 +2012,16 @@ export class GridSession<TData = any> {
       const number = typeof raw === 'number' ? raw : Number(raw);
       return Number.isFinite(number) ? String(number) : '0';
     });
-    if (!/^[\d+\-*/().\s]+$/.test(replaced)) return null;
+    const summed = replaced.replace(/SUM\s*\(([^)]*)\)/gi, (_match, inner: string) => {
+      const total = inner.split(',').reduce((sum, part) => {
+        const number = Number(part.trim());
+        return sum + (Number.isFinite(number) ? number : 0);
+      }, 0);
+      return String(total);
+    });
+    if (!/^[\d+\-*/().\s]+$/.test(summed)) return null;
     try {
-      const value = Function(`"use strict"; return (${replaced})`)() as unknown;
+      const value = Function(`"use strict"; return (${summed})`)() as unknown;
       return typeof value === 'number' && Number.isFinite(value) ? value : null;
     } catch {
       return null;

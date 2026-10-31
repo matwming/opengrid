@@ -160,7 +160,7 @@ function App() {
               </tr>
               <tr>
                 <td>公式</td>
-                <td><code>allowFormula</code> 把 <code>=[qty]*2</code> 显示成 8，把 <code>=1+2</code> 显示成 3，和 <code>ag-grid-enterprise</code> 36.2.0 一样。行数据里仍是公式字符串。范围、<code>SUM</code> 和公式数据源还没有。</td>
+                <td><code>allowFormula</code> 把 <code>=[qty]*2</code> 显示成 8，把 <code>=1+2</code> 显示成 3。<code>=SUM([qty],[bonus])</code> 是 5，<code>=SUM([qty])</code> 是 3，和 <code>ag-grid-enterprise</code> 36.2.0 一样。像 <code>A1:A2</code> 这样的范围还没有。</td>
               </tr>
               <tr>
                 <td>查找</td>
@@ -261,7 +261,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>对齐网格、工具条、分组面板拖拽、公式范围和 SUM、查找高亮。</li>
+            <li>对齐网格、工具条、分组面板拖拽、公式单元格范围、查找高亮。</li>
           </ul>
         </section>
 

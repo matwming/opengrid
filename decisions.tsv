@@ -57,3 +57,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:29:15Z	batch	Hold cell edits until commit, matching enterprise	During the batch the row stays Ada, cancel keeps Ada, and commit writes Zoe	packages/opengrid/src/batch.test.ts	tests green
 2026-10-31T01:34:23Z	group-filter	Hide groups with no matching child, like enterprise	Equals 2021 leaves g:USA and 2021 on both grids	packages/opengrid/src/group-filter.test.ts	tests green
 2026-10-31T01:35:52Z	notes	Store a cell note through notesDataSource like enterprise	Both grids read hello back from the name cell, and the accessibility cell exposes data-note	packages/opengrid/src/notes.test.ts	tests green
+2026-10-31T01:37:01Z	sum	Add SUM arguments the way enterprise does	SUM of qty and bonus is 5, and SUM of qty on the next row is 3, on both grids	packages/opengrid/src/sum.test.ts	tests green
