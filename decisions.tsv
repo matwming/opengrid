@@ -64,3 +64,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:51:28Z	group-drag	Drop a header onto the group panel	The grouped column is country and the chip text matches enterprise	packages/opengrid/src/group-drag.test.ts	tests green
 2026-10-31T01:52:28Z	formula-range	Evaluate A1 ranges and SUM over them like enterprise	SUM(A1:B2) is 10, B1 is 1, and SUM(A1:A2) is 7 on both grids	packages/opengrid/src/range-formula.test.ts	tests green
 2026-10-31T01:59:31Z	group-filter-picker	Open a field picker on the group column filter	Select field lists Country and Year. Year contains 2021 leaves the same rows as enterprise	packages/opengrid/src/group-filter-picker.test.ts	tests green
+2026-10-31T02:00:12Z	note-popup	Open a note popup with the author line enterprise shows	Clicking the cell shows hello and Ada · 2020-01-02	packages/opengrid/src/note-popup.test.ts	tests green

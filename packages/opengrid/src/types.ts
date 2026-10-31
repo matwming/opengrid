@@ -271,9 +271,10 @@ export interface GridOptions<TData = any> {
   undoRedoCellEditing?: boolean;
   undoRedoCellEditingLimit?: number;
   notesDataSource?: {
-    getNote(params: { column: Column; rowNode: IRowNode<TData> }): { text: string } | undefined;
-    setNote(params: { column: Column; rowNode: IRowNode<TData>; note: { text: string } | undefined }): void;
+    getNote(params: { column: Column; rowNode: IRowNode<TData> }): { text: string; author?: string; createdAt?: string; updatedAt?: string } | undefined;
+    setNote(params: { column: Column; rowNode: IRowNode<TData>; note: { text: string; author?: string; createdAt?: string; updatedAt?: string } | undefined }): void;
   };
+  noteTrigger?: 'hover' | 'click';
   findSearchValue?: string;
   getContextMenuItems?: (params: { defaultItems: string[] }) => (string | { name: string })[];
   fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
@@ -614,8 +615,8 @@ export interface GridApi<TData = any> {
   commitBatchEdit(): void;
   cancelBatchEdit(): void;
   isBatchEditing(): boolean;
-  setNote(params: { column: string | Column; rowNode?: IRowNode<TData>; rowIndex?: number; note?: { text: string } }): void;
-  getNote(params: { column: string | Column; rowNode?: IRowNode<TData>; rowIndex?: number }): { text: string } | undefined;
+  setNote(params: { column: string | Column; rowNode?: IRowNode<TData>; rowIndex?: number; note?: { text: string; author?: string; createdAt?: string; updatedAt?: string } }): void;
+  getNote(params: { column: string | Column; rowNode?: IRowNode<TData>; rowIndex?: number }): { text: string; author?: string; createdAt?: string; updatedAt?: string } | undefined;
   isAnyFilterPresent(): boolean;
   isColumnFilterPresent(): boolean;
   onFilterChanged(): void;

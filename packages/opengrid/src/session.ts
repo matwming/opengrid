@@ -214,6 +214,7 @@ export class GridSession<TData = any> {
     this.worker?.destroy();
     this.worker = null;
     this.options.datasource?.destroy?.();
+    this.notePopup?.remove();
     this.host.replaceChildren();
     this.host.classList.remove('og-host');
   }
@@ -1998,9 +1999,10 @@ export class GridSession<TData = any> {
     this.syncA11y();
   }
 
-  private notes = new Map<string, { text: string }>();
+  private notes = new Map<string, { text: string; author?: string; createdAt?: string; updatedAt?: string }>();
+  private notePopup: HTMLElement | null = null;
 
-  private noteFor(source: number, leaf: Leaf<TData>): { text: string } | undefined {
+  private noteFor(source: number, leaf: Leaf<TData>): { text: string; author?: string; createdAt?: string; updatedAt?: string } | undefined {
     if (this.options.notesDataSource) {
       return this.options.notesDataSource.getNote({ column: columnFacade(leaf), rowNode: this.nodeFor(source) });
     }
@@ -2011,15 +2013,33 @@ export class GridSession<TData = any> {
     return `${rowId}\0${colId}`;
   }
 
-  private readNote(rowId: string, colId: string): { text: string } | undefined {
+  private readNote(rowId: string, colId: string): { text: string; author?: string; createdAt?: string; updatedAt?: string } | undefined {
     return this.notes.get(this.noteKey(rowId, colId));
   }
 
-  private writeNote(rowId: string, colId: string, note: { text: string } | undefined): void {
+  private writeNote(rowId: string, colId: string, note: { text: string; author?: string; createdAt?: string; updatedAt?: string } | undefined): void {
     const key = this.noteKey(rowId, colId);
     if (!note) this.notes.delete(key);
-    else this.notes.set(key, { text: note.text });
+    else this.notes.set(key, note);
     this.syncA11y();
+  }
+
+  private openNotePopup(note: { text: string; author?: string; createdAt?: string; updatedAt?: string }): void {
+    this.notePopup?.remove();
+    const popup = el('div', 'og-notes');
+    popup.setAttribute('aria-label', 'Note');
+    const metaText = [note.author, note.updatedAt || note.createdAt].filter((part) => part).join(' · ');
+    if (metaText) {
+      const meta = el('div', 'og-notes-meta');
+      meta.textContent = metaText;
+      popup.append(meta);
+    }
+    const editor = document.createElement('textarea');
+    editor.className = 'og-notes-editor';
+    editor.value = note.text;
+    popup.append(editor);
+    document.body.append(popup);
+    this.notePopup = popup;
   }
 
   private batchKey(source: number, colId: string): string {
@@ -2346,7 +2366,15 @@ export class GridSession<TData = any> {
           cell.style.width = `${width}px`;
         }
         const note = source >= 0 ? this.noteFor(source, leaf) : undefined;
-        if (note) cell.dataset.note = note.text;
+        if (note) {
+          cell.dataset.note = note.text;
+          cell.classList.add('og-has-note');
+          const open = () => this.openNotePopup(note);
+          if ((this.options.noteTrigger ?? 'hover') === 'click') cell.addEventListener('click', open);
+          else cell.addEventListener('pointerenter', (event) => {
+            if (event.pointerType === 'mouse') open();
+          });
+        }
         cell.textContent = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : source < 0 ? this.groupLabel(display, leaf.colId) : this.textFor(source, leaf);
         const query = (this.options.findSearchValue ?? '').toLocaleLowerCase();
         if (query && (cell.textContent ?? '').toLocaleLowerCase().includes(query)) cell.classList.add('og-find');

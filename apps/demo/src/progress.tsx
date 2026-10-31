@@ -196,7 +196,7 @@ function App() {
               </tr>
               <tr>
                 <td>备注</td>
-                <td><code>notesDataSource</code> 配合 <code>setNote</code> 和 <code>getNote</code> 在名字格记下 hello，和 <code>ag-grid-enterprise</code> 36.2.0 一样。无障碍单元格带 <code>data-note</code>。作者、时间和备注弹层还没有。</td>
+                <td><code>notesDataSource</code> 配合 <code>setNote</code> 和 <code>getNote</code> 在名字格记下 hello，和 <code>ag-grid-enterprise</code> 36.2.0 一样。无障碍单元格带 <code>data-note</code>。<code>noteTrigger: 'click'</code> 打开弹层，正文是 hello，作者行是 <code>Ada · 2020-01-02</code>。</td>
               </tr>
               <tr>
                 <td>树</td>
