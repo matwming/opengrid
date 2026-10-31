@@ -15,6 +15,7 @@ import type {
   ColumnState,
   CsvExportParams,
   FilterModel,
+  AlignedGrid,
   GridApi,
   GridOptions,
   GridState,
@@ -94,6 +95,7 @@ export class GridSession<TData = any> {
   private pager: HTMLElement;
   private status: HTMLElement | null = null;
   private groupPanel!: HTMLElement;
+  private aligning = false;
   private undoStack: { source: number; colId: string; value: unknown }[] = [];
   private redoStack: { source: number; colId: string; value: unknown }[] = [];
   private batchActive = false;
@@ -117,6 +119,7 @@ export class GridSession<TData = any> {
     this.host = host;
     this.options = options;
     this.api = this.createApi();
+    sessionsByApi.set(this.api, this);
     Object.assign(this.options, { api: this.api });
     this.root = document.createElement('div');
     this.root.className = 'og-root';
@@ -995,6 +998,7 @@ export class GridSession<TData = any> {
       this.syncLeafDef(leaf);
       const column = columnFacade(leaf);
       this.emit('columnResized', { column, columns: [column], finished: true, source: 'ui' });
+      this.pushAlignedColumns();
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -1030,6 +1034,7 @@ export class GridSession<TData = any> {
     this.layout();
     const column = columnFacade(leaf);
     this.emit('columnMoved', { column, columns: [column], finished: true, source: 'ui' });
+    this.pushAlignedColumns();
   }
 
   private leafAtClientX(clientX: number): Leaf<TData> | null {
@@ -1479,6 +1484,7 @@ export class GridSession<TData = any> {
 
   private onScroll(): void {
     this.syncHeaderScroll();
+    this.pushAlignedScroll();
     if (this.remoteMode()) this.ensureInfinite();
     if (this.options.rowModelType === 'viewport') this.pushViewport();
     if (this.paintFrameId) return;
@@ -2667,6 +2673,7 @@ export class GridSession<TData = any> {
       this.syncLeafDef(leaf);
     }
     this.layout();
+    this.pushAlignedColumns();
   }
 
   private csv(params?: CsvExportParams): string {
@@ -2947,6 +2954,7 @@ export class GridSession<TData = any> {
         }
         session.layout();
         session.emit('columnVisible', { column: columns[0] ?? null, columns, source: 'api' });
+        session.pushAlignedColumns();
       },
       setColumnsPinned: (keys, pinned) => {
         const columns: Column[] = [];
@@ -2959,6 +2967,7 @@ export class GridSession<TData = any> {
         }
         session.layout();
         session.emit('columnPinned', { column: columns[0] ?? null, columns, source: 'api' });
+        session.pushAlignedColumns();
       },
       getColumns: () => session.leaves.map((leaf) => columnFacade(leaf)),
       getAllGridColumns: () => session.reportedColumns().map((leaf) => columnFacade(leaf)),
@@ -2976,6 +2985,7 @@ export class GridSession<TData = any> {
         session.leaves = stay;
         session.layout();
         session.emit('columnMoved', { column: moving[0] ? columnFacade(moving[0]) : null, columns: moving.map((leaf) => columnFacade(leaf)), finished: true, source: 'api' });
+        session.pushAlignedColumns();
       },
       moveColumnByIndex: (fromIndex, toIndex) => {
         const leaf = session.visibleLeaves()[fromIndex];
@@ -2998,6 +3008,7 @@ export class GridSession<TData = any> {
           session.syncLeafDef(leaf);
         });
         session.layout();
+        session.pushAlignedColumns();
       },
       setColumnWidths: (columnWidths) => {
         for (const item of columnWidths) {
@@ -3008,6 +3019,7 @@ export class GridSession<TData = any> {
           session.syncLeafDef(leaf);
         }
         session.layout();
+        session.pushAlignedColumns();
       },
       isPinning: () => session.leaves.some((leaf) => !leaf.hide && leaf.pinned != null),
       isPinningLeft: () => session.leaves.some((leaf) => !leaf.hide && leaf.pinned === 'left'),
@@ -3306,6 +3318,51 @@ export class GridSession<TData = any> {
       });
     }
     this.refresh('sort');
+    this.pushAlignedColumns();
+  }
+
+  private alignedSessions(): GridSession<any>[] {
+    const option = this.options.alignedGrids;
+    if (!option) return [];
+    let list: AlignedGrid[];
+    try {
+      list = typeof option === 'function' ? option() : option;
+    } catch {
+      return [];
+    }
+    if (!Array.isArray(list)) return [];
+    const out: GridSession<any>[] = [];
+    for (const item of list) {
+      const api = alignedApi(item);
+      const other = api ? sessionsByApi.get(api) : undefined;
+      if (other && other !== this && !other.destroyed) out.push(other);
+    }
+    return out;
+  }
+
+  private pushAlignedScroll(): void {
+    if (this.aligning) return;
+    const left = this.viewport.scrollLeft;
+    for (const other of this.alignedSessions()) {
+      if (other.viewport.scrollLeft === left) continue;
+      other.aligning = true;
+      other.viewport.scrollLeft = left;
+      other.syncHeaderScroll();
+      other.aligning = false;
+    }
+  }
+
+  private pushAlignedColumns(): void {
+    if (this.aligning) return;
+    const state = this.leaves.map((leaf) => ({ colId: leaf.colId, width: leaf.width, hide: leaf.hide, pinned: leaf.pinned }));
+    const signature = JSON.stringify(state);
+    for (const other of this.alignedSessions()) {
+      const current = JSON.stringify(other.leaves.map((leaf) => ({ colId: leaf.colId, width: leaf.width, hide: leaf.hide, pinned: leaf.pinned })));
+      if (current === signature) continue;
+      other.aligning = true;
+      other.applyColumnState({ state, applyOrder: true });
+      other.aligning = false;
+    }
   }
 }
 
@@ -3577,3 +3634,11 @@ export function createGrid<TData = any>(eGridDiv: HTMLElement, gridOptions: Grid
 }
 
 const sessions = new WeakMap<HTMLElement, { destroy(): void }>();
+const sessionsByApi = new WeakMap<object, GridSession<any>>();
+
+function alignedApi(item: AlignedGrid): GridApi | null {
+  if (!item || typeof item !== 'object') return null;
+  if ('getGridId' in item && typeof item.getGridId === 'function') return item;
+  if ('current' in item) return item.current?.api ?? null;
+  return 'api' in item ? item.api ?? null : null;
+}

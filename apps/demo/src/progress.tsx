@@ -183,6 +183,10 @@ function App() {
                 <td>子列过滤后，没有匹配子行的组会被藏起。年份等于 2021 时只剩 <code>g:USA</code> 和 2021，和 <code>ag-grid-enterprise</code> 36.2.0 一样。分组列自己的过滤选择器还没有。</td>
               </tr>
               <tr>
+                <td>对齐网格</td>
+                <td><code>alignedGrids</code> 让两张表的横向滚动停在同一位置。列宽、列顺序和隐藏也跟着走，和 <code>ag-grid-enterprise</code> 36.2.0 一样。</td>
+              </tr>
+              <tr>
                 <td>备注</td>
                 <td><code>notesDataSource</code> 配合 <code>setNote</code> 和 <code>getNote</code> 在名字格记下 hello，和 <code>ag-grid-enterprise</code> 36.2.0 一样。无障碍单元格带 <code>data-note</code>。作者、时间和备注弹层还没有。</td>
               </tr>
@@ -261,7 +265,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>对齐网格、工具条、分组面板拖拽、公式单元格范围。</li>
+            <li>工具条、分组面板拖拽、公式单元格范围。</li>
           </ul>
         </section>
 

@@ -59,3 +59,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:35:52Z	notes	Store a cell note through notesDataSource like enterprise	Both grids read hello back from the name cell, and the accessibility cell exposes data-note	packages/opengrid/src/notes.test.ts	tests green
 2026-10-31T01:37:01Z	sum	Add SUM arguments the way enterprise does	SUM of qty and bonus is 5, and SUM of qty on the next row is 3, on both grids	packages/opengrid/src/sum.test.ts	tests green
 2026-10-31T01:37:40Z	find-mark	Mark find matches on the accessibility cells	Two cells get og-find, the same count enterprise reports for ada	packages/opengrid/src/find.test.ts	tests green
+2026-10-31T01:47:14Z	aligned	Keep scroll and column state in step across aligned grids	Scroll lands on 80, and width, order, and hide match enterprise	packages/opengrid/src/aligned.test.ts	tests green
