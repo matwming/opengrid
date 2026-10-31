@@ -20,7 +20,7 @@ describe('integrated chart', () => {
     });
     const panel = host.querySelector('.og-chart');
     expect(panel?.getAttribute('data-series')).toBe('4,9');
-    expect(panel?.querySelectorAll('rect').length).toBe(2);
+    expect(panel?.querySelector('svg')?.querySelectorAll('rect').length).toBe(2);
     expect(panel?.querySelector('title')?.textContent).toBe('Ada 4');
     chart.destroyChart();
     expect(host.querySelector('.og-chart')).toBeNull();

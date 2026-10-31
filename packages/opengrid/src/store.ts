@@ -36,6 +36,7 @@ export interface StoreField {
   plainField?: string;
 }
 
+const NO_NULLS = new Uint8Array(0);
 const keyBuffer = new Float64Array(1);
 const keyWords = new Uint32Array(keyBuffer.buffer);
 
@@ -142,9 +143,9 @@ function buildPlainStore(rows: readonly unknown[], fields: readonly StoreField[]
     const name = field.plainField ?? '';
     if (field.kind === 'number') {
       const values = allocFloat(rowCount, shared);
-      const nulls = allocBytes(rowCount, shared);
-      columns.set(field.colId, { kind: 'number', values, nulls });
-      return { name, kind: 'number' as const, values, nulls };
+      const vector: NumberVector = { kind: 'number', values, nulls: NO_NULLS };
+      columns.set(field.colId, vector);
+      return { name, kind: 'number' as const, values, nulls: vector.nulls, vector };
     }
     if (field.kind === 'date') {
       const values = allocFloat(rowCount, shared);
@@ -163,13 +164,17 @@ function buildPlainStore(rows: readonly unknown[], fields: readonly StoreField[]
   });
   for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
     const record = objectRow(rows[rowIndex]);
+    if (!record) continue;
     for (let index = 0; index < plans.length; index++) {
       const plan = plans[index];
-      if (!plan || !record) continue;
+      if (!plan) continue;
       const raw = record[plan.name];
       if (plan.kind === 'number') {
-        if (typeof raw === 'number' && raw === raw) plan.values[rowIndex] = raw === 0 ? 0 : raw;
-        else plan.nulls[rowIndex] = 1;
+        if (typeof raw === 'number' && raw === raw) plan.vector.values[rowIndex] = raw;
+        else {
+          if (plan.vector.nulls.length !== rowCount) plan.vector.nulls = allocBytes(rowCount, false);
+          plan.vector.nulls[rowIndex] = 1;
+        }
       } else if (plan.kind === 'text') {
         plan.values[rowIndex] = raw == null ? null : typeof raw === 'string' ? raw : String(raw);
       } else if (plan.kind === 'boolean') {
@@ -247,12 +252,13 @@ export function writeVector(vector: Vector, rowIndex: number, raw: unknown): voi
   if (vector.kind === 'number') {
     if (typeof raw === 'number' && raw === raw) {
       vector.values[rowIndex] = raw === 0 ? 0 : raw;
-      vector.nulls[rowIndex] = 0;
+      if (vector.nulls.length) vector.nulls[rowIndex] = 0;
     } else if (typeof raw === 'string' && raw.trim() !== '' && raw.trim() === String(Number(raw))) {
       vector.values[rowIndex] = Number(raw);
-      vector.nulls[rowIndex] = 0;
+      if (vector.nulls.length) vector.nulls[rowIndex] = 0;
     } else {
       vector.values[rowIndex] = 0;
+      if (vector.nulls.length !== vector.values.length) vector.nulls = new Uint8Array(vector.values.length);
       vector.nulls[rowIndex] = 1;
     }
     return;

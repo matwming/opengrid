@@ -12,6 +12,8 @@ interface Row {
 
 interface Mounted {
   firstRenderMs: number;
+  sortReadyMs: number;
+  copyMs: number;
   workerWaitMs: number;
   engine: string;
   isolated: boolean;
@@ -111,17 +113,32 @@ const bench = {
     });
     const firstRenderMs = performance.now() - started;
     const engineNode = element.querySelector('.og-root');
+    let sortReadyMs = 0;
     if (next === 'opengrid' && rows.length > 32_768) {
+      const readyAt = performance.now();
       await new Promise<void>((resolve, reject) => {
-        const timer = window.setTimeout(() => reject(new Error('worker load timed out')), 90_000);
+        const timer = window.setTimeout(() => reject(new Error('column copy timed out')), 90_000);
         const check = () => {
-          const state = engineNode?.getAttribute('data-worker');
-          if (state === 'ready' || state === 'failed' || state === 'skipped') {
+          const state = engineNode?.getAttribute('data-store');
+          if (state === 'partial' || state === 'ready') {
             window.clearTimeout(timer);
             resolve();
             return;
           }
-          requestAnimationFrame(check);
+          setTimeout(check, 0);
+        };
+        check();
+      });
+      sortReadyMs = performance.now() - readyAt;
+      await new Promise<void>((resolve, reject) => {
+        const timer = window.setTimeout(() => reject(new Error('column copy timed out')), 90_000);
+        const check = () => {
+          if (engineNode?.getAttribute('data-store') === 'ready') {
+            window.clearTimeout(timer);
+            resolve();
+            return;
+          }
+          setTimeout(check, 0);
         };
         check();
       });
@@ -129,12 +146,14 @@ const bench = {
     const engine = engineNode?.getAttribute('data-engine') ?? (next === 'ag' ? 'ag-grid' : 'missing');
     const result = {
       firstRenderMs,
-      workerWaitMs: performance.now() - started - firstRenderMs,
+      sortReadyMs,
+      copyMs: Number(engineNode?.getAttribute('data-copy-ms') ?? '0'),
+      workerWaitMs: performance.now() - started - firstRenderMs - sortReadyMs,
       engine,
       isolated: crossOriginIsolated,
       rows: api?.getDisplayedRowCount() ?? 0,
     };
-    note(`${next} first render ${result.firstRenderMs.toFixed(0)} ms, worker wait ${result.workerWaitMs.toFixed(0)} ms, engine ${engine}`);
+    note(`${next} first render ${result.firstRenderMs.toFixed(0)} ms, sort-ready ${result.sortReadyMs.toFixed(0)} ms after paint (column copy ${result.copyMs.toFixed(0)} ms, worker not included), engine ${engine}`);
     return result;
   },
 
@@ -231,6 +250,7 @@ function checkpoints(count: number): number[] {
 }
 
 window.__opengridBench = bench;
+note('sort-ready 是首次绘制之后到可以排序、过滤的等待。用到的列会当场拷贝，不必等全部列。copyMs 是后台把全部列拷完的时间，不包含 worker。企业版绘制完就可以排，所以它的 sort-ready 记 0。');
 note('bench controller ready');
 
 declare global {

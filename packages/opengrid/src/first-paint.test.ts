@@ -17,7 +17,16 @@ describe('first paint', () => {
     expect(api.getDisplayedRowAtIndex(0)?.data?.qty).toBe(0);
     expect(api.getDisplayedRowAtIndex(999)?.data?.qty).toBe(999);
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(root?.getAttribute('data-store')).toBe('ready');
+    expect(root?.getAttribute('data-store')).toBe('partial');
+    api.applyColumnState({ state: [{ colId: 'qty', sort: 'desc' }], defaultState: { sort: null } });
+    expect(api.getDisplayedRowAtIndex(0)?.data?.qty).toBe(999);
+    await new Promise<void>((resolve) => {
+      const check = () => {
+        if (root?.getAttribute('data-store') === 'ready') resolve();
+        else setTimeout(check, 0);
+      };
+      check();
+    });
     api.applyColumnState({ state: [{ colId: 'qty', sort: 'desc' }], defaultState: { sort: null } });
     expect(api.getDisplayedRowAtIndex(0)?.data?.qty).toBe(999);
     api.destroy();

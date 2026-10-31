@@ -120,6 +120,18 @@ test('chart theme and format panels match enterprise', async ({ page }) => {
   expect(menu.ogFormat).toContain('Vertical Axis');
   expect(menu.ogFormat).toContain('Series');
   expect(menu.ogFormat).toContain('Font');
+  expect(menu.agFormat).toContain('Grid Lines');
+  expect(menu.agFormat).toContain('Ticks');
+  expect(menu.agFormat).toContain('Rotation');
+  expect(menu.ogFormat).toContain('Grid Lines');
+  expect(menu.ogFormat).toContain('Ticks');
+  expect(menu.ogFormat).toContain('Rotation');
+  expect(menu.agSetup).toContain('Aggregate');
+  expect(menu.agSetup).toContain('Direction');
+  expect(menu.agSetup).toContain('Group Type');
+  expect(menu.ogSetup).toContain('Aggregate');
+  expect(menu.ogSetup).toContain('Direction');
+  expect(menu.ogSetup).toContain('Group Type');
   expect(menu.agSetup).toContain('Categories');
   expect(menu.agSetup).toContain('Switch Category / Series');
   expect(menu.ogSetup).toContain('Categories');

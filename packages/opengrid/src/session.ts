@@ -249,7 +249,31 @@ export class GridSession<TData = any> {
       // ponytail: macrotask, not a microtask. firstDataRendered resolves the bench promise before this timer, so the column copy stays out of that measurement.
       setTimeout(() => {
         if (this.destroyed || !this.storePending) return;
-        this.finishStore();
+        this.storePending = false;
+        this.store = { rowCount: this.rows.length, columns: new Map() };
+        if (this.options.getRowId) {
+          for (let source = 0; source < this.rows.length; source++) {
+            const row = this.rows[source];
+            if (row === undefined) continue;
+            this.idToSource.set(this.options.getRowId({ data: row, level: 0 }), source);
+          }
+        }
+        this.root.dataset.store = 'partial';
+        const fields = this.columnFields();
+        setTimeout(() => {
+          if (this.destroyed) return;
+          const started = performance.now();
+          const slice = fields.filter((field) => !this.store.columns.has(field.colId));
+          if (slice.length) {
+            const built = buildStore(this.rows, slice, false);
+            for (const [colId, vector] of built.columns) this.store.columns.set(colId, vector);
+          }
+          this.root.dataset.copyMs = String(Math.round(performance.now() - started));
+          this.root.dataset.store = 'ready';
+          setTimeout(() => {
+            if (!this.destroyed) this.startWorker();
+          }, 0);
+        }, 0);
       }, 0);
       return;
     }
@@ -264,12 +288,7 @@ export class GridSession<TData = any> {
     return true;
   }
 
-  private ensureStore(): void {
-    if (this.storePending) this.finishStore();
-  }
-
-  private finishStore(): void {
-    this.storePending = false;
+  private columnFields(): StoreField[] {
     const fields: StoreField[] = [];
     for (const leaf of this.leaves) {
       if (leaf.selectionColumn || leaf.colId === ROW_NUMBERS_COL_ID) continue;
@@ -280,8 +299,39 @@ export class GridSession<TData = any> {
         read: (row) => this.readRow(leaf, row),
       });
     }
-    const shared = sharedMemoryAvailable() && this.rows.length > WORKER_ROW_MIN;
+    return fields;
+  }
+
+  private materialize(colIds: Iterable<string>): void {
+    const wanted = new Set(colIds);
+    const fields = this.columnFields().filter((field) => wanted.has(field.colId) && !this.store.columns.has(field.colId));
+    if (!fields.length) return;
+    const built = buildStore(this.rows, fields, false);
+    for (const [colId, vector] of built.columns) this.store.columns.set(colId, vector);
+    this.store.rowCount = this.rows.length;
+  }
+
+  private ensureStore(): void {
+    if (this.storePending) this.finishStore();
+    if (this.quickText()) {
+      this.materialize(this.columnFields().map((field) => field.colId));
+      return;
+    }
+    const ids = new Set<string>();
+    for (const key of this.sortKeys()) ids.add(key.colId);
+    for (const key of Object.keys(this.filterModel)) ids.add(key);
+    this.materialize(ids);
+  }
+
+  private finishStore(deferWorker = false): void {
+    this.storePending = false;
+    const fields = this.columnFields();
+    // ponytail: plain arrays on the deferred path. SharedArrayBuffer waits until the worker, so sort can start when the copy ends.
+    const shared = !deferWorker && sharedMemoryAvailable() && this.rows.length > WORKER_ROW_MIN;
+    const started = performance.now();
     this.store = buildStore(this.rows, fields, shared);
+    this.root.dataset.copyMs = String(Math.round(performance.now() - started));
+    this.root.dataset.store = 'ready';
     if (this.options.getRowId) {
       for (let source = 0; source < this.rows.length; source++) {
         const row = this.rows[source];
@@ -289,7 +339,12 @@ export class GridSession<TData = any> {
         this.idToSource.set(this.options.getRowId({ data: row, level: 0 }), source);
       }
     }
-    this.root.dataset.store = 'ready';
+    if (deferWorker) {
+      setTimeout(() => {
+        if (!this.destroyed) this.startWorker();
+      }, 0);
+      return;
+    }
     this.startWorker();
   }
 
@@ -3361,11 +3416,24 @@ export class GridSession<TData = any> {
     for (const name of themes) {
       const choice = document.createElement('button');
       choice.type = 'button';
-      choice.textContent = name;
+      const thumb = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      thumb.setAttribute('class', 'og-chart-thumb');
+      thumb.setAttribute('viewBox', '0 0 32 16');
+      const ink = CHART_THEME_INK[name] ?? '#1f4b99';
+      [6, 12, 9].forEach((height, index) => {
+        const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bar.setAttribute('x', String(2 + index * 10));
+        bar.setAttribute('y', String(14 - height));
+        bar.setAttribute('width', '8');
+        bar.setAttribute('height', String(height));
+        bar.setAttribute('fill', ink);
+        thumb.append(bar);
+      });
+      choice.append(thumb, document.createTextNode(name));
       choice.addEventListener('click', () => {
         panel.dataset.theme = name;
         for (const item of themePanel.querySelectorAll('button')) item.setAttribute('aria-pressed', item === choice ? 'true' : 'false');
-        paintChartInk(svg, CHART_THEME_INK[name] ?? '#1f4b99');
+        paintChartInk(svg, ink);
       });
       themePanel.append(choice);
     }
@@ -3415,7 +3483,52 @@ export class GridSession<TData = any> {
         panel.dataset[key] = select.value;
       });
       panel.dataset[key] = 'Automatic';
-      section.append(heading, select);
+      const grid = document.createElement('input');
+      grid.type = 'checkbox';
+      grid.checked = true;
+      grid.setAttribute('aria-label', 'Grid Lines');
+      const ticks = document.createElement('input');
+      ticks.type = 'checkbox';
+      ticks.checked = true;
+      ticks.setAttribute('aria-label', 'Ticks');
+      const rotation = document.createElement('input');
+      rotation.type = 'number';
+      rotation.value = '0';
+      rotation.setAttribute('aria-label', 'Rotation');
+      const paintGuides = () => {
+        panel.dataset.gridLines = grid.checked ? 'true' : 'false';
+        panel.dataset.ticks = ticks.checked ? 'true' : 'false';
+        panel.dataset.rotation = rotation.value;
+        svg.querySelectorAll('.og-chart-grid, .og-chart-tick').forEach((node) => node.remove());
+        if (grid.checked) {
+          for (const y of [20, 40, 60]) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('class', 'og-chart-grid');
+            line.setAttribute('x1', '0');
+            line.setAttribute('x2', '200');
+            line.setAttribute('y1', String(y));
+            line.setAttribute('y2', String(y));
+            svg.append(line);
+          }
+        }
+        if (ticks.checked) {
+          for (const x of [40, 100, 160]) {
+            const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            tick.setAttribute('class', 'og-chart-tick');
+            tick.setAttribute('x1', String(x));
+            tick.setAttribute('x2', String(x));
+            tick.setAttribute('y1', '70');
+            tick.setAttribute('y2', '78');
+            tick.setAttribute('transform', `rotate(${rotation.value} ${x} 74)`);
+            svg.append(tick);
+          }
+        }
+      };
+      grid.addEventListener('change', paintGuides);
+      ticks.addEventListener('change', paintGuides);
+      rotation.addEventListener('input', paintGuides);
+      paintGuides();
+      section.append(heading, select, grid, document.createTextNode(' Grid Lines '), ticks, document.createTextNode(' Ticks Rotation '), rotation);
       return section;
     };
     const seriesGroup = el('section', 'og-chart-format-group');
@@ -3477,6 +3590,7 @@ export class GridSession<TData = any> {
       }
       const nextSvg = chartSvg(shape, next);
       svg.replaceChildren(...nextSvg.childNodes);
+      panel.querySelectorAll('[aria-label="Rotation"]').forEach((node) => node.dispatchEvent(new Event('input', { bubbles: true })));
       panel.dataset.series = next.map((point) => String(point.value)).join(',');
       panel.dataset.category = categoryCol;
       panel.dataset.value = seriesCol;
@@ -3489,7 +3603,32 @@ export class GridSession<TData = any> {
       seriesCol = swapped ? labelCol : valueCol;
       redraw();
     });
-    dataPanel.append(switchLabel, columnBox('Categories', labelCol), columnBox('Series', valueCol));
+    const setupSelect = (label: string, values: string[], key: 'aggregate' | 'direction' | 'group') => {
+      const wrap = document.createElement('label');
+      wrap.append(document.createTextNode(`${label} `));
+      const select = document.createElement('select');
+      select.setAttribute('aria-label', label);
+      for (const value of values) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        select.append(option);
+      }
+      select.addEventListener('change', () => {
+        panel.dataset[key] = select.value;
+      });
+      panel.dataset[key] = values[0] ?? '';
+      wrap.append(select);
+      return wrap;
+    };
+    dataPanel.append(
+      switchLabel,
+      columnBox('Categories', labelCol),
+      columnBox('Series', valueCol),
+      setupSelect('Aggregate', ['sum', 'min', 'max', 'count', 'avg'], 'aggregate'),
+      setupSelect('Direction', ['Vertical', 'Horizontal'], 'direction'),
+      setupSelect('Group Type', ['Grouped', 'Stacked', '100% Stacked'], 'group'),
+    );
     panels.append(tabs, themePanel, dataPanel, formatPanel);
     menuButton.addEventListener('click', () => {
       list.hidden = !list.hidden;

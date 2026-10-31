@@ -56,7 +56,7 @@ Status words mean the following.
 | Excel export | [Excel export](https://www.ag-grid.com/javascript-data-grid/excel-export/) | partial. `getDataAsExcel` returns an `.xlsx` workbook that starts with PK and contains the cell text Ada, the same checks as `ag-grid-enterprise` 36.2.0. Styles, multiple sheets, and the Excel export popup are not started. |
 | Server-side row model | [Server-side model](https://www.ag-grid.com/javascript-data-grid/server-side-model/) | partial. The first `getRows` call asks for block 0, matching `ag-grid-enterprise` 36.2.0, and `success` fills Ada. Grouping and pivoting on the server are not started. |
 | Viewport row model | [Viewport](https://www.ag-grid.com/javascript-data-grid/viewport/) | partial. With a 240px grid, 36px rows, and 4 rows, `setViewportRange` is `0` to `3`, matching `ag-grid-enterprise` 36.2.0. |
-| Integrated charts | [Integrated charts](https://www.ag-grid.com/javascript-data-grid/integrated-charts/) | partial. `createRangeChart` covers the chart types `ag-grid-enterprise` 36.2.0 can create. In Chromium, line, area, pie, scatter, bar, donut, and histogram use the same series type as enterprise, and the qty values are 4 and 9. Edit Chart opens Chart, Set Up, and Customize. Set Up lists Categories, Series, and Switch Category / Series. Customize has Titles, Legend, Horizontal Axis, Vertical Axis, Series, and Font. Enterprise shows those same labels. Grid lines, tick marks, aggregation, and direction are not started. |
+| Integrated charts | [Integrated charts](https://www.ag-grid.com/javascript-data-grid/integrated-charts/) | partial. `createRangeChart` covers the chart types `ag-grid-enterprise` 36.2.0 can create. Edit Chart opens Chart, Set Up, and Customize. Each theme has a thumbnail. Set Up has Categories, Series, Switch Category / Series, Aggregate, Direction, and Group Type. Customize has Grid Lines, Ticks, and Rotation as well as Titles, Legend, the axes, Series, and Font. Enterprise shows those labels. Line dash, colors, padding, and Reverse are not started. |
 | Sparklines | [Sparklines](https://www.ag-grid.com/javascript-data-grid/sparklines-overview/) | partial. The default sparkline is a line. `sparklineOptions.type: 'area'` draws an area, and `'bar'` draws bars. In Chromium the area sparkline for `[1, 3, 2]` renders `ag-sparkline-wrapper` on enterprise and `data-type="area"` here. |
 | Status bar | [Status bar](https://www.ag-grid.com/javascript-data-grid/status-bar/) | partial. `agTotalRowCountComponent` shows `Total Rows : 2` and keeps that count after a filter, matching `ag-grid-enterprise` 36.2.0. `agTotalAndFilteredRowCountComponent` shows `Rows : 2` when every row is visible, and `Rows : 1 of 2` after a filter removes a row. |
 | Side bar | [Side bar](https://www.ag-grid.com/javascript-data-grid/side-bar/) | partial. `sideBar: true` shows Columns and Filters, the same tab labels as `ag-grid-enterprise` 36.2.0. The columns panel hides a column. The filters panel opens that column's filter. |
@@ -79,14 +79,16 @@ Status words mean the following.
 
 ## Benchmark
 
-Measured on 31 Oct 2026 at 13:57 Australia/Melbourne. Three repeats. 1,000,000 rows and 50 numeric columns. Chromium. `ag-grid-enterprise` 36.2.0 with `AllEnterpriseModule`. The ranges below cover the three runs. The full series is in `bench/results.json`. The progress page quotes the middle sort run.
+Measured on 31 Oct 2026 at 14:14 Australia/Melbourne. Three repeats. 1,000,000 rows and 50 numeric columns. Chromium. `ag-grid-enterprise` 36.2.0 with `AllEnterpriseModule`. The ranges below cover the three runs. The full series is in `bench/results.json`. The progress page quotes the middle sort run.
 
 | Metric | Opengrid | AG Grid Enterprise |
 | --- | --- | --- |
-| First render | 19 to 23 ms | 705 to 970 ms |
-| Scroll | 60 fps, p95 frame 16.7 ms | 41 to 44 fps, p95 frame 33.3 ms |
-| Sort of column `c0` | 61 to 76 ms wall, 41 to 59 ms on the main thread | 1456 to 1510 ms |
-| Number filter `greaterThan` 50000 | 59 to 71 ms, 499,990 rows | 864 to 905 ms, same row count and the same sampled values |
-| Minified gzip entry | 39,656 bytes | 721,207 bytes |
+| First render | 19 to 28 ms | 785 to 982 ms |
+| Sort and filter ready | 12 to 13 ms after first paint. A column is copied when that sort or filter uses it | 0 ms |
+| Deferred copy of every column | 1016 to 1166 ms. The worker is not included. The main thread is busy while it runs | 0 ms |
+| Scroll | 60 fps, p95 frame 16.7 ms | 43 to 47 fps, p95 frame 33.3 ms |
+| Sort of column `c0` | 60 to 74 ms wall, 41 to 60 ms on the main thread | 1440 to 1558 ms |
+| Number filter `greaterThan` 50000 | 60 to 74 ms, 499,990 rows | 858 to 899 ms, same row count and the same sampled values |
+| Minified gzip entry | 40,690 bytes | 721,207 bytes |
 
-First render no longer waits for the column-store copy. That copy runs on a timer after `firstDataRendered`. On the middle sort run the worker wait was 1135 ms and includes the copy. Scroll, sort, filter, and the entry bundle are faster or smaller. Sort finishes on the main thread. The worker still loads above 32,768 rows and does not run the query. The bundle comparison is `AllEnterpriseModule` against this entry. Heap delta from `performance.memory` was zero at the reported precision, so this table does not claim a memory win. Grouping was not timed.
+`/bench` prints `sort-ready` and the column-copy time on the page. Sort and filter do not wait for the unused columns. The full copy still runs after first paint. Heap delta from `performance.memory` was zero at the reported precision, so this table does not claim a memory win. Grouping was not timed.
