@@ -33,12 +33,12 @@ describe('row grouping', () => {
       groupDefaultExpanded: -1,
     });
     expect(api.getRowGroupColumns().map((column) => column.getColId())).toEqual(['country']);
-    expect(ids(api)).toEqual(['g:Ireland', '2020', '2021', 'g:USA', '2020', '2021']);
-    const ireland = api.getDisplayedRowAtIndex(0);
-    expect(ireland?.group).toBe(true);
-    expect(ireland?.allChildrenCount).toBe(2);
-    ireland?.setExpanded(false);
-    expect(ids(api)).toEqual(['g:Ireland', 'g:USA', '2020', '2021']);
+    expect(ids(api)).toEqual(['g:USA', '2020', '2021', 'g:Ireland', '2020', '2021']);
+    const usa = api.getDisplayedRowAtIndex(0);
+    expect(usa?.group).toBe(true);
+    expect(usa?.allChildrenCount).toBe(2);
+    usa?.setExpanded(false);
+    expect(ids(api)).toEqual(['g:USA', 'g:Ireland', '2020', '2021']);
     api.setRowGroupColumns(['year']);
     expect(ids(api)).toEqual(['g:2020', '2020', '2020', 'g:2021', '2021', '2021']);
     api.destroy();

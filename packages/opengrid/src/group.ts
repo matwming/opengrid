@@ -47,8 +47,7 @@ export function flattenGroups(
       if (list) list.push(source);
       else buckets.set(key, [source]);
     }
-    const keys = [...buckets.keys()].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0));
-    for (const key of keys) {
+    for (const key of buckets.keys()) {
       const children = buckets.get(key) ?? [];
       const id = `${path}${colId}:${key}`;
       const expanded = isExpanded(id, depth);

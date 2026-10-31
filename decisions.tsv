@@ -42,3 +42,4 @@ ts	phase	decision	why	evidence	result
 2026-10-30T23:23:47Z	multi	Keep a row only when every multi-filter condition matches	The multi test leaves Noel when the boxes are no and el	packages/opengrid/src/multi.test.ts	tests green
 2026-10-30T23:24:54Z	advanced	Join a text condition and a number condition	The advanced test keeps Bea and Amy when the name contains a and qty is greater than 2	packages/opengrid/src/advanced.test.ts	tests green
 2026-10-30T23:26:03Z	viewport	Fill the visible range from a viewport datasource	The viewport test sets four rows, asks from row 0, and shows Ada and Bea	packages/opengrid/src/viewport.test.ts	tests green
+2026-10-31T01:01:06Z	enterprise-group	Keep group keys in first-seen order so they match enterprise 36.2.0	The probe expected USA then Ireland. Opengrid had sorted Ireland first. After the change both grids show USA, then Ireland, and the set filter leaves the same years	packages/opengrid/src/enterprise-probe.test.ts	tests green

@@ -124,7 +124,7 @@ function App() {
               </tr>
               <tr>
                 <td>行分组</td>
-                <td>客户端 <code>rowGroup</code> 会生成自动分组列，组键按升序排，<code>groupDefaultExpanded</code> 和 <code>setExpanded</code> 控制展开。<code>setRowGroupColumns</code> 能换分组列。企业版包不在社区依赖里，所以没有并排对照。</td>
+                <td>客户端 <code>rowGroup</code> 会生成自动分组列。组键按数据里第一次出现的顺序排，和 <code>ag-grid-enterprise</code> 36.2.0 的探针对上了。USA 在 Ireland 前面。<code>groupDefaultExpanded</code> 和 <code>setExpanded</code> 控制展开。<code>setRowGroupColumns</code> 能换分组列。组脚和分组选择还没有。</td>
               </tr>
               <tr>
                 <td>聚合</td>
@@ -132,7 +132,7 @@ function App() {
               </tr>
               <tr>
                 <td>透视</td>
-                <td><code>pivotMode</code> 把透视列的每个键变成一列。Ireland 的 2020 年 sales 是 4，2021 年是 9。透视时不展开明细行。没有和企业版并排对照。</td>
+                <td><code>pivotMode</code> 把透视列的每个键变成一列。Ireland 的 2020 年 sales 是 4，2021 年是 9。和企业版 36.2.0 对过列 id。企业版是 <code>pivot_year_2020_sales</code>，这边是 <code>ag-Grid-Pivot-sales-2020</code>，而且 <code>getAllGridColumns</code> 还留着原来的 <code>country</code>、<code>year</code>、<code>sales</code>。</td>
               </tr>
               <tr>
                 <td>树</td>
@@ -144,7 +144,7 @@ function App() {
               </tr>
               <tr>
                 <td>集合过滤</td>
-                <td><code>filterType: 'set'</code> 只留下 <code>values</code> 里的文本。空列表一行都不留。<code>agSetColumnFilter</code> 打开勾选列表，点 Apply 后只留勾中的值。弹窗里还没有搜索框。没有和企业版并排对照。</td>
+                <td><code>filterType: 'set'</code> 和 <code>ag-grid-enterprise</code> 36.2.0 在探针数据上留下同样的行。<code>agSetColumnFilter</code> 打开勾选列表，点 Apply 后只留勾中的值。弹窗里还没有搜索框。</td>
               </tr>
               <tr>
                 <td>范围选择</td>
