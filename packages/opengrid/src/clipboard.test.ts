@@ -22,7 +22,7 @@ describe('clipboard', () => {
     });
     api.addCellRange({ rowStartIndex: 0, rowEndIndex: 1, columns: ['name', 'qty'] });
     api.copySelectedRangeToClipboard();
-    expect(copied).toBe('ADA\t1\nBEA\t2');
+    expect(copied).toBe('ADA\t1\r\nBEA\t2');
     const data = new DataTransfer();
     data.setData('text/plain', 'Cara\t9');
     host.querySelector('.og-root')?.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, clipboardData: data }));

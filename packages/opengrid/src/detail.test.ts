@@ -21,7 +21,7 @@ describe('master detail', () => {
       const out: string[] = [];
       for (let index = 0; index < api.getDisplayedRowCount(); index++) {
         const node = api.getDisplayedRowAtIndex(index);
-        out.push(node?.id?.startsWith('detail:') ? `d:${node.key}` : String((node?.data as { id: string } | undefined)?.id));
+        out.push(node?.id?.startsWith('detail_') ? `d:${node.key}` : String((node?.data as { id: string } | undefined)?.id));
       }
       return out;
     };

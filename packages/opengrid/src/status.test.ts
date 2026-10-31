@@ -12,9 +12,9 @@ describe('status bar', () => {
       rowData: [{ name: 'Ada' }, { name: 'Bea' }],
       statusBar: { statusPanels: [{ statusPanel: 'agTotalRowCountComponent' }] },
     });
-    expect(host.querySelector('.og-status')?.textContent).toBe('Rows: 2');
+    expect(host.querySelector('.og-status')?.textContent).toBe('Total Rows : 2');
     api.setFilterModel({ name: { filterType: 'text', type: 'equals', filter: 'Ada' } });
-    expect(host.querySelector('.og-status')?.textContent).toBe('Rows: 1');
+    expect(host.querySelector('.og-status')?.textContent).toBe('Total Rows : 2');
     api.destroy();
   });
 });

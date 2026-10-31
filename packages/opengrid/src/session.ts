@@ -338,7 +338,6 @@ export class GridSession<TData = any> {
     const last = Math.min(this.view.count - 1, first + visible - 1 + buffer);
     const firstBlock = Math.floor(first / size);
     let lastBlock = Math.floor(Math.max(first, last) / size);
-    if (!this.infiniteKnown) lastBlock = Math.max(lastBlock, firstBlock + 1);
     const maxBlock = Math.floor(Math.max(0, this.view.count - 1) / size);
     if (this.infiniteKnown) lastBlock = Math.min(lastBlock, maxBlock);
     for (let block = firstBlock; block <= lastBlock; block++) this.loadInfiniteBlock(block, size);
@@ -451,7 +450,8 @@ export class GridSession<TData = any> {
     if (this.options.rowModelType !== 'viewport' || !datasource || this.view.count <= 0) return;
     const rowHeight = this.rowHeight();
     const first = Math.max(0, Math.floor(this.virtualTop() / rowHeight));
-    const visible = this.viewport.clientHeight > 0 ? Math.max(1, Math.floor(this.viewport.clientHeight / rowHeight)) : 1;
+    const height = this.viewport.clientHeight > 0 ? this.viewport.clientHeight : Number.parseFloat(this.host.style.height) || 0;
+    const visible = height > 0 ? Math.max(1, Math.floor(height / rowHeight)) : 1;
     const last = Math.min(this.view.count - 1, first + visible - 1);
     datasource.setViewportRange(first, last);
   }
@@ -617,7 +617,7 @@ export class GridSession<TData = any> {
       const row = this.rows[source];
       if (this.options.isRowMaster && row !== undefined && !this.options.isRowMaster(row)) continue;
       const text = this.options.detailCellRenderer?.({ data: row }) ?? '';
-      out.push({ kind: 'group', id: `detail:${source}`, key: text, level: 1, expanded: false, leafCount: 0, leafSources: [] });
+      out.push({ kind: 'group', id: `detail_${this.rowId(source)}`, key: text, level: 1, expanded: false, leafCount: 0, leafSources: [] });
     }
     return out;
   }
@@ -1416,6 +1416,14 @@ export class GridSession<TData = any> {
       : option.toolPanels ?? [];
     if (panels.length === 0) return;
     const side = el('div', 'og-side');
+    const tabs = el('div', 'og-side-buttons');
+    for (const panel of panels) {
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.textContent = panel.toolPanel === 'agFiltersToolPanel' || panel.id === 'filters' ? 'Filters' : 'Columns';
+      tabs.append(tab);
+    }
+    side.append(tabs);
     for (const panel of panels) {
       if (panel.toolPanel === 'agColumnsToolPanel' || panel.id === 'columns') side.append(this.columnsToolPanel());
       if (panel.toolPanel === 'agFiltersToolPanel' || panel.id === 'filters') side.append(this.filtersToolPanel());
@@ -2548,7 +2556,7 @@ export class GridSession<TData = any> {
         lines.push(cells.join('\t'));
       }
     }
-    return lines.join('\n');
+    return lines.join('\r\n');
   }
 
   private pasteClipboard(text: string): void {
@@ -2922,8 +2930,12 @@ export class GridSession<TData = any> {
   private renderStatus(): void {
     if (!this.status) return;
     const panels = this.options.statusBar?.statusPanels ?? [];
-    const wantsCount = panels.some((panel) => panel.statusPanel === 'agTotalRowCountComponent' || panel.statusPanel === 'agTotalAndFilteredRowCountComponent');
-    this.status.textContent = wantsCount ? `Rows: ${this.view.count}` : '';
+    const total = this.rows.length;
+    const shown = this.view.count;
+    const parts: string[] = [];
+    if (panels.some((panel) => panel.statusPanel === 'agTotalRowCountComponent')) parts.push(`Total Rows : ${total}`);
+    if (panels.some((panel) => panel.statusPanel === 'agTotalAndFilteredRowCountComponent')) parts.push(shown === total ? `Rows : ${shown}` : `Rows : ${shown} of ${total}`);
+    this.status.textContent = parts.join(' ');
   }
 
   private renderPager(): void {
@@ -3851,6 +3863,10 @@ class GroupNode<TData> implements IRowNode<TData> {
 
   get expanded(): boolean {
     return this.item.expanded;
+  }
+
+  get detail(): boolean {
+    return this.item.id.startsWith('detail_');
   }
 
   get allChildrenCount(): number {

@@ -204,7 +204,7 @@ function App() {
               </tr>
               <tr>
                 <td>主从明细</td>
-                <td><code>masterDetail</code> 展开主行后插入明细。只有 <code>isRowMaster</code> 允许的行会展开。<code>detailCellRenderer</code> 可以返回字符串。没有和企业版并排对照。</td>
+                <td><code>masterDetail</code> 展开主行后多出一行。只有 <code>isRowMaster</code> 允许的行会展开。明细行 id 是 <code>detail_0</code>，<code>detail</code> 为 true，和 <code>ag-grid-enterprise</code> 36.2.0 一样。<code>detailCellRenderer</code> 可以返回字符串。</td>
               </tr>
               <tr>
                 <td>集合过滤</td>
@@ -216,7 +216,7 @@ function App() {
               </tr>
               <tr>
                 <td>剪贴板</td>
-                <td><code>copySelectedRangeToClipboard</code> 把范围做成制表符文本，交给 <code>sendToClipboard</code>。<code>processCellForClipboard</code> 可以改每个格子。粘贴会写回范围，数字列仍是数字。没有和企业版并排对照。</td>
+                <td><code>copySelectedRangeToClipboard</code> 把范围做成制表符文本，行之间是 <code>\r\n</code>，和 <code>ag-grid-enterprise</code> 36.2.0 一样。<code>processCellForClipboard</code> 可以改每个格子。粘贴会写回范围，数字列仍是数字。</td>
               </tr>
               <tr>
                 <td>填充柄</td>
@@ -224,27 +224,27 @@ function App() {
               </tr>
               <tr>
                 <td>Excel 导出</td>
-                <td><code>getDataAsExcel</code> 返回 <code>.xlsx</code>。工作表里有表头和单元格文字。还没有样式、多表和导出弹窗。没有和企业版并排对照。</td>
+                <td><code>getDataAsExcel</code> 返回以 PK 开头的 <code>.xlsx</code>，文件里有 Ada，和 <code>ag-grid-enterprise</code> 36.2.0 一样。还没有样式、多表和导出弹窗。</td>
               </tr>
               <tr>
                 <td>服务端行模型</td>
-                <td><code>serverSideDatasource.getRows</code> 收到起止行、排序和过滤。<code>success</code> 把 <code>rowData</code> 和 <code>rowCount</code> 填进这一块。还没有服务端分组和透视。没有和企业版并排对照。</td>
+                <td><code>serverSideDatasource.getRows</code> 先要第 0 块，和 <code>ag-grid-enterprise</code> 36.2.0 一样。<code>success</code> 填进 Ada。还没有服务端分组和透视。</td>
               </tr>
               <tr>
                 <td>状态栏</td>
-                <td><code>agTotalRowCountComponent</code> 和 <code>agTotalAndFilteredRowCountComponent</code> 显示当前行数。过滤后数字会跟着变。其他状态面板还没有。没有和企业版并排对照。</td>
+                <td><code>agTotalRowCountComponent</code> 显示 <code>Total Rows : 2</code>，过滤后仍是这个数，和 <code>ag-grid-enterprise</code> 36.2.0 一样。没过滤时 <code>agTotalAndFilteredRowCountComponent</code> 是 <code>Rows : 2</code>。滤成 1 行时这边写成 <code>Rows : 1 of 2</code>。</td>
               </tr>
               <tr>
                 <td>集成图表</td>
-                <td><code>createRangeChart</code> 按范围里的数字列画出柱形图。<code>destroyChart</code> 把它去掉。还没有其他图种、图表工具条，以及图表和表格的联动。没有和企业版并排对照。</td>
+                <td><code>createRangeChart</code> 按范围里的数字列画出柱形图。<code>destroyChart</code> 把它去掉。这套企业版安装报错 200，Integrated Charts 模块没有绘图层，所以柱形没有并排对上。</td>
               </tr>
               <tr>
                 <td>迷你图</td>
-                <td><code>cellRenderer: 'agSparklineCellRenderer'</code> 按单元格里的数字数组画柱。数组 <code>[1, 3, 2]</code> 画出三根柱。还没有折线和面积迷你图。没有和企业版并排对照。</td>
+                <td><code>cellRenderer: 'agSparklineCellRenderer'</code> 按单元格里的数字数组画柱。数组 <code>[1, 3, 2]</code> 画出三根柱。这套企业版安装报错 200，Sparklines 模块没有绘图层，所以柱没有并排对上。</td>
               </tr>
               <tr>
                 <td>侧边栏</td>
-                <td><code>sideBar: true</code> 打开列工具面板和过滤工具面板。列面板可以藏起一列。过滤面板打开那一列的过滤。自定义工具面板还没有。没有和企业版并排对照。</td>
+                <td><code>sideBar: true</code> 的页签是 Columns 和 Filters，和 <code>ag-grid-enterprise</code> 36.2.0 一样。列面板可以藏起一列。过滤面板打开那一列的过滤。自定义工具面板还没有。</td>
               </tr>
               <tr>
                 <td>多重过滤</td>
@@ -256,7 +256,7 @@ function App() {
               </tr>
               <tr>
                 <td>视口行模型</td>
-                <td><code>viewportDatasource.init</code> 收到 <code>setRowCount</code> 和 <code>setRowData</code>。<code>setViewportRange</code> 拿到可见行，数据源把这些行填进来。没有和企业版并排对照。</td>
+                <td><code>viewportDatasource.init</code> 收到 <code>setRowCount</code> 和 <code>setRowData</code>。240 像素高、行高 36、共 4 行时，<code>setViewportRange</code> 是 0 到 3，和 <code>ag-grid-enterprise</code> 36.2.0 一样。</td>
               </tr>
               <tr>
                 <td>React</td>
@@ -273,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>工具条菜单快捷键。</li>
+            <li>填充柄和行拖拽的企业版指针拖动需要真实布局，happy-dom 里对不上落点。图表和迷你图的企业版模块在这套安装里报错 200，没有绘图层。</li>
           </ul>
         </section>
 

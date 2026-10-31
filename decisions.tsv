@@ -72,3 +72,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T02:08:08Z	find-active	Mark the current find match like enterprise	After two findNext calls the active mark is the city cell on both grids	packages/opengrid/src/find.test.ts	tests green
 2026-10-31T02:10:06Z	note-edit	Write an edited note back when the pointer leaves	Both grids store there and keep the author Ada	packages/opengrid/src/note-edit.test.ts	tests green
 2026-10-31T02:10:25Z	toolbar-shortcut	Show Ctrl+C beside Copy in the toolbar menu	The shortcut text matches enterprise	packages/opengrid/src/toolbar-menu.test.ts	tests green
+2026-10-31T02:13:51Z	parity	Match enterprise clipboard, status text, detail id, server block, viewport range, side tabs, and excel bytes	CRLF copy, Total Rows : 2, detail_0, block 0, range 0 to 3, Columns and Filters, and Ada in the xlsx	packages/opengrid/src/parity.test.ts	tests green
