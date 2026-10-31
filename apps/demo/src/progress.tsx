@@ -160,7 +160,7 @@ function App() {
               </tr>
               <tr>
                 <td>公式</td>
-                <td><code>allowFormula</code> 把 <code>=[qty]*2</code> 显示成 8，把 <code>=1+2</code> 显示成 3。<code>=SUM([qty],[bonus])</code> 是 5，<code>=SUM([qty])</code> 是 3。<code>=SUM(A1:B2)</code> 是 10，<code>=B1</code> 是 1，<code>=SUM(A1:A2)</code> 是 7，和 <code>ag-grid-enterprise</code> 36.2.0 一样。行号列不占字母。公式数据源还没有。</td>
+                <td><code>allowFormula</code> 把 <code>=[qty]*2</code> 显示成 8，把 <code>=1+2</code> 显示成 3。<code>=SUM([qty],[bonus])</code> 是 5，<code>=SUM([qty])</code> 是 3。<code>=SUM(A1:B2)</code> 是 10，<code>=B1</code> 是 1，<code>=SUM(A1:A2)</code> 是 7，和 <code>ag-grid-enterprise</code> 36.2.0 一样。行号列不占字母。<code>formulaDataSource</code> 提供 <code>=1+2</code> 时格子显示 3，行数据仍是 9，<code>refreshFormulas</code> 之后和企业版 36.2.0 一样。</td>
               </tr>
               <tr>
                 <td>查找</td>
@@ -273,7 +273,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>行合并 <code>spanRows</code>、公式数据源、工具条的菜单和透视项。</li>
+            <li>公式数据源、工具条的菜单和透视项、查找高亮。</li>
           </ul>
         </section>
 

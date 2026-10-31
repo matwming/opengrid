@@ -66,3 +66,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:59:31Z	group-filter-picker	Open a field picker on the group column filter	Select field lists Country and Year. Year contains 2021 leaves the same rows as enterprise	packages/opengrid/src/group-filter-picker.test.ts	tests green
 2026-10-31T02:00:12Z	note-popup	Open a note popup with the author line enterprise shows	Clicking the cell shows hello and Ada · 2020-01-02	packages/opengrid/src/note-popup.test.ts	tests green
 2026-10-31T02:01:03Z	span-rows	Merge equal cells down the column like enterprise	USA spans two rows at 83px and Ireland stays a single cell	packages/opengrid/src/span-rows.test.ts	tests green
+2026-10-31T02:01:33Z	formula-source	Read formulas from formulaDataSource and keep the row value	=1+2 displays 3 and the row stays total 9 on both grids	packages/opengrid/src/formula-source.test.ts	tests green

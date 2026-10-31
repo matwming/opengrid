@@ -1893,6 +1893,16 @@ export class GridSession<TData = any> {
     } else if (editor.leaf.kind === 'number') next = text.trim() === '' ? null : Number(text);
     else if (editor.leaf.kind === 'date') next = text.trim() === '' ? null : text;
     else if (editor.leaf.kind === 'boolean') next = text === 'true';
+    if (this.options.formulaDataSource && editor.leaf.def.allowFormula) {
+      this.options.formulaDataSource.setFormula({
+        column: columnFacade(editor.leaf),
+        rowNode: this.nodeFor(editor.source),
+        formula: typeof next === 'string' && next.startsWith('=') ? next : undefined,
+      });
+      this.paint();
+      this.syncA11y();
+      return;
+    }
     this.writeSource(editor.source, editor.leaf, next, 'edit');
   }
 
@@ -2078,8 +2088,14 @@ export class GridSession<TData = any> {
 
   private formulaValue(source: number, leaf: Leaf<TData>): unknown {
     const value = this.readSource(source, leaf);
-    if (!leaf.def.allowFormula || typeof value !== 'string' || !value.startsWith('=')) return value;
-    const computed = this.evalFormula(value.slice(1), source, new Set());
+    const stored = this.options.formulaDataSource?.getFormula({ column: columnFacade(leaf), rowNode: this.nodeFor(source) });
+    const formula = leaf.def.allowFormula && typeof stored === 'string' && stored.startsWith('=')
+      ? stored
+      : leaf.def.allowFormula && typeof value === 'string' && value.startsWith('=')
+        ? value
+        : undefined;
+    if (!formula) return value;
+    const computed = this.evalFormula(formula.slice(1), source, new Set());
     return computed == null ? value : computed;
   }
 
@@ -3428,6 +3444,11 @@ export class GridSession<TData = any> {
         session.refresh('filter');
       },
       getAdvancedFilterModel: () => session.advancedModel,
+      refreshFormulas: () => {
+        session.paint();
+        session.syncA11y();
+        return true;
+      },
       findGetTotalMatches: () => session.findMatches().length,
       findNext: () => session.findStep(1),
       undoCellEditing: () => session.undoCellEditing(),

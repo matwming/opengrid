@@ -277,6 +277,10 @@ export interface GridOptions<TData = any> {
     setNote(params: { column: Column; rowNode: IRowNode<TData>; note: { text: string; author?: string; createdAt?: string; updatedAt?: string } | undefined }): void;
   };
   noteTrigger?: 'hover' | 'click';
+  formulaDataSource?: {
+    getFormula(params: { column: Column; rowNode: IRowNode<TData> }): string | undefined;
+    setFormula(params: { column: Column; rowNode: IRowNode<TData>; formula?: string }): void;
+  };
   findSearchValue?: string;
   getContextMenuItems?: (params: { defaultItems: string[] }) => (string | { name: string })[];
   fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
@@ -642,6 +646,7 @@ export interface GridApi<TData = any> {
   ensureColumnVisible(key: string | Column, position?: 'auto' | 'start' | 'middle' | 'end'): void;
   getDataAsCsv(params?: CsvExportParams): string;
   exportDataAsCsv(params?: CsvExportParams): void;
+  refreshFormulas(): boolean;
   findGetTotalMatches(): number;
   findNext(): void;
   getDataAsExcel(): Blob;
