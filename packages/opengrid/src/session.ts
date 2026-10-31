@@ -1,4 +1,4 @@
-import { bandsOf, buildLeaves, columnFacade, groupRuns, selectionConfig, visibleLeaves, AUTO_GROUP_COL_ID, autoGroupLeaf, type Leaf, type SelectionConfig } from './columns';
+import { bandsOf, buildLeaves, columnFacade, groupRuns, selectionConfig, visibleLeaves, AUTO_GROUP_COL_ID, autoGroupLeaf, rowNumberLeaf, ROW_NUMBERS_COL_ID, type Leaf, type SelectionConfig } from './columns';
 import { encodeCsv, encodeCsvRaw, downloadCsv } from './csv';
 import { workbookBytes } from './xlsx';
 import { WORKER_ROW_MIN, WorkerEngine } from './engine-client';
@@ -201,6 +201,7 @@ export class GridSession<TData = any> {
   private rebuildColumns(sample: readonly TData[]): void {
     this.selection = selectionConfig(this.options);
     this.leaves = buildLeaves(this.options, sample);
+    if (this.options.rowNumbers) this.leaves.unshift(rowNumberLeaf<TData>());
     this.layout();
   }
 
@@ -210,7 +211,7 @@ export class GridSession<TData = any> {
     this.idToSource.clear();
     const fields: StoreField[] = [];
     for (const leaf of this.leaves) {
-      if (leaf.selectionColumn) continue;
+      if (leaf.selectionColumn || leaf.colId === ROW_NUMBERS_COL_ID) continue;
       fields.push({
         colId: leaf.colId,
         kind: leaf.kind,
@@ -1788,6 +1789,10 @@ export class GridSession<TData = any> {
   }
 
   private textFor(source: number, leaf: Leaf<TData>): string {
+    if (leaf.colId === ROW_NUMBERS_COL_ID) {
+      const display = this.displayIndex(source);
+      return display == null ? '' : String(display + 1);
+    }
     if (leaf.selectionColumn) return '';
     const value = this.readSource(source, leaf);
     if (typeof leaf.valueFormatter === 'function') {

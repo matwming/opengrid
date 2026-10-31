@@ -122,6 +122,12 @@ export function autoGroupLeaf<TData>(headerName: string, width: number): Leaf<TD
   return leaf;
 }
 
+export const ROW_NUMBERS_COL_ID = 'ag-Grid-RowNumbersColumn';
+
+export function rowNumberLeaf<TData>(): Leaf<TData> {
+  return autoLeaf<TData>(ROW_NUMBERS_COL_ID, '', 70, 'left');
+}
+
 function autoLeaf<TData>(colId: string, headerName: string, width: number, pinned: 'left' | 'right' | null): Leaf<TData> {
   return {
     colId,

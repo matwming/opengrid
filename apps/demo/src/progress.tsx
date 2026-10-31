@@ -135,6 +135,10 @@ function App() {
                 <td><code>pivotMode</code> 的列 id 和第一组的 <code>aggData</code> 与 <code>ag-grid-enterprise</code> 36.2.0 对上了。列名是 <code>pivot_year_2020_sales</code> 这种。<code>getAllGridColumns</code> 不再列出原来的分组列、透视列和值列。多列透视和合计列还没有。</td>
               </tr>
               <tr>
+                <td>行号</td>
+                <td><code>rowNumbers: true</code> 加上 <code>ag-Grid-RowNumbersColumn</code>，位置和 <code>ag-grid-enterprise</code> 36.2.0 一样。前两行显示 1 和 2。</td>
+              </tr>
+              <tr>
                 <td>树</td>
                 <td><code>treeData</code> 和 <code>getDataPath</code> 按路径嵌套。CEO 下面有 Sales 和 Support，收起 Sales 后 EU 不再显示。没有和企业版并排对照。</td>
               </tr>
@@ -208,7 +212,9 @@ function App() {
 
         <section>
           <h2>还没做</h2>
-          <p>上面点名的这批已经进表。每一行里写了还没做的部分，例如图表工具条、迷你图折线、高级过滤搭建界面。</p>
+          <ul>
+            <li>右键菜单、列菜单、分组面板、单元格合并、公式、查找、PDF 导出、撤销。</li>
+          </ul>
         </section>
 
         <section>

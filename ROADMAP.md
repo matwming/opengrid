@@ -60,7 +60,8 @@ Status words mean the following.
 | Sparklines | [Sparklines](https://www.ag-grid.com/javascript-data-grid/sparklines-overview/) | partial. `cellRenderer: 'agSparklineCellRenderer'` draws one bar per number in the cell array. Line and area sparklines are not started. Not compared with Enterprise. |
 | Status bar | [Status bar](https://www.ag-grid.com/javascript-data-grid/status-bar/) | partial. `agTotalRowCountComponent` and `agTotalAndFilteredRowCountComponent` show the displayed row count, including after a filter. Other status panels are not started. Not compared with Enterprise. |
 | Side bar | [Side bar](https://www.ag-grid.com/javascript-data-grid/side-bar/) | partial. `sideBar: true` shows the columns tool panel and the filters tool panel. The columns panel hides a column. The filters panel opens that column's filter. Custom tool panels are not started. Not compared with Enterprise. |
-| Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | not started |
+| Row numbers | [Row numbers](https://www.ag-grid.com/javascript-data-grid/row-numbers/) | partial. `rowNumbers: true` adds `ag-Grid-RowNumbersColumn` in the same place as `ag-grid-enterprise` 36.2.0. The cells show 1 and 2 for the first two displayed rows. |
+| Tool panels | [Tool panel](https://www.ag-grid.com/javascript-data-grid/tool-panel/) | partial. The columns and filters panels ship with the side bar. A custom `toolPanel` component is not started. |
 
 ## Benchmark
 

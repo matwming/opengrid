@@ -247,6 +247,7 @@ export interface GridOptions<TData = any> {
   cellSelection?: boolean | { handle?: { mode?: 'fill' } };
   statusBar?: { statusPanels?: { statusPanel?: string }[] };
   sideBar?: boolean | { toolPanels?: { id?: string; toolPanel?: string }[] };
+  rowNumbers?: boolean | { suppressCellFocus?: boolean };
   enableAdvancedFilter?: boolean;
   fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
   sendToClipboard?: (params: { data: string }) => void;

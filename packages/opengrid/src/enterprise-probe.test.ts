@@ -88,6 +88,32 @@ describe('enterprise probe', () => {
     ours.destroy();
   });
 
+  it('matches the row number column id', () => {
+    const hostFor = () => {
+      const host = document.createElement('div');
+      host.style.width = '640px';
+      host.style.height = '240px';
+      document.body.appendChild(host);
+      return host;
+    };
+    const options = {
+      columnDefs: [{ field: 'name' }],
+      rowData: [{ name: 'Ada' }, { name: 'Bea' }],
+      rowNumbers: true,
+      animateRows: false,
+    };
+    const enterpriseHost = hostFor();
+    const ourHost = hostFor();
+    const enterprise = createAgGrid(enterpriseHost, options);
+    const ours = createOpenGrid(ourHost, options);
+    expect(ours.getAllGridColumns().map((column) => column.getColId())).toEqual(enterprise.getAllGridColumns().map((column) => column.getColId()));
+    const cells = [...ourHost.querySelectorAll('[role="gridcell"]')].map((cell) => cell.textContent);
+    expect(cells).toContain('1');
+    expect(cells).toContain('2');
+    enterprise.destroy();
+    ours.destroy();
+  });
+
   it('matches a set filter', () => {
     const options = {
       columnDefs: [{ field: 'country', filter: 'agSetColumnFilter' }, { field: 'year' }],
