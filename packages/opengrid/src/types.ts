@@ -216,6 +216,7 @@ export interface ToolbarItem<TData = any> {
   label?: string;
   action?: (params: { key: string }) => void;
   toolbarItem?: string;
+  toolbarItemParams?: { menuItems?: (string | { name: string })[] };
 }
 
 export type AlignedGrid<TData = any> =

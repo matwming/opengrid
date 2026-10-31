@@ -1305,6 +1305,27 @@ export class GridSession<TData = any> {
     this.popup.style.top = `${Math.max(0, event.clientY - rect.top)}px`;
   }
 
+  private openToolbarMenu(items: readonly (string | { name: string })[]): void {
+    const labels = this.contextLabels(items);
+    this.popup.replaceChildren();
+    this.popup.hidden = false;
+    this.popup.classList.add('og-menu-list');
+    labels.forEach((label, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'og-menu-option';
+      button.textContent = label;
+      button.addEventListener('click', () => {
+        this.popup.hidden = true;
+        const token = items[index];
+        const leaf = this.visibleLeaves()[this.focusCol];
+        if (!leaf) return;
+        this.runContextItem(typeof token === 'string' ? token : label, this.focusRow, leaf);
+      });
+      this.popup.append(button);
+    });
+  }
+
   private runContextItem(token: string, display: number, leaf: Leaf<TData>): void {
     const copy = (headers: boolean) => {
       const previous = this.cellRanges.slice();
@@ -2657,6 +2678,20 @@ export class GridSession<TData = any> {
     this.api.setRowGroupColumns([...ids, colId]);
   }
 
+  private fillPivotPanel(panel: HTMLElement): void {
+    const pivots = this.leaves.filter((leaf) => leaf.def.pivot && leaf.def.pivotKey == null);
+    panel.replaceChildren();
+    if (pivots.length === 0) {
+      panel.textContent = 'Drag here to set column labels';
+      return;
+    }
+    for (const leaf of pivots) {
+      const chip = document.createElement('span');
+      chip.textContent = leaf.headerName;
+      panel.append(chip);
+    }
+  }
+
   private fillGroupPanel(panel: HTMLElement): void {
     const groups = this.groupLeaves();
     panel.replaceChildren();
@@ -2676,7 +2711,8 @@ export class GridSession<TData = any> {
   }
 
   private syncToolbarGroups(): void {
-    this.toolbar?.querySelectorAll<HTMLElement>('.og-toolbar-panel').forEach((panel) => this.fillGroupPanel(panel));
+    this.toolbar?.querySelectorAll<HTMLElement>('.og-toolbar-panel:not(.og-pivot-panel)').forEach((panel) => this.fillGroupPanel(panel));
+    this.toolbar?.querySelectorAll<HTMLElement>('.og-pivot-panel').forEach((panel) => this.fillPivotPanel(panel));
   }
 
   private renderToolbar(): void {
@@ -2693,7 +2729,7 @@ export class GridSession<TData = any> {
     this.syncFindCount();
   }
 
-  private appendToolbarItem(item: string | { key?: string; label?: string; action?: (params: { key: string }) => void; toolbarItem?: string }): void {
+  private appendToolbarItem(item: string | { key?: string; label?: string; action?: (params: { key: string }) => void; toolbarItem?: string; toolbarItemParams?: { menuItems?: (string | { name: string })[] } }): void {
     if (!this.toolbar) return;
     if (item === 'separator' || (typeof item === 'object' && item.toolbarItem === 'separator')) {
       this.toolbar.append(el('span', 'og-toolbar-sep'));
@@ -2728,6 +2764,26 @@ export class GridSession<TData = any> {
       const panel = el('div', 'og-toolbar-panel');
       this.bindGroupDrop(panel);
       this.toolbar.append(panel);
+      return;
+    }
+    if (item.toolbarItem === 'agPivotPanelToolbarItem') {
+      if (!this.options.pivotMode) return;
+      const panel = el('div', 'og-toolbar-panel og-pivot-panel');
+      this.fillPivotPanel(panel);
+      this.toolbar.append(panel);
+      return;
+    }
+    if (item.toolbarItem === 'agMenuToolbarItem') {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'og-toolbar-button';
+      const label = document.createElement('span');
+      label.className = 'og-toolbar-button-label';
+      label.textContent = item.label ?? 'Menu';
+      button.append(label);
+      const menuItems = item.toolbarItemParams?.menuItems ?? [];
+      button.addEventListener('click', () => this.openToolbarMenu(menuItems));
+      this.toolbar.append(button);
       return;
     }
     if (!item.label && !item.action) return;
