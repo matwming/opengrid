@@ -1913,13 +1913,45 @@ export class GridSession<TData = any> {
     };
   }
 
+  private formulaValue(source: number, leaf: Leaf<TData>): unknown {
+    const value = this.readSource(source, leaf);
+    if (!leaf.def.allowFormula || typeof value !== 'string' || !value.startsWith('=')) return value;
+    const computed = this.evalFormula(value.slice(1), source, new Set());
+    return computed == null ? value : computed;
+  }
+
+  private evalFormula(expr: string, source: number, seen: Set<string>): number | null {
+    const replaced = expr.replace(/\[([^\]]+)\]/g, (_match, colId: string) => {
+      const key = `${source}:${colId}`;
+      if (seen.has(key)) return '0';
+      const nextSeen = new Set(seen);
+      nextSeen.add(key);
+      const leaf = this.leafByKey(colId);
+      if (!leaf) return '0';
+      const raw = this.readSource(source, leaf);
+      if (leaf.def.allowFormula && typeof raw === 'string' && raw.startsWith('=')) {
+        const inner = this.evalFormula(raw.slice(1), source, nextSeen);
+        return inner == null ? '0' : String(inner);
+      }
+      const number = typeof raw === 'number' ? raw : Number(raw);
+      return Number.isFinite(number) ? String(number) : '0';
+    });
+    if (!/^[\d+\-*/().\s]+$/.test(replaced)) return null;
+    try {
+      const value = Function(`"use strict"; return (${replaced})`)() as unknown;
+      return typeof value === 'number' && Number.isFinite(value) ? value : null;
+    } catch {
+      return null;
+    }
+  }
+
   private textFor(source: number, leaf: Leaf<TData>): string {
     if (leaf.colId === ROW_NUMBERS_COL_ID) {
       const display = this.displayIndex(source);
       return display == null ? '' : String(display + 1);
     }
     if (leaf.selectionColumn) return '';
-    const value = this.readSource(source, leaf);
+    const value = this.formulaValue(source, leaf);
     if (typeof leaf.valueFormatter === 'function') {
       return leaf.valueFormatter({
         value,
@@ -2103,6 +2135,7 @@ export class GridSession<TData = any> {
         cell.id = this.cellDomId(display, index);
         cell.setAttribute('role', 'gridcell');
         cell.setAttribute('aria-colindex', String(index + 1));
+        cell.dataset.colId = leaf.colId;
         if (span > 1) {
           cell.setAttribute('aria-colspan', String(span));
           const width = leaves.slice(index, index + span).reduce((sum, item) => sum + item.width, 0);
