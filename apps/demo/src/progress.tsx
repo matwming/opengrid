@@ -143,6 +143,10 @@ function App() {
                 <td><code>rowGroupPanelShow: 'always'</code> 显示 <code>Drag here to set row groups</code>，和企业版 36.2.0 的文字一样。已经分组的列显示表头名。还不能把列拖进面板。</td>
               </tr>
               <tr>
+                <td>撤销</td>
+                <td>打开 <code>undoRedoCellEditing</code> 后，<code>undoCellEditing</code> 和 <code>redoCellEditing</code> 把 <code>setDataValue</code> 的修改退回和重做，结果和 <code>ag-grid-enterprise</code> 36.2.0 一样。默认最多记 10 步。</td>
+              </tr>
+              <tr>
                 <td>树</td>
                 <td><code>treeData</code> 和 <code>getDataPath</code> 按路径嵌套。CEO 下面有 Sales 和 Support，收起 Sales 后 EU 不再显示。没有和企业版并排对照。</td>
               </tr>
@@ -217,7 +221,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>右键菜单、列菜单、单元格合并、公式、查找、PDF 导出、撤销。</li>
+            <li>右键菜单、列菜单、单元格合并、公式、查找、PDF 导出。</li>
           </ul>
         </section>
 

@@ -46,3 +46,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:07:25Z	pivot-id	Name pivot columns the way enterprise 36.2.0 does	The probe reads pivot_year_2020_sales and pivot_year_2021_sales, and the USA group aggData is 10 and 7	packages/opengrid/src/enterprise-probe.test.ts	tests green
 2026-10-31T01:09:36Z	row-numbers	Show a row number column with the enterprise column id	The probe matches ag-Grid-RowNumbersColumn, and the cells read 1 and 2	packages/opengrid/src/enterprise-probe.test.ts	tests green
 2026-10-31T01:11:22Z	group-panel	Show the enterprise row group panel placeholder	The panel test reads Drag here to set row groups on both grids, and Country once a column is grouped	packages/opengrid/src/group-panel.test.ts	tests green
+2026-10-31T01:13:12Z	undo	Undo and redo a setDataValue edit like enterprise 36.2.0	Both grids return to Ada after undo and to Zoe after redo	packages/opengrid/src/undo.test.ts	tests green

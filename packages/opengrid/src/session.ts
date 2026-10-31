@@ -92,7 +92,9 @@ export class GridSession<TData = any> {
   private empty: HTMLElement;
   private pager: HTMLElement;
   private status: HTMLElement | null = null;
-  private groupPanel: HTMLElement;
+  private groupPanel!: HTMLElement;
+  private undoStack: { source: number; colId: string; value: unknown }[] = [];
+  private redoStack: { source: number; colId: string; value: unknown }[] = [];
   private pageIndex = 0;
   private infiniteKnown = false;
   private infiniteGen = 0;
@@ -489,6 +491,26 @@ export class GridSession<TData = any> {
     if (value == null) return '';
     if (leaf.kind === 'date' && typeof value === 'number') return formatDay(value);
     return String(value);
+  }
+
+  private undoCellEditing(): void {
+    const item = this.undoStack.pop();
+    if (!item) return;
+    const leaf = this.leafByKey(item.colId);
+    if (!leaf) return;
+    const current = this.readSource(item.source, leaf);
+    this.redoStack.push({ source: item.source, colId: item.colId, value: current });
+    this.writeSource(item.source, leaf, item.value, 'undo');
+  }
+
+  private redoCellEditing(): void {
+    const item = this.redoStack.pop();
+    if (!item) return;
+    const leaf = this.leafByKey(item.colId);
+    if (!leaf) return;
+    const current = this.readSource(item.source, leaf);
+    this.undoStack.push({ source: item.source, colId: item.colId, value: current });
+    this.writeSource(item.source, leaf, item.value, 'redo');
   }
 
   private applyAdvanced(view: ViewResult): ViewResult {
@@ -1706,6 +1728,12 @@ export class GridSession<TData = any> {
   private writeSource(source: number, leaf: Leaf<TData>, next: unknown, eventSource: string): boolean {
     if (leaf.selectionColumn) return false;
     const oldValue = this.readSource(source, leaf);
+    if (this.options.undoRedoCellEditing && eventSource !== 'undo' && eventSource !== 'redo') {
+      this.undoStack.push({ source, colId: leaf.colId, value: oldValue });
+      const limit = this.options.undoRedoCellEditingLimit ?? 10;
+      while (this.undoStack.length > limit) this.undoStack.shift();
+      this.redoStack = [];
+    }
     const row = this.rows[source];
     if (row == null) return false;
     if (typeof leaf.valueSetter === 'function') {
@@ -2847,6 +2875,8 @@ export class GridSession<TData = any> {
         session.refresh('filter');
       },
       getAdvancedFilterModel: () => session.advancedModel,
+      undoCellEditing: () => session.undoCellEditing(),
+      redoCellEditing: () => session.redoCellEditing(),
       isAnyFilterPresent: () => session.hasFilter(),
       isColumnFilterPresent: () => session.columnFilterPresent(),
       onFilterChanged: () => session.refresh('filter'),

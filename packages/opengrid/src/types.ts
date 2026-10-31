@@ -250,6 +250,8 @@ export interface GridOptions<TData = any> {
   rowNumbers?: boolean | { suppressCellFocus?: boolean };
   rowGroupPanelShow?: 'always' | 'onlyWhenGrouping' | 'never';
   enableAdvancedFilter?: boolean;
+  undoRedoCellEditing?: boolean;
+  undoRedoCellEditingLimit?: number;
   fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
   sendToClipboard?: (params: { data: string }) => void;
   processCellForClipboard?: (params: { value: string; column: Column }) => string;
@@ -582,6 +584,8 @@ export interface GridApi<TData = any> {
   getFilterModel(): FilterModel;
   setAdvancedFilterModel(model: AdvancedFilterModel | null): void;
   getAdvancedFilterModel(): AdvancedFilterModel | null;
+  undoCellEditing(): void;
+  redoCellEditing(): void;
   isAnyFilterPresent(): boolean;
   isColumnFilterPresent(): boolean;
   onFilterChanged(): void;
