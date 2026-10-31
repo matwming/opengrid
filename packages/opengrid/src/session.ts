@@ -1945,6 +1945,24 @@ export class GridSession<TData = any> {
     }
   }
 
+  private findIndex = -1;
+
+  private findMatches(): { row: number; col: number }[] {
+    const query = (this.options.findSearchValue ?? '').toLocaleLowerCase();
+    if (!query) return [];
+    const leaves = this.visibleLeaves();
+    const out: { row: number; col: number }[] = [];
+    for (let row = 0; row < this.view.count; row++) {
+      const source = this.sourceAt(row);
+      if (source < 0) continue;
+      leaves.forEach((leaf, col) => {
+        if (leaf.selectionColumn || leaf.colId === ROW_NUMBERS_COL_ID) return;
+        if (this.textFor(source, leaf).toLocaleLowerCase().includes(query)) out.push({ row, col });
+      });
+    }
+    return out;
+  }
+
   private textFor(source: number, leaf: Leaf<TData>): string {
     if (leaf.colId === ROW_NUMBERS_COL_ID) {
       const display = this.displayIndex(source);
@@ -3010,6 +3028,14 @@ export class GridSession<TData = any> {
         session.refresh('filter');
       },
       getAdvancedFilterModel: () => session.advancedModel,
+      findGetTotalMatches: () => session.findMatches().length,
+      findNext: () => {
+        const matches = session.findMatches();
+        if (matches.length === 0) return;
+        session.findIndex = (session.findIndex + 1) % matches.length;
+        const match = matches[session.findIndex];
+        if (match) session.setFocus(match.row, match.col, true);
+      },
       undoCellEditing: () => session.undoCellEditing(),
       redoCellEditing: () => session.redoCellEditing(),
       isAnyFilterPresent: () => session.hasFilter(),

@@ -51,3 +51,4 @@ ts	phase	decision	why	evidence	result
 2026-10-31T01:17:58Z	column-menu	List the enterprise column menu and sort ascending from it	The menu test matches seven labels, and Sort Ascending puts Ada before Bea	packages/opengrid/src/column-menu.test.ts	tests green
 2026-10-31T01:19:45Z	span	Widen a cell across the next column like enterprise	The span test sees one name cell at 400px on both grids	packages/opengrid/src/span.test.ts	tests green
 2026-10-31T01:22:23Z	formula	Evaluate bracket and arithmetic formulas like enterprise 36.2.0	The formula test shows 8 and 3 on both grids and keeps the formula string in the row	packages/opengrid/src/formula.test.ts	tests green
+2026-10-31T01:24:12Z	find	Count find matches like enterprise and move to the next one	The find test reports 2 matches on both grids, then focuses name and then city	packages/opengrid/src/find.test.ts	tests green

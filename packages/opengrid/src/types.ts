@@ -254,6 +254,7 @@ export interface GridOptions<TData = any> {
   enableAdvancedFilter?: boolean;
   undoRedoCellEditing?: boolean;
   undoRedoCellEditingLimit?: number;
+  findSearchValue?: string;
   getContextMenuItems?: (params: { defaultItems: string[] }) => (string | { name: string })[];
   fillOperation?: (params: { currentValue: unknown; values: unknown[] }) => unknown;
   sendToClipboard?: (params: { data: string }) => void;
@@ -612,6 +613,8 @@ export interface GridApi<TData = any> {
   ensureColumnVisible(key: string | Column, position?: 'auto' | 'start' | 'middle' | 'end'): void;
   getDataAsCsv(params?: CsvExportParams): string;
   exportDataAsCsv(params?: CsvExportParams): void;
+  findGetTotalMatches(): number;
+  findNext(): void;
   getDataAsExcel(): Blob;
   exportDataAsExcel(): void;
   createRangeChart(params: CreateRangeChartParams): ChartRef;

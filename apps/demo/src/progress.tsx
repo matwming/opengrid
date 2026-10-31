@@ -163,6 +163,10 @@ function App() {
                 <td><code>allowFormula</code> 把 <code>=[qty]*2</code> 显示成 8，把 <code>=1+2</code> 显示成 3，和 <code>ag-grid-enterprise</code> 36.2.0 一样。行数据里仍是公式字符串。范围、<code>SUM</code> 和公式数据源还没有。</td>
               </tr>
               <tr>
+                <td>查找</td>
+                <td><code>findSearchValue: 'ada'</code> 找到 2 处，和 <code>ag-grid-enterprise</code> 36.2.0 的次数一样。<code>findNext</code> 先聚焦名字格，再聚焦城市格。匹配高亮还没有。</td>
+              </tr>
+              <tr>
                 <td>树</td>
                 <td><code>treeData</code> 和 <code>getDataPath</code> 按路径嵌套。CEO 下面有 Sales 和 Support，收起 Sales 后 EU 不再显示。没有和企业版并排对照。</td>
               </tr>
@@ -237,7 +241,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>查找、PDF 导出、富选择编辑器、分组过滤、备注、批量编辑、对齐网格、工具条、分组面板拖拽。</li>
+            <li>PDF 导出、富选择编辑器、分组过滤、备注、批量编辑、对齐网格、工具条、分组面板拖拽。</li>
           </ul>
         </section>
 
