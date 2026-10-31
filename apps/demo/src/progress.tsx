@@ -164,7 +164,7 @@ function App() {
               </tr>
               <tr>
                 <td>查找</td>
-                <td><code>findSearchValue: 'ada'</code> 找到 2 处，和 <code>ag-grid-enterprise</code> 36.2.0 的次数一样。<code>findNext</code> 先聚焦名字格，再聚焦城市格。匹配高亮还没有。</td>
+                <td><code>findSearchValue: 'ada'</code> 找到 2 处，和 <code>ag-grid-enterprise</code> 36.2.0 的次数一样。<code>findNext</code> 先聚焦名字格，再聚焦城市格。匹配的无障碍单元格带 <code>og-find</code>。</td>
               </tr>
               <tr>
                 <td>PDF 导出</td>
@@ -261,7 +261,7 @@ function App() {
         <section>
           <h2>还没做</h2>
           <ul>
-            <li>对齐网格、工具条、分组面板拖拽、公式单元格范围、查找高亮。</li>
+            <li>对齐网格、工具条、分组面板拖拽、公式单元格范围。</li>
           </ul>
         </section>
 

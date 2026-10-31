@@ -34,6 +34,7 @@ describe('find', () => {
     api.findNext();
     expect(api.getFocusedCell()?.rowIndex).toBe(1);
     expect(api.getFocusedCell()?.column.getColId()).toBe('city');
+    expect(host.querySelectorAll('.og-find')).toHaveLength(enterprise.findGetTotalMatches());
     enterprise.destroy();
     api.destroy();
   });

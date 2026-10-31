@@ -2245,6 +2245,8 @@ export class GridSession<TData = any> {
         const note = source >= 0 ? this.noteFor(source, leaf) : undefined;
         if (note) cell.dataset.note = note.text;
         cell.textContent = leaf.selectionColumn ? (this.selected[source] === 1 ? 'selected' : 'not selected') : source < 0 ? this.groupLabel(display, leaf.colId) : this.textFor(source, leaf);
+        const query = (this.options.findSearchValue ?? '').toLocaleLowerCase();
+        if (query && (cell.textContent ?? '').toLocaleLowerCase().includes(query)) cell.classList.add('og-find');
         const paint = this.paintStyle(source, leaf);
         if (paint.className) cell.classList.add(...paint.className.split(/\s+/).filter(Boolean));
         if (paint.background) cell.style.backgroundColor = paint.background;
