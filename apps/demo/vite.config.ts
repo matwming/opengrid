@@ -15,8 +15,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
-        bench: 'bench.html',
-        progress: 'progress.html',
       },
     },
   },
